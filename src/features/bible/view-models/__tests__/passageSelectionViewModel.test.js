@@ -55,11 +55,17 @@ describe('passage selection view model', () => {
     let viewModel;
 
     function Probe() {
-      viewModel = usePassageSelectionViewModel(repository, 'JAS', 1);
+      viewModel = usePassageSelectionViewModel(repository, 'JAS', 1, {
+        startVerseKey: 'JAS.1.2',
+        endVerseKey: 'JAS.1.10',
+      });
       return null;
     }
 
     await mount(Probe);
+
+    expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.2', endVerseKey: 'JAS.1.10' });
+    expect(viewModel.preview).toEqual({ status: 'ready', data: previewData });
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 10));

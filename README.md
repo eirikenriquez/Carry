@@ -60,14 +60,20 @@ stack. Loading failures offer Retry, and empty publisher entries are labelled
 rather than filled with invented text. Tap one verse for a single selection,
 then another for an inclusive same-chapter range. Backwards taps are ordered;
 a third tap starts a new selection. The selected passage is highlighted and
-previewed below the chapter. Clear resets it. Reference lookup and Carry saving
-are not implemented yet.
+previewed below the chapter. Clear resets it. The book list also accepts full
+book-name references such as `John 3:16`, `James 1:19-20` or `1 John 3:16`.
+Names are case-insensitive and ranges may use a hyphen or en dash. Valid references
+open the chapter with the passage selected in the preview; Back returns to books.
+Abbreviations, keyword search and cross-chapter lookup are not supported. Invalid
+references show feedback without navigating. Carry saving is not implemented yet.
 
 Browser verification is recorded separately from the earlier James 1:19–20
 setup preview, which remains historical evidence for bundled-data loading.
 See [`docs/evidence/browser/verification.md`](docs/evidence/browser/verification.md)
 for the browsing checks and Android screenshots. Selection checks are in
 [`docs/evidence/selection/verification.md`](docs/evidence/selection/verification.md).
+Reference lookup checks and screenshots are in
+[`docs/evidence/lookup/verification.md`](docs/evidence/lookup/verification.md).
 
 Run the checks from this directory:
 

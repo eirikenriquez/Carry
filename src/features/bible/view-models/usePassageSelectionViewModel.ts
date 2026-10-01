@@ -39,12 +39,15 @@ export function usePassageSelectionViewModel(
   repository: BibleRepository,
   bookId: string,
   chapter: number,
+  initialSelection?: PassageSelection,
 ): PassageSelectionViewModel {
   const [selectionState, setSelectionState] = useState<SelectionState>(() => ({
     repository,
     bookId,
     chapter,
-    record: null,
+    record: initialSelection
+      ? { selection: initialSelection, anchorVerseNumber: 0, completed: true }
+      : null,
   }));
   const [previewRecord, setPreviewRecord] = useState<PreviewRecord | null>(null);
   const [attempt, setAttempt] = useState(0);
