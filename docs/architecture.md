@@ -67,5 +67,12 @@ ViewModels map results into loading, error, or ready state and expose Retry.
 Effect cleanup prevents late requests from replacing a newer chapter. Views
 receive data and callbacks without importing navigation, SQLite, or Expo storage.
 
-The browser replaces the earlier setup preview. Selection and reference lookup
-remain separate future increments; this is not yet a complete Carry creation flow.
+`usePassageSelectionViewModel` owns the screen-local start/end keys and preview
+state. It orders endpoints numerically within the current chapter and calls
+`BibleRepository.getPassage` rather than duplicating passage resolution in Views.
+New selections, Clear and chapter changes invalidate older preview requests.
+The reading component is keyed by book/chapter so changing scope remounts local
+selection state. `PassagePreview` displays resolved text in a bounded scroll area.
+
+Reference lookup and Carry saving remain future increments; this is not yet a
+complete Carry creation flow. No selected Scripture text is persisted.

@@ -1,42 +1,73 @@
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { BibleVerse } from '../../../domain/entities/BibleVerse';
+import type { BiblePassage } from '../../../domain/entities/BiblePassage';
+import type { PassageSelection } from '../../../domain/entities/PassageSelection';
 import type { BibleLoadState } from '../view-models/BibleLoadState';
 import { BibleLoadFeedback } from './BibleLoadFeedback';
+import { PassagePreview } from './PassagePreview';
 
 interface VersesScreenProps {
   readonly state: BibleLoadState<readonly BibleVerse[]>;
   readonly onRetry: () => void;
+  readonly selection: PassageSelection | null;
+  readonly preview: BibleLoadState<BiblePassage> | null;
+  readonly onSelectVerse: (verse: BibleVerse) => void;
+  readonly onClearSelection: () => void;
+  readonly onRetryPreview: () => void;
 }
 
-export function VersesScreen({ state, onRetry }: VersesScreenProps) {
+export function VersesScreen({
+  state,
+  onRetry,
+  selection,
+  preview,
+  onSelectVerse,
+  onClearSelection,
+  onRetryPreview,
+}: VersesScreenProps) {
   if (state.status !== 'ready') {
     return <BibleLoadFeedback status={state.status} onRetry={onRetry} />;
   }
 
+  const startIndex = state.data.findIndex((verse) => verse.key === selection?.startVerseKey);
+  const endIndex = state.data.findIndex((verse) => verse.key === selection?.endVerseKey);
+
   return (
     <SafeAreaView style={styles.container} edges={['bottom', 'left', 'right']}>
+      <Text style={styles.instructions}>Tap twice for a range; tap again to start over.</Text>
       <FlatList
         data={state.data}
+        extraData={selection}
         keyExtractor={(verse) => verse.key}
         contentContainerStyle={styles.listContent}
         ListFooterComponent={<Text style={styles.edition}>World English Bible</Text>}
-        renderItem={({ item: verse }) => {
+        renderItem={({ item: verse, index }) => {
           const text = verse.text.trim() ? verse.text : 'No verse text in this edition.';
+          const selected = startIndex >= 0 && index >= startIndex && index <= endIndex;
 
           return (
-            <View
-              accessible
+            <Pressable
+              accessibilityRole="button"
               accessibilityLabel={`Verse ${verse.verse}. ${text}`}
-              style={styles.verseRow}
+              accessibilityState={{ selected }}
+              onPress={() => onSelectVerse(verse)}
+              style={({ pressed }) => [
+                styles.verseRow,
+                selected && styles.selectedVerse,
+                pressed && styles.pressedVerse,
+              ]}
             >
               <Text style={styles.verseNumber}>{verse.verse}</Text>
               <Text style={styles.verseText}>{text}</Text>
-            </View>
+            </Pressable>
           );
         }}
       />
+      {selection && preview && (
+        <PassagePreview preview={preview} onClear={onClearSelection} onRetry={onRetryPreview} />
+      )}
     </SafeAreaView>
   );
 }
@@ -52,10 +83,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   verseRow: {
+    minHeight: 48,
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: 8,
   },
+  instructions: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#555555',
+  },
+  selectedVerse: { backgroundColor: '#e7eef4' },
+  pressedVerse: { backgroundColor: '#f2f2f2' },
   verseNumber: {
     minWidth: 30,
     paddingTop: 2,
