@@ -1,0 +1,77 @@
+# Test log
+
+Historical checks from 2 October 2026 (New Zealand time), not a fresh test run.
+Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
+
+## Automated checkpoints
+
+| Increment | Jest tests / suites | Main coverage |
+| --- | --- | --- |
+| Bundled Bible, after cleanup | 37 / 6 | Domain rules, loader recovery, reader failures |
+| Browsing | 41 / 7 | Retry, repository reuse, chapter changes, empty results |
+| Selection | 45 / 8 | Tap progression, backwards ordering, reset, stale previews |
+| Reference lookup | 51 / 10 | Parsing, bounds, invalid references, retry, duplicate/stale requests |
+
+- Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
+- Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
+  including ordered content, passage endpoints, empty text, and invalid selections.
+- Lookup additionally checked John 3:16, James 1:19-20, 1 John 3:16, Luke 17:36,
+  and rejection of a missing verse.
+- Four Python source-data tests passed at the bundled-data checkpoint.
+- Initial Bible tests numbered 43; six duplicate mocked success cases were replaced
+  by stronger real-SQLite assertions, leaving 37 before later increments.
+
+## Offline Android acceptance
+
+Prototype release builds ran without Metro, with airplane mode on and Wi-Fi off.
+Original radio settings were restored; later feature checks did not clear app data.
+
+- Bundled data: first launch and cold restart displayed the setup passage.
+  Packaged and copied database hashes matched the recorded dataset.
+- Browsing: Books -> Genesis -> chapter 1, Back navigation, another chapter after
+  restart, and Luke 17:36's explicit empty-text label passed.
+- Selection: single verse, backwards range, highlighting, bounded preview scroll,
+  third-tap replacement, Clear, chapter reset, and selection after restart passed.
+- Lookup: single/range and numbered-book references passed, including cold restart.
+  Invalid book/chapter/verse and descending range stayed on Books with feedback.
+  Back, fresh-tap replacement, Clear, and empty-entry preview passed.
+
+### Copy-recovery recheck
+
+- Fix `aaf670d` stages and validates a temporary database before promotion.
+- A native recheck removed a stale empty temporary file and rebuilt the Bible offline;
+  cold restart passed and the original database was restored afterward.
+- The mocked regression covers an actual copy throwing mid-operation; the native
+  recheck covers a leftover temporary file, not a mid-copy exception.
+
+## Screenshots
+
+- Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
+  [development build](evidence/setup/carry-development-build-api33.png).
+- Bundled data: [offline preview](evidence/bible/carry-bible-offline-api33.png),
+  [copy recovery](evidence/bible/carry-copy-recovery-api33.png).
+- Browsing: [books](evidence/browser/books-offline-api33.png),
+  [chapters](evidence/browser/chapters-offline-api33.png),
+  [verses](evidence/browser/verses-offline-api33.png),
+  [empty entry](evidence/browser/empty-verse-offline-api33.png).
+- Selection: [single](evidence/selection/single-offline-api33.png),
+  [range](evidence/selection/range-offline-api33.png).
+- Lookup: [single](evidence/lookup/single-offline-api33.png),
+  [range](evidence/lookup/range-offline-api33.png),
+  [invalid range](evidence/lookup/invalid-offline-api33.png),
+  [empty entry](evidence/lookup/empty-offline-api33.png).
+
+## Limits and environment
+
+- These are representative emulator checks, not physical-device, TalkBack,
+  large-font, or user-study results. Screenshots were visually inspected.
+- Retry and stale-result failures use mocks/controlled promises, not corrupted
+  installed databases. Native empty-selection coverage was added at lookup.
+- The early Bible check found no recorded traffic for the app UID; this was
+  network accounting, not packet capture or proof of no attempted connections.
+- Long Windows paths required a temporary drive mapping; it was removed after verification.
+  Native cache/deprecation warnings remain; no dependency downgrade was applied.
+- Ten moderate transitive Expo CLI audit advisories were recorded at the
+  bundled-data checkpoint; that historical count is not a current security audit.
+- Lookup starts at the chapter beginning; the preview shows the selected passage.
+  No automatic scroll, keyword search, cross-chapter lookup, or Carry saving was tested.
