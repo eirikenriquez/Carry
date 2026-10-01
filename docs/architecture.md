@@ -27,7 +27,7 @@ Only folders containing real code are created during setup. The remaining folder
 
 - `Carry` stores stable relationships, user-entered intention data, scheduled and creation times, and optional reminder and reflection identifiers.
 - `Category` has a stable identifier and display name. Category matching trims whitespace, collapses repeated spaces, and ignores case without storing a second public name.
-- `PassageSelection` stores canonical start and end verse keys. The later `BibleRepository` must confirm that both keys exist and form an ordered range before persistence.
+- `PassageSelection` stores canonical start and end verse keys. `BibleRepository` confirms that both keys exist and form an ordered range; the later Carry save workflow must call it before persistence.
 - `Reflection` belongs to one Carry and uses a whole-number alignment rating from 1 to 5.
 - `CarryStatus` is derived from scheduled time and reflection existence instead of being persisted.
 
@@ -41,3 +41,20 @@ User-correctable domain validation returns explicit issues. Programming errors, 
 - Personal carry data remains local. No remote repository is planned for it.
 
 The current setup screen demonstrates the presentation boundary: `App.tsx` delegates to the composition root in `src/app`, which renders a React Native View under `src/features/setup/views`. The framework-independent types, factories, rules, and unit tests under `src/domain` implement the first application model.
+
+## Implemented Scripture boundary
+
+`BibleRepository` exposes books, chapter verses, and resolved passages. Its
+results distinguish invalid selections from unavailable local data.
+`SQLiteBibleRepository` implements the interface using parameterized reads and
+canonical numeric ordering, rather than sorting verse-key strings.
+
+`openBundledBible` copies the packaged database into the app's document SQLite
+directory only when the versioned file is absent. It checks the dataset version
+and enables SQLite's connection-level `query_only` setting. This database is
+separate from future writable Carry storage. Changing the dataset requires an
+explicit key-compatibility and migration review.
+
+`CarryApp` supplies the loader to `useBibleSetupViewModel`. The ViewModel maps
+repository results into loading, error, or ready presentation state. The setup
+View renders that state without importing SQLite or Expo storage APIs.

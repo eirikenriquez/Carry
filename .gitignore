@@ -33,3 +33,6 @@ yarn-error.*
 
 # TypeScript
 *.tsbuildinfo
+
+# Python dataset-build cache
+__pycache__/
