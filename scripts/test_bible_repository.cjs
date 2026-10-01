@@ -43,6 +43,25 @@ async function verifyRepository() {
     assert.equal(books.value.length, 66);
     assert.equal(books.value[0].name, 'Genesis');
     assert.equal(books.value[65].name, 'Revelation');
+    assert.deepEqual(
+      books.value.map((book) => book.order),
+      Array.from({ length: 66 }, (_, i) => i + 1),
+    );
+    assert.deepEqual(
+      books.value.find((book) => book.id === 'JAS'),
+      {
+        id: 'JAS',
+        name: 'James',
+        order: 59,
+        chapterCount: 5,
+      },
+    );
+
+    const verseColumns = 'key, book_id AS bookId, chapter, verse, text';
+    const verseByKey = database.prepare(`SELECT ${verseColumns} FROM verses WHERE key = ?`);
+    const chapterVerses = database.prepare(
+      `SELECT ${verseColumns} FROM verses WHERE book_id = ? AND chapter = ? ORDER BY verse`,
+    );
 
     // Exercise the complete catalogue, not only the preview passage.
     let verseCount = 0;
@@ -50,21 +69,29 @@ async function verifyRepository() {
       for (let chapter = 1; chapter <= book.chapterCount; chapter++) {
         const result = await repository.getChapter(book.id, chapter);
         assert.equal(result.ok, true, `${book.id} ${chapter}`);
+        assert.deepEqual(
+          result.value,
+          chapterVerses.all(book.id, chapter).map((row) => ({ ...row })),
+        );
         verseCount += result.value.length;
       }
     }
     assert.equal(verseCount, 31103);
 
-    for (const [startVerseKey, endVerseKey, reference] of [
-      ['GEN.1.1', 'GEN.1.1', 'Genesis 1:1'],
-      ['JAS.1.19', 'JAS.1.20', 'James 1:19–20'],
-      ['JAS.1.27', 'JAS.2.1', 'James 1:27–2:1'],
-      ['MAL.4.6', 'MAT.1.1', 'Malachi 4:6–Matthew 1:1'],
-      ['REV.22.21', 'REV.22.21', 'Revelation 22:21'],
+    for (const [startVerseKey, endVerseKey, reference, expectedKeys] of [
+      ['GEN.1.1', 'GEN.1.1', 'Genesis 1:1', ['GEN.1.1']],
+      ['JAS.1.19', 'JAS.1.20', 'James 1:19–20', ['JAS.1.19', 'JAS.1.20']],
+      ['JAS.1.27', 'JAS.2.1', 'James 1:27–2:1', ['JAS.1.27', 'JAS.2.1']],
+      ['MAL.4.6', 'MAT.1.1', 'Malachi 4:6–Matthew 1:1', ['MAL.4.6', 'MAT.1.1']],
+      ['REV.22.21', 'REV.22.21', 'Revelation 22:21', ['REV.22.21']],
     ]) {
       const result = await repository.getPassage({ startVerseKey, endVerseKey });
       assert.equal(result.ok, true);
       assert.equal(result.value.reference, reference);
+      assert.deepEqual(
+        result.value.verses,
+        expectedKeys.map((key) => ({ ...verseByKey.get(key) })),
+      );
     }
     assert.deepEqual(await repository.getChapter('GEN', 51), {
       ok: false,
@@ -89,7 +116,10 @@ async function verifyRepository() {
       endVerseKey: 'LUK.17.36',
     });
     assert.equal(blank.ok, true);
-    assert.equal(blank.value.verses[0].text, '');
+    assert.deepEqual(blank.value, {
+      reference: 'Luke 17:36',
+      verses: [{ key: 'LUK.17.36', bookId: 'LUK', chapter: 17, verse: 36, text: '' }],
+    });
   } finally {
     database.close();
   }
