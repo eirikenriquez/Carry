@@ -40,7 +40,9 @@ User-correctable domain validation returns explicit issues. Programming errors, 
 - Repository and notification interfaces point inward; SQLite and Expo-specific code implement those interfaces at the infrastructure edge.
 - Personal carry data remains local. No remote repository is planned for it.
 
-The current setup screen demonstrates the presentation boundary: `App.tsx` delegates to the composition root in `src/app`, which renders a React Native View under `src/features/setup/views`. The framework-independent types, factories, rules, and unit tests under `src/domain` implement the first application model.
+`App.tsx` delegates to the composition root in `src/app`. The framework-independent
+types, factories, rules, and unit tests under `src/domain` implement the first
+application model. Bible browsing views live under `src/features/bible/views`.
 
 ## Implemented Scripture boundary
 
@@ -55,6 +57,15 @@ and enables SQLite's connection-level `query_only` setting. This database is
 separate from future writable Carry storage. Changing the dataset requires an
 explicit key-compatibility and migration review.
 
-`CarryApp` supplies the loader to `useBibleSetupViewModel`. The ViewModel maps
-repository results into loading, error, or ready presentation state. The setup
-View renders that state without importing SQLite or Expo storage APIs.
+`CarryApp` supplies the loader to `useBibleBrowserViewModel`. Once books are loaded,
+it supplies the repository and books to `BibleNavigator`. React Navigation's
+native stack manages Books -> Chapters -> Verses; route parameters contain book
+IDs and chapter numbers, not duplicated Scripture text.
+
+`useBibleChapterViewModel` reads the selected chapter through the repository.
+ViewModels map results into loading, error, or ready state and expose Retry.
+Effect cleanup prevents late requests from replacing a newer chapter. Views
+receive data and callbacks without importing navigation, SQLite, or Expo storage.
+
+The browser replaces the earlier setup preview. Selection and reference lookup
+remain separate future increments; this is not yet a complete Carry creation flow.
