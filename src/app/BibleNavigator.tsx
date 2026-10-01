@@ -8,6 +8,7 @@ import { Text } from 'react-native';
 import type { BibleRepository } from '../application/ports/BibleRepository';
 import type { BibleBook } from '../domain/entities/BibleBook';
 import { useBibleChapterViewModel } from '../features/bible/view-models/useBibleChapterViewModel';
+import { usePassageSelectionViewModel } from '../features/bible/view-models/usePassageSelectionViewModel';
 import { BooksScreen } from '../features/bible/views/BooksScreen';
 import { ChaptersScreen } from '../features/bible/views/ChaptersScreen';
 import { VersesScreen } from '../features/bible/views/VersesScreen';
@@ -37,7 +38,18 @@ interface ChapterReadingProps {
 
 function ChapterReading({ repository, bookId, chapter }: ChapterReadingProps) {
   const { state, retry } = useBibleChapterViewModel(repository, bookId, chapter);
-  return <VersesScreen state={state} onRetry={retry} />;
+  const passage = usePassageSelectionViewModel(repository, bookId, chapter);
+  return (
+    <VersesScreen
+      state={state}
+      onRetry={retry}
+      selection={passage.selection}
+      preview={passage.preview}
+      onSelectVerse={passage.selectVerse}
+      onClearSelection={passage.clearSelection}
+      onRetryPreview={passage.retryPreview}
+    />
+  );
 }
 
 export function BibleNavigator({ repository, books }: BibleNavigatorProps) {
@@ -80,6 +92,7 @@ export function BibleNavigator({ repository, books }: BibleNavigatorProps) {
         >
           {({ route }: NativeStackScreenProps<BibleRoutes, 'Verses'>) => (
             <ChapterReading
+              key={`${route.params.bookId}.${route.params.chapter}`}
               repository={repository}
               bookId={route.params.bookId}
               chapter={route.params.chapter}

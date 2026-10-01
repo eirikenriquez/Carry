@@ -57,13 +57,17 @@ are recorded in [`data/bible/README.md`](data/bible/README.md).
 The app now opens a book list, then a chapter list, then numbered verse text.
 Data still comes through `BibleRepository`; React Navigation handles the screen
 stack. Loading failures offer Retry, and empty publisher entries are labelled
-rather than filled with invented text. Passage selection and reference lookup
+rather than filled with invented text. Tap one verse for a single selection,
+then another for an inclusive same-chapter range. Backwards taps are ordered;
+a third tap starts a new selection. The selected passage is highlighted and
+previewed below the chapter. Clear resets it. Reference lookup and Carry saving
 are not implemented yet.
 
 Browser verification is recorded separately from the earlier James 1:19–20
 setup preview, which remains historical evidence for bundled-data loading.
 See [`docs/evidence/browser/verification.md`](docs/evidence/browser/verification.md)
-for this increment's checks and Android screenshots.
+for the browsing checks and Android screenshots. Selection checks are in
+[`docs/evidence/selection/verification.md`](docs/evidence/selection/verification.md).
 
 Run the checks from this directory:
 
