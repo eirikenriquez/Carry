@@ -40,8 +40,9 @@ Screenshots were visually inspected for highlighting, preview layout and text:
 ## Limits
 
 Error/retry and late-result handling were checked with repository mocks, not
-by corrupting the installed database. Empty-text preview handling has automated
-coverage; this increment did not repeat a native empty-entry selection check.
+by corrupting the installed database. The hook test checks that a passage with
+empty verse text reaches the ready state; it does not render the UI placeholder.
+This increment did not repeat a native empty-entry selection check.
 This was a representative emulator check, not a physical-device, TalkBack,
 large-font, usability study or packet-capture audit. Reference lookup and Carry
 creation handoff remain unimplemented.
