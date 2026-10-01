@@ -74,5 +74,18 @@ New selections, Clear and chapter changes invalidate older preview requests.
 The reading component is keyed by book/chapter so changing scope remounts local
 selection state. `PassagePreview` displays resolved text in a bounded scroll area.
 
-Reference lookup and Carry saving remain future increments; this is not yet a
-complete Carry creation flow. No selected Scripture text is persisted.
+`resolveBibleReference` matches full book names from the loaded metadata, parses
+single verses or same-chapter ranges, and validates the canonical keys through
+`BibleRepository.getPassage`. It rejects invalid or descending typed ranges and
+returns a keys-only navigation target. It does not perform keyword search.
+
+`useReferenceLookupViewModel` owns input, loading and feedback. Input changes,
+unmounting or choosing browsing invalidate pending results; duplicate submits
+are ignored. The composition layer opens a fresh reading screen with a validated
+initial selection. This selection is complete, so the next tap starts over.
+The preview reuses the existing passage resolver; Scripture is not passed as
+navigation state. Direct lookup returns to Books on Back; browsing retains its
+Books -> Chapters -> Verses flow.
+
+Carry saving remains a future increment; this is not yet a complete creation
+flow. No selected Scripture text is persisted.

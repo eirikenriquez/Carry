@@ -6,20 +6,26 @@ const { DatabaseSync } = require('node:sqlite');
 const ts = require('typescript');
 
 const root = path.resolve(__dirname, '..');
-const source = fs.readFileSync(
-  path.join(root, 'src/infrastructure/repositories/SQLiteBibleRepository.ts'),
-  'utf8',
+function loadTypeScript(relativePath) {
+  const source = fs.readFileSync(path.join(root, relativePath), 'utf8');
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+  });
+  const loaded = { exports: {} };
+  new Function('exports', 'require', 'module', compiled.outputText)(
+    loaded.exports,
+    require,
+    loaded,
+  );
+  return loaded.exports;
+}
+
+const { SQLiteBibleRepository } = loadTypeScript(
+  'src/infrastructure/repositories/SQLiteBibleRepository.ts',
 );
-const compiled = ts.transpileModule(source, {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-});
-const repositoryModule = { exports: {} };
-new Function('exports', 'require', 'module', compiled.outputText)(
-  repositoryModule.exports,
-  require,
-  repositoryModule,
+const { resolveBibleReference } = loadTypeScript(
+  'src/application/services/resolveBibleReference.ts',
 );
-const { SQLiteBibleRepository } = repositoryModule.exports;
 
 function connect(database) {
   return new SQLiteBibleRepository({
@@ -77,6 +83,29 @@ async function verifyRepository() {
       }
     }
     assert.equal(verseCount, 31103);
+
+    for (const [input, bookId, chapter, start, end] of [
+      ['John 3:16', 'JHN', 3, 16, 16],
+      [' James 1:19–20 ', 'JAS', 1, 19, 20],
+      ['1 john 3:16', '1JN', 3, 16, 16],
+      ['Luke 17:36', 'LUK', 17, 36, 36],
+    ]) {
+      assert.deepEqual(await resolveBibleReference(input, books.value, repository), {
+        ok: true,
+        value: {
+          bookId,
+          chapter,
+          selection: {
+            startVerseKey: `${bookId}.${chapter}.${start}`,
+            endVerseKey: `${bookId}.${chapter}.${end}`,
+          },
+        },
+      });
+    }
+    assert.deepEqual(await resolveBibleReference('John 3:999', books.value, repository), {
+      ok: false,
+      code: 'invalid_selection',
+    });
 
     for (const [startVerseKey, endVerseKey, reference, expectedKeys] of [
       ['GEN.1.1', 'GEN.1.1', 'Genesis 1:1', ['GEN.1.1']],
