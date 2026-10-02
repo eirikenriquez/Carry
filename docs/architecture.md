@@ -24,7 +24,7 @@ The composition layer supplies the concrete implementation.
   normalized name is stored.
 - Reflections use a whole-number alignment rating from 1 to 5.
 - Carry status is derived from schedule and reflection, not persisted.
-- Form validation returns issues; invalid dates throw in creation, reflection, and status rules.
+- Form validation returns issues; invalid current times or stored schedules throw in lifecycle rules.
 
 ## Bible flows
 

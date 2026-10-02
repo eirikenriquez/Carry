@@ -33,18 +33,19 @@ export function useReferenceLookupViewModel(
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [lookupScope, setLookupScope] = useState({ repository, books });
+
+  // Reset feedback before rendering a changed reader or catalogue; keep the query.
+  if (lookupScope.repository !== repository || lookupScope.books !== books) {
+    setLookupScope({ repository, books });
+    setError(null);
+    setIsLoading(false);
+  }
+
   // Only the latest request ID may publish a result.
   const requestId = useRef(0);
   // State updates are deferred; this ref blocks a second submit immediately.
   const requestInFlight = useRef(false);
-
-  useEffect(
-    () => () => {
-      requestId.current += 1;
-      requestInFlight.current = false;
-    },
-    [repository, books],
-  );
 
   /**
    * Invalidate pending lookup results and clear feedback without changing the input.
@@ -55,6 +56,13 @@ export function useReferenceLookupViewModel(
     setError(null);
     setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    return () => {
+      requestId.current += 1;
+      requestInFlight.current = false;
+    };
+  }, [repository, books]);
 
   const changeQuery = useCallback(
     (value: string): void => {

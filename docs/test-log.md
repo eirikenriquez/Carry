@@ -12,6 +12,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Selection | 45 / 8 | Tap progression, backwards ordering, reset, stale previews |
 | Reference lookup | 51 / 10 | Parsing, bounds, invalid references, retry, duplicate/stale requests |
 | Readability audit | 53 / 10 | Invalid dates, explicit cancellation, consistent fixtures, shared hook setup |
+| Final lookup fix | 55 / 10 | Dependency changes cancel pending requests, reset feedback, and allow retry |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -21,6 +22,8 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 - Four Python source-data tests passed at the bundled-data checkpoint.
 - Initial Bible tests numbered 43; six duplicate mocked success cases were replaced
   by stronger real-SQLite assertions, leaving 37 before later increments.
+- Final lookup fix passed all automated checks above. Its two new dependency-change
+  cases use controlled promises; the native audit below predates this final fix.
 
 ## Offline Android acceptance
 

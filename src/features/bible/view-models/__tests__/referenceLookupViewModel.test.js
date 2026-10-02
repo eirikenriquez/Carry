@@ -64,6 +64,60 @@ it('reports invalid input and a read failure, then allows a successful retry', a
   expect(current().isLoading).toBe(false);
 });
 
+it.each(['books', 'repository'])(
+  'cancels a pending lookup when %s changes and allows retry',
+  async (dependency) => {
+    let resolveOldRead;
+    const oldRead = new Promise((resolve) => {
+      resolveOldRead = resolve;
+    });
+    const repository = {
+      getPassage: jest
+        .fn()
+        .mockReturnValueOnce(oldRead)
+        .mockResolvedValue({ ok: true, value: passage(16) }),
+    };
+    const replacementRepository = {
+      getPassage: jest.fn().mockResolvedValue({ ok: true, value: passage(16) }),
+    };
+    let viewModel;
+    function Probe({ reader = repository, catalogue = books }) {
+      viewModel = useReferenceLookupViewModel(reader, catalogue);
+      return null;
+    }
+    renderer = await mountProbe(Probe);
+    await act(async () => {
+      viewModel.changeQuery('John 3:16');
+    });
+    let oldRequest;
+    await act(async () => {
+      oldRequest = viewModel.lookup();
+    });
+    expect(viewModel.isLoading).toBe(true);
+    await act(async () => {
+      renderer.update(React.createElement(Probe));
+    });
+    expect(viewModel.isLoading).toBe(true);
+    await act(async () => {
+      renderer.update(
+        React.createElement(Probe, {
+          reader: dependency === 'repository' ? replacementRepository : repository,
+          catalogue: dependency === 'books' ? [...books] : books,
+        }),
+      );
+    });
+    expect(viewModel.query).toBe('John 3:16');
+    expect(viewModel.isLoading).toBe(false);
+    await act(async () => {
+      expect(await viewModel.lookup()).toEqual(target);
+      resolveOldRead({ ok: true, value: passage(16) });
+      expect(await oldRequest).toBeNull();
+    });
+    expect(viewModel.isLoading).toBe(false);
+    expect(viewModel.error).toBeNull();
+  },
+);
+
 it('ignores duplicate submits and results after editing, cancellation, or unmount', async () => {
   let resolveRead;
   const pending = new Promise((resolve) => {
