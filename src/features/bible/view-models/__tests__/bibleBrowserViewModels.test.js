@@ -1,42 +1,17 @@
 const React = require('react');
 const { afterEach, describe, it, jest, expect } = require('@jest/globals');
-const { create } = require('react-test-renderer');
+const { mountProbe, unmountProbe } = require('../../test-utils/hookTestHelpers');
 
 const { useBibleBrowserViewModel } = require('../useBibleBrowserViewModel');
 const { useBibleChapterViewModel } = require('../useBibleChapterViewModel');
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const { act } = React;
 
 let renderer;
 
-/**
- * Yield to pending promise callbacks before checking hook state.
- */
-async function flushMicrotasks() {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-}
-
-/**
- * Mount a hook probe and flush its initial asynchronous updates inside act.
- */
-async function mount(Probe) {
-  await act(async () => {
-    renderer = create(React.createElement(Probe));
-    await flushMicrotasks();
-  });
-}
-
 afterEach(async () => {
-  if (renderer !== undefined) {
-    await act(async () => {
-      renderer.unmount();
-    });
-    renderer = undefined;
-  }
+  await unmountProbe(renderer);
+  renderer = undefined;
 });
 
 describe('Bible browser view models', () => {
@@ -56,13 +31,12 @@ describe('Bible browser view models', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
 
     expect(viewModel.state).toEqual({ status: 'error' });
 
     await act(async () => {
       viewModel.retry();
-      await flushMicrotasks();
     });
 
     expect(viewModel.state).toEqual({
@@ -88,13 +62,12 @@ describe('Bible browser view models', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
 
     expect(viewModel.state).toEqual({ status: 'error' });
 
     await act(async () => {
       viewModel.retry();
-      await flushMicrotasks();
     });
 
     expect(viewModel.state).toEqual({ status: 'ready', data: verses });
@@ -122,13 +95,12 @@ describe('Bible browser view models', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
     expect(viewModel.state).toEqual({ status: 'loading' });
 
     chapter = 2;
     await act(async () => {
       renderer.update(React.createElement(Probe));
-      await flushMicrotasks();
     });
 
     expect(viewModel.state).toEqual({ status: 'ready', data: secondChapterVerses });
@@ -139,7 +111,6 @@ describe('Bible browser view models', () => {
         value: [{ key: 'JAS.1.1', bookId: 'JAS', chapter: 1, verse: 1, text: 'Old.' }],
       });
       await firstChapter;
-      await flushMicrotasks();
     });
 
     expect(viewModel.state).toEqual({ status: 'ready', data: secondChapterVerses });
@@ -162,12 +133,10 @@ describe('Bible browser view models', () => {
       return null;
     }
 
-    await mount(BrowserProbe);
+    renderer = await mountProbe(BrowserProbe);
     expect(viewModel.state).toEqual({ status: 'error' });
 
-    await act(async () => {
-      renderer.unmount();
-    });
+    await unmountProbe(renderer);
     renderer = undefined;
 
     const emptyChapterRepository = {
@@ -179,7 +148,7 @@ describe('Bible browser view models', () => {
       return null;
     }
 
-    await mount(ChapterProbe);
+    renderer = await mountProbe(ChapterProbe);
     expect(viewModel.state).toEqual({ status: 'error' });
   });
 });

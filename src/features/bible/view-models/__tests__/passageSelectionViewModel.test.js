@@ -1,10 +1,8 @@
 const React = require('react');
 const { afterEach, describe, it, jest, expect } = require('@jest/globals');
-const { create } = require('react-test-renderer');
+const { mountProbe, unmountProbe } = require('../../test-utils/hookTestHelpers');
 
 const { usePassageSelectionViewModel } = require('../usePassageSelectionViewModel');
-
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 const { act } = React;
 
@@ -37,32 +35,9 @@ function passageForSelection(selection) {
   return passage(Number(start), Number(end), Number(chapter));
 }
 
-/**
- * Yield to pending promise callbacks before checking hook state.
- */
-async function flushMicrotasks() {
-  await Promise.resolve();
-  await Promise.resolve();
-  await Promise.resolve();
-}
-
-/**
- * Mount a hook probe and flush its initial asynchronous updates inside act.
- */
-async function mount(Probe) {
-  await act(async () => {
-    renderer = create(React.createElement(Probe));
-    await flushMicrotasks();
-  });
-}
-
 afterEach(async () => {
-  if (renderer !== undefined) {
-    await act(async () => {
-      renderer.unmount();
-    });
-    renderer = undefined;
-  }
+  await unmountProbe(renderer);
+  renderer = undefined;
 });
 
 describe('passage selection view model', () => {
@@ -84,21 +59,19 @@ describe('passage selection view model', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
 
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.2', endVerseKey: 'JAS.1.10' });
     expect(viewModel.preview).toEqual({ status: 'ready', data: previewData });
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 10));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.10', endVerseKey: 'JAS.1.10' });
     expect(viewModel.preview).toEqual({ status: 'ready', data: passage(10) });
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 2));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.2', endVerseKey: 'JAS.1.10' });
     expect(viewModel.preview).toEqual({ status: 'ready', data: passage(2, 10) });
@@ -109,17 +82,14 @@ describe('passage selection view model', () => {
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 3));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.3', endVerseKey: 'JAS.1.3' });
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 3));
-      await flushMicrotasks();
     });
     await act(async () => {
       viewModel.selectVerse(verse(1, 4));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.4', endVerseKey: 'JAS.1.4' });
     expect(viewModel.preview).toEqual({ status: 'ready', data: passage(4) });
@@ -141,43 +111,37 @@ describe('passage selection view model', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
     await act(async () => {
       viewModel.selectVerse(verse(1, 1));
-      await flushMicrotasks();
     });
     expect(viewModel.preview).toEqual({ status: 'ready', data: previewData });
 
     await act(async () => {
       viewModel.clearSelection();
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toBeNull();
     expect(viewModel.preview).toBeNull();
 
     await act(async () => {
       viewModel.selectVerse(verse(2, 1));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toBeNull();
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 2));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.2', endVerseKey: 'JAS.1.2' });
 
     chapter = 2;
     await act(async () => {
       renderer.update(React.createElement(Probe));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toBeNull();
     expect(viewModel.preview).toBeNull();
 
     await act(async () => {
       viewModel.selectVerse(verse(2, 1));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.2.1', endVerseKey: 'JAS.2.1' });
     expect(viewModel.preview).toEqual({ status: 'ready', data: passage(1, 1, 2) });
@@ -185,7 +149,6 @@ describe('passage selection view model', () => {
     chapter = 1;
     await act(async () => {
       renderer.update(React.createElement(Probe));
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toBeNull();
     expect(viewModel.preview).toBeNull();
@@ -207,16 +170,14 @@ describe('passage selection view model', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
     await act(async () => {
       viewModel.selectVerse(verse(1, 1));
-      await flushMicrotasks();
     });
     expect(viewModel.preview).toEqual({ status: 'error' });
 
     await act(async () => {
       viewModel.retryPreview();
-      await flushMicrotasks();
     });
     expect(viewModel.preview).toEqual({ status: 'ready', data: previewData });
     expect(repository.getPassage).toHaveBeenCalledTimes(2);
@@ -242,30 +203,26 @@ describe('passage selection view model', () => {
       return null;
     }
 
-    await mount(Probe);
+    renderer = await mountProbe(Probe);
     await act(async () => {
       viewModel.selectVerse(verse(1, 1));
-      await flushMicrotasks();
     });
     expect(viewModel.preview).toEqual({ status: 'loading' });
 
     await act(async () => {
       viewModel.clearSelection();
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toBeNull();
     expect(viewModel.preview).toBeNull();
 
     await act(async () => {
       viewModel.selectVerse(verse(1, 2));
-      await flushMicrotasks();
     });
     expect(viewModel.preview).toEqual({ status: 'ready', data: currentPreview });
 
     await act(async () => {
       resolveFirstPreview({ ok: true, value: passage() });
       await firstPreview;
-      await flushMicrotasks();
     });
     expect(viewModel.selection).toEqual({ startVerseKey: 'JAS.1.2', endVerseKey: 'JAS.1.2' });
     expect(viewModel.preview).toEqual({ status: 'ready', data: currentPreview });

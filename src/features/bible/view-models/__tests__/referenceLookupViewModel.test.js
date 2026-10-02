@@ -1,9 +1,8 @@
 const React = require('react');
 const { afterEach, it, expect, jest } = require('@jest/globals');
-const { create } = require('react-test-renderer');
+const { mountProbe, unmountProbe } = require('../../test-utils/hookTestHelpers');
 const { useReferenceLookupViewModel } = require('../useReferenceLookupViewModel');
 
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 const { act } = React;
 const books = [{ id: 'JHN', name: 'John', order: 43, chapterCount: 21 }];
 const target = {
@@ -29,16 +28,13 @@ async function mount(repository) {
     viewModel = useReferenceLookupViewModel(repository, books);
     return null;
   }
-  await act(async () => {
-    renderer = create(React.createElement(Probe));
-  });
+  renderer = await mountProbe(Probe);
   return () => viewModel;
 }
 
 afterEach(async () => {
-  await act(async () => {
-    renderer?.unmount();
-  });
+  await unmountProbe(renderer);
+  renderer = undefined;
 });
 
 it('reports invalid input and a read failure, then allows a successful retry', async () => {
@@ -124,9 +120,8 @@ it('ignores duplicate submits and results after editing, cancellation, or unmoun
   await act(async () => {
     unmountedRequest = current().lookup();
   });
-  await act(async () => {
-    renderer.unmount();
-  });
+  await unmountProbe(renderer);
+  renderer = undefined;
   resolveUnmounted({ ok: true, value: passage(17) });
   expect(await unmountedRequest).toBeNull();
 });
