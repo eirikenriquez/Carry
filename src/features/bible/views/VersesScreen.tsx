@@ -16,6 +16,7 @@ interface VersesScreenProps {
   readonly onSelectVerse: (verse: BibleVerse) => void;
   readonly onClearSelection: () => void;
   readonly onRetryPreview: () => void;
+  readonly onUsePassage: () => void;
 }
 
 export function VersesScreen({
@@ -26,6 +27,7 @@ export function VersesScreen({
   onSelectVerse,
   onClearSelection,
   onRetryPreview,
+  onUsePassage,
 }: VersesScreenProps) {
   if (state.status !== 'ready') {
     return <BibleLoadFeedback status={state.status} onRetry={onRetry} />;
@@ -66,7 +68,12 @@ export function VersesScreen({
         }}
       />
       {selection && preview && (
-        <PassagePreview preview={preview} onClear={onClearSelection} onRetry={onRetryPreview} />
+        <PassagePreview
+          preview={preview}
+          onClear={onClearSelection}
+          onRetry={onRetryPreview}
+          onUsePassage={onUsePassage}
+        />
       )}
     </SafeAreaView>
   );

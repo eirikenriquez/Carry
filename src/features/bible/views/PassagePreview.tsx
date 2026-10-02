@@ -7,9 +7,10 @@ interface PassagePreviewProps {
   readonly preview: BibleLoadState<BiblePassage>;
   readonly onClear: () => void;
   readonly onRetry: () => void;
+  readonly onUsePassage: () => void;
 }
 
-export function PassagePreview({ preview, onClear, onRetry }: PassagePreviewProps) {
+export function PassagePreview({ preview, onClear, onRetry, onUsePassage }: PassagePreviewProps) {
   return (
     <View style={styles.container}>
       <View style={styles.headingRow}>
@@ -45,13 +46,22 @@ export function PassagePreview({ preview, onClear, onRetry }: PassagePreviewProp
         </View>
       )}
       {preview.status === 'ready' && (
-        <ScrollView style={styles.textScroll} nestedScrollEnabled>
-          {preview.data.verses.map((verse) => (
-            <Text key={verse.key} style={styles.verseText}>
-              {verse.verse}. {verse.text.trim() ? verse.text : 'No verse text in this edition.'}
-            </Text>
-          ))}
-        </ScrollView>
+        <>
+          <ScrollView style={styles.textScroll} nestedScrollEnabled>
+            {preview.data.verses.map((verse) => (
+              <Text key={verse.key} style={styles.verseText}>
+                {verse.verse}. {verse.text.trim() ? verse.text : 'No verse text in this edition.'}
+              </Text>
+            ))}
+          </ScrollView>
+          <Pressable
+            accessibilityRole="button"
+            onPress={onUsePassage}
+            style={({ pressed }) => [styles.button, pressed && styles.pressedButton]}
+          >
+            <Text style={styles.buttonText}>Use in a Carry</Text>
+          </Pressable>
+        </>
       )}
     </View>
   );
