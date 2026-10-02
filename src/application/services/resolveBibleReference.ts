@@ -27,6 +27,9 @@ function failure(code: ReferenceErrorCode): {
   return { ok: false, code };
 }
 
+/**
+ * Parse a full-name reference and validate its verse keys through the repository.
+ */
 export async function resolveBibleReference(
   input: string,
   books: readonly BibleBook[],
@@ -75,6 +78,7 @@ export async function resolveBibleReference(
   };
 
   try {
+    // Numeric bounds alone cannot confirm that a verse exists in this edition.
     const passage = await repository.getPassage(selection);
     if (passage.ok) {
       return { ok: true, value: { bookId: book.id, chapter, selection } };

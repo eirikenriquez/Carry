@@ -1,6 +1,9 @@
 import type { Carry } from '../entities/Carry';
 import type { CarryStatus } from '../entities/CarryStatus';
 
+/**
+ * Derive status from the scheduled time and whether a reflection exists.
+ */
 export function getCarryStatus(carry: Carry, now: Date): CarryStatus {
   if (carry.reflection) {
     return 'completed';

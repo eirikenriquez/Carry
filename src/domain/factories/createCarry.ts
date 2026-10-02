@@ -30,6 +30,9 @@ export type CreateCarryResult =
   | { readonly ok: true; readonly carry: Carry }
   | { readonly ok: false; readonly issues: readonly CreateCarryValidationIssue[] };
 
+/**
+ * Validate and normalise input before creating a Carry scheduled in the future.
+ */
 export function createCarry(input: CreateCarryInput, now: Date): CreateCarryResult {
   const currentTimestamp = now.getTime();
   if (Number.isNaN(currentTimestamp)) {
@@ -39,6 +42,7 @@ export function createCarry(input: CreateCarryInput, now: Date): CreateCarryResu
   const id = input.id.trim();
   const categoryId = input.categoryId.trim();
   const situation = input.situation.trim();
+  // These checks require keys; the save workflow must also validate them through the repository.
   const startVerseKey = input.passage.startVerseKey.trim();
   const endVerseKey = input.passage.endVerseKey.trim();
   const ifThenIntention = input.ifThenIntention.trim();
