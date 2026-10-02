@@ -264,6 +264,78 @@ export class SQLiteCarryRepository implements CarryRepository {
     );
   }
 
+  /**
+   * Update only editable fields, retaining stored identity and lifecycle-owned metadata.
+   */
+  async update(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry | null>> {
+    if (
+      !category ||
+      typeof category.id !== 'string' ||
+      !category.id.trim() ||
+      typeof category.name !== 'string' ||
+      !carry ||
+      !isValidCarryRecord(carry) ||
+      carry.categoryId !== category.id
+    ) {
+      return { ok: false, code: 'invalid_record' };
+    }
+
+    const name = category.name.trim().replace(/\s+/g, ' ');
+    const normalized = normalizeCategoryName(name);
+    if (!normalized) return { ok: false, code: 'invalid_record' };
+
+    return this.withDatabase((database) =>
+      this.withTransaction(database, async () => {
+        const existing = await database.getFirstAsync<{ id: string }>(
+          'SELECT id FROM carries WHERE id = ?',
+          carry.id,
+        );
+        if (!existing) return { ok: true, value: null };
+
+        const idOwner = await database.getFirstAsync<{ normalizedName: string }>(
+          'SELECT normalized_name AS normalizedName FROM categories WHERE id = ?',
+          category.id,
+        );
+        if (idOwner && idOwner.normalizedName !== normalized) {
+          return { ok: false, code: 'invalid_record' };
+        }
+
+        await database.runAsync(
+          `INSERT INTO categories (id, name, normalized_name)
+          VALUES (?, ?, ?) ON CONFLICT(normalized_name) DO NOTHING`,
+          category.id,
+          name,
+          normalized,
+        );
+        const storedCategory = await database.getFirstAsync<Category>(
+          'SELECT id, name FROM categories WHERE normalized_name = ?',
+          normalized,
+        );
+        if (!storedCategory) return { ok: false, code: 'unavailable' };
+
+        const result = await database.runAsync(
+          `UPDATE carries SET category_id = ?, situation = ?, scheduled_at = ?,
+          start_verse_key = ?, end_verse_key = ?, if_then_intention = ? WHERE id = ?`,
+          storedCategory.id,
+          carry.situation,
+          carry.scheduledAt.toISOString(),
+          carry.passage.startVerseKey,
+          carry.passage.endVerseKey,
+          carry.ifThenIntention,
+          carry.id,
+        );
+        if (result.changes === 0) return { ok: false, code: 'unavailable' };
+
+        const row = await database.getFirstAsync<CarryRow>(
+          `${carryQuery} WHERE c.id = ?`,
+          carry.id,
+        );
+        if (!row) return { ok: false, code: 'unavailable' };
+        return { ok: true, value: readCarry(row) };
+      }),
+    );
+  }
+
   async findById(id: string): Promise<CarryRepositoryResult<Carry | null>> {
     return this.withDatabase(async (database) => {
       const row = await database.getFirstAsync<CarryRow>(`${carryQuery} WHERE c.id = ?`, id);

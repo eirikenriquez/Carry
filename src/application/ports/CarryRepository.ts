@@ -25,6 +25,11 @@ export interface CarryRepository {
   create(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry>>;
 
   /**
+   * Update editable Carry fields and its category atomically; return null when the Carry is missing.
+   */
+  update(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry | null>>;
+
+  /**
    * Save a Carry and any supplied reflection atomically; omission preserves an existing reflection.
    */
   save(carry: Carry): Promise<CarryRepositoryResult<Carry>>;
