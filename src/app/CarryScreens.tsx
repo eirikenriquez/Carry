@@ -8,7 +8,7 @@ import type { PassageSelection } from '../domain/entities/PassageSelection';
 import { useCreateCarryViewModel } from '../features/carry/view-models/useCreateCarryViewModel';
 import { useCarryListViewModel } from '../features/carry/view-models/useCarryListViewModel';
 import { useCarryDetailViewModel } from '../features/carry/view-models/useCarryDetailViewModel';
-import { CreateCarryScreen } from '../features/carry/views/CreateCarryScreen';
+import { CarryFormScreen } from '../features/carry/views/CarryFormScreen';
 import { CarryListScreen } from '../features/carry/views/CarryListScreen';
 import { CarryDetailScreen } from '../features/carry/views/CarryDetailScreen';
 
@@ -47,7 +47,7 @@ export function CreateCarryFlow({
   }, [model.savedCarry, onSaved]);
 
   return (
-    <CreateCarryScreen
+    <CarryFormScreen
       draft={model.draft}
       categories={model.categories}
       categoryLoadFailed={model.categoryLoadFailed}

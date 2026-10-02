@@ -2,14 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../../../application/ports/BibleRepository';
 import type { CarryRepository } from '../../../application/ports/CarryRepository';
-import {
-  createCarryRecord,
-  type CreateCarryRecordValidationIssue,
-} from '../../../application/services/createCarryRecord';
+import { createCarryRecord } from '../../../application/services/createCarryRecord';
 import type { BiblePassage } from '../../../domain/entities/BiblePassage';
 import type { Carry } from '../../../domain/entities/Carry';
 import type { Category } from '../../../domain/entities/Category';
 import type { PassageSelection } from '../../../domain/entities/PassageSelection';
+import { clearFieldError, sameSelection, validationMessage } from './CarryFormState';
+import type { CarryFormDraft, CarryFormErrors } from './CarryFormState';
 import type { CarryLoadState } from './CarryLoadState';
 
 export interface CreateCarryViewModelOptions {
@@ -20,22 +19,14 @@ export interface CreateCarryViewModelOptions {
   readonly now: () => Date;
 }
 
-export interface CreateCarryDraftState {
-  readonly categoryName: string;
-  readonly situation: string;
-  readonly scheduledAt: Date | null;
-  readonly passage: PassageSelection;
-  readonly ifThenIntention: string;
-}
-
 export interface CreateCarryViewModel {
-  readonly draft: CreateCarryDraftState;
+  readonly draft: CarryFormDraft;
   readonly categories: readonly Category[];
   readonly categoryLoadFailed: boolean;
   readonly onRetryCategories: () => void;
   readonly passagePreview: CarryLoadState<BiblePassage>;
   readonly onRetryPassage: () => void;
-  readonly errors: Partial<Record<CreateCarryRecordValidationIssue['field'], string>>;
+  readonly errors: CarryFormErrors;
   readonly saveError: string | null;
   readonly isSaving: boolean;
   readonly savedCarry: Carry | null;
@@ -44,45 +35,6 @@ export interface CreateCarryViewModel {
   readonly onChangeIntention: (value: string) => void;
   readonly onChangeSchedule: (value: Date) => void;
   readonly save: () => Promise<void>;
-}
-
-const validationMessage = (issue: CreateCarryRecordValidationIssue): string => {
-  switch (issue.code) {
-    case 'invalid_date':
-      return 'Choose a valid schedule date.';
-    case 'must_be_future':
-      return 'Choose a time in the future.';
-    case 'invalid_selection':
-      return 'Choose a valid Bible passage.';
-    case 'required':
-      switch (issue.field) {
-        case 'categoryName':
-          return 'Choose or enter a category.';
-        case 'situation':
-          return 'Add the situation you want to prepare for.';
-        case 'scheduledAt':
-          return 'Choose a schedule date.';
-        case 'passage':
-          return 'Choose a Bible passage.';
-        case 'ifThenIntention':
-          return 'Add your if–then intention.';
-      }
-  }
-  return 'Check this field.';
-};
-
-function clearFieldError(
-  current: Partial<Record<CreateCarryRecordValidationIssue['field'], string>>,
-  field: CreateCarryRecordValidationIssue['field'],
-): Partial<Record<CreateCarryRecordValidationIssue['field'], string>> {
-  if (current[field] === undefined) return current;
-  const next = { ...current };
-  delete next[field];
-  return next;
-}
-
-function sameSelection(left: PassageSelection, right: PassageSelection): boolean {
-  return left.startVerseKey === right.startVerseKey && left.endVerseKey === right.endVerseKey;
 }
 
 /** Coordinate a new Carry draft, independent reads, and one guarded save attempt at a time. */
@@ -94,7 +46,7 @@ export function useCreateCarryViewModel({
   now,
 }: CreateCarryViewModelOptions): CreateCarryViewModel {
   const [identity] = useState(() => ({ carryId: createId(), categoryId: createId() }));
-  const [draft, setDraft] = useState<CreateCarryDraftState>(() => ({
+  const [draft, setDraft] = useState<CarryFormDraft>(() => ({
     categoryName: '',
     situation: '',
     scheduledAt: null,
@@ -112,9 +64,7 @@ export function useCreateCarryViewModel({
     readonly attempt: number;
     readonly state: CarryLoadState<BiblePassage>;
   } | null>(null);
-  const [errors, setErrors] = useState<
-    Partial<Record<CreateCarryRecordValidationIssue['field'], string>>
-  >({});
+  const [errors, setErrors] = useState<CarryFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedCarry, setSavedCarry] = useState<Carry | null>(null);
@@ -258,7 +208,7 @@ export function useCreateCarryViewModel({
       if (!mounted.current) return;
       if (!result.ok) {
         if (result.code === 'validation') {
-          const nextErrors: Partial<Record<CreateCarryRecordValidationIssue['field'], string>> = {};
+          const nextErrors: CarryFormErrors = {};
           for (const issue of result.issues) nextErrors[issue.field] = validationMessage(issue);
           setErrors(nextErrors);
         } else {
