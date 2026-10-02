@@ -13,7 +13,7 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:bible": "node scripts/test_bible_repository.cjs",
-    "test:carry": "node --test scripts/test_carry_schema.cjs",
+    "test:carry": "node --test scripts/test_carry_*.cjs",
     "format": "prettier --write \"**/*.{js,cjs,json,ts,tsx}\"",
     "format:check": "prettier --check \"**/*.{js,cjs,json,ts,tsx}\""
   },

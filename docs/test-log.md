@@ -29,6 +29,10 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   ownership, ratings, and deletion cleanup. Format/lint/typecheck, Bible integration,
   four Python tests, and scoped whitespace checks pass. In-memory schema tests only;
   no Carry adapter, installed personal database, or restart persistence checked yet.
+- Personal database opener: seven grouped Node SQLite checks now pass (three schema,
+  four opener), including file reopen, incompatible-schema preservation, rollback/retry,
+  and controlled opening/foreign-key failures. Format/lint/typecheck and all 55 Jest
+  tests/10 suites pass. No Android personal-data persistence check yet.
 
 ## Offline Android acceptance
 

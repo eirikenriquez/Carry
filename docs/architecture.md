@@ -73,11 +73,15 @@ SHA-256 checksums:
   category names are unique; each Carry owns at most one reflection, deleted with it.
 - Dates use UTC ISO text; reminders are optional, and status is not stored.
   Category matching and date conversion belong in the forthcoming SQLite adapter.
-- Schema checks use isolated Node SQLite databases; the app does not open this database yet.
+- `openPersonalDatabase` opens a private connection, enables foreign keys before
+  its transaction, and initializes only an empty version-0 database. Version 1
+  is reused after column checks; unknown or damaged schemas fail without reset.
+- Schema/opener checks use Node SQLite, including a temporary file reopened after
+  closing. The opener is not wired into the app yet; callers must close its connection.
 
 ## Planned, not implemented
 
 - Carry creation UI, persistence, and lifecycle orchestration.
-- Personal database opening, SQLite Carry adapter, and notification interfaces/adapters.
+- SQLite Carry adapter and notification interfaces/adapters.
 - Validate passage keys through the Bible repository before saving a Carry;
   personal data remains local. Add folders only when their code is needed.
