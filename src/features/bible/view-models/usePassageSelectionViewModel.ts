@@ -35,6 +35,9 @@ type PreviewRecord = {
 
 const loadingState: BibleLoadState<BiblePassage> = { status: 'loading' };
 
+/**
+ * Manage same-chapter tap selection and its resolved passage preview.
+ */
 export function usePassageSelectionViewModel(
   repository: BibleRepository,
   bookId: string,
@@ -45,6 +48,7 @@ export function usePassageSelectionViewModel(
     repository,
     bookId,
     chapter,
+    // Completed lookup selections never use the anchor; the next tap starts over.
     record: initialSelection
       ? { selection: initialSelection, anchorVerseNumber: 0, completed: true }
       : null,
@@ -64,6 +68,7 @@ export function usePassageSelectionViewModel(
 
   const activeSelectionRecord = sameScope ? selectionState.record : null;
   const selection = activeSelectionRecord?.selection ?? null;
+  // Show results only for the current selection and retry attempt.
   const preview =
     activeSelectionRecord === null
       ? null
@@ -107,6 +112,9 @@ export function usePassageSelectionViewModel(
     };
   }, [activeSelectionRecord, attempt, repository]);
 
+  /**
+   * Start a selection or complete its range using numeric verse order.
+   */
   const selectVerse = useCallback(
     (verse: BibleVerse): void => {
       if (verse.bookId !== bookId || verse.chapter !== chapter) return;

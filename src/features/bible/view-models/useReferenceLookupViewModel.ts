@@ -14,6 +14,9 @@ const messages = {
   unavailable: 'The Bible data could not be read. Please try again.',
 };
 
+/**
+ * Manage reference input, feedback, and cancellation of outdated lookups.
+ */
 export function useReferenceLookupViewModel(
   repository: BibleRepository,
   books: readonly BibleBook[],
@@ -21,7 +24,9 @@ export function useReferenceLookupViewModel(
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Only the latest request ID may publish a result.
   const request = useRef(0);
+  // State updates are deferred; this ref blocks a second submit immediately.
   const busy = useRef(false);
 
   useEffect(
@@ -41,6 +46,9 @@ export function useReferenceLookupViewModel(
     setIsLoading(false);
   }, []);
 
+  /**
+   * Return a validated navigation target only while this lookup is still current.
+   */
   const lookup = useCallback(async (): Promise<ReferenceTarget | null> => {
     if (busy.current) return null;
     busy.current = true;

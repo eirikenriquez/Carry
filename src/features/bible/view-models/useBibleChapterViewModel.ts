@@ -18,6 +18,9 @@ type ChapterStateRecord = {
 
 const loadingState: BibleLoadState<readonly BibleVerse[]> = { status: 'loading' };
 
+/**
+ * Load the current chapter, expose retry, and ignore outdated responses.
+ */
 export function useBibleChapterViewModel(
   repository: BibleRepository,
   bookId: string,
@@ -62,6 +65,7 @@ export function useBibleChapterViewModel(
     setAttempt((current) => current + 1);
   }, [repository, bookId, chapter]);
 
+  // A scope change shows loading instead of another chapter's cached result.
   const state =
     record.repository === repository && record.bookId === bookId && record.chapter === chapter
       ? record.state
