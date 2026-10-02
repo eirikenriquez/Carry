@@ -82,8 +82,7 @@ function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: Book
     <BooksScreen
       books={books}
       onSelectBook={(book) => {
-        // Browsing away cancels any lookup still waiting for the repository.
-        lookup.changeQuery(lookup.query);
+        lookup.cancelLookup();
         Keyboard.dismiss();
         onSelectBook(book);
       }}

@@ -10,6 +10,10 @@ export interface ReferenceTarget {
 
 type ReferenceErrorCode = 'invalid_format' | 'unknown_book' | 'invalid_selection' | 'unavailable';
 
+type ReferenceLookupResult =
+  | { readonly ok: true; readonly value: ReferenceTarget }
+  | { readonly ok: false; readonly code: ReferenceErrorCode };
+
 const REFERENCE_PATTERN = /^(.*?)\s+(\d+)\s*:\s*(\d+)(?:\s*[-–]\s*(\d+))?$/u;
 
 function normalizeBookName(name: string): string {
@@ -20,10 +24,7 @@ function isPositiveSafeInteger(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
 }
 
-function failure(code: ReferenceErrorCode): {
-  readonly ok: false;
-  readonly code: ReferenceErrorCode;
-} {
+function failure(code: ReferenceErrorCode): ReferenceLookupResult {
   return { ok: false, code };
 }
 
@@ -34,10 +35,7 @@ export async function resolveBibleReference(
   input: string,
   books: readonly BibleBook[],
   repository: BibleRepository,
-): Promise<
-  | { readonly ok: true; readonly value: ReferenceTarget }
-  | { readonly ok: false; readonly code: ReferenceErrorCode }
-> {
+): Promise<ReferenceLookupResult> {
   const match = REFERENCE_PATTERN.exec(input.trim());
   if (!match) return failure('invalid_format');
 

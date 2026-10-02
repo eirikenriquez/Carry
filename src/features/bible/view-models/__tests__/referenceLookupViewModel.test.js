@@ -68,7 +68,7 @@ it('reports invalid input and a read failure, then allows a successful retry', a
   expect(current().isLoading).toBe(false);
 });
 
-it('ignores duplicate submits and results arriving after input changes or unmount', async () => {
+it('ignores duplicate submits and results after editing, cancellation, or unmount', async () => {
   let resolveRead;
   const pending = new Promise((resolve) => {
     resolveRead = resolve;
@@ -93,6 +93,27 @@ it('ignores duplicate submits and results arriving after input changes or unmoun
   });
   expect(current().query).toBe('John 3:17');
   expect(current().isLoading).toBe(false);
+
+  let resolveCancelled;
+  repository.getPassage.mockReturnValueOnce(
+    new Promise((resolve) => {
+      resolveCancelled = resolve;
+    }),
+  );
+  let cancelledRequest;
+  await act(async () => {
+    cancelledRequest = current().lookup();
+  });
+  expect(current().isLoading).toBe(true);
+  await act(async () => {
+    current().cancelLookup();
+  });
+  expect(current().query).toBe('John 3:17');
+  expect(current().isLoading).toBe(false);
+  expect(current().error).toBeNull();
+  resolveCancelled({ ok: true, value: passage(17) });
+  expect(await cancelledRequest).toBeNull();
+
   let resolveUnmounted;
   repository.getPassage.mockReturnValueOnce(
     new Promise((resolve) => {
