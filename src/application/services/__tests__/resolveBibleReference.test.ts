@@ -21,14 +21,17 @@ function verseForKey(key: string) {
 }
 
 /**
- * Supply endpoint fixtures; real passage content is covered by SQLite checks.
+ * Supply a complete mock range with matching keys and a display reference.
  */
 function successfulPassage(selection: PassageSelection): BibleRepositoryResult<BiblePassage> {
-  const verses = [verseForKey(selection.startVerseKey)];
-  if (selection.endVerseKey !== selection.startVerseKey) {
-    verses.push(verseForKey(selection.endVerseKey));
-  }
-  return { ok: true, value: { reference: '', verses } };
+  const start = verseForKey(selection.startVerseKey);
+  const end = verseForKey(selection.endVerseKey);
+  const verses = Array.from({ length: end.verse - start.verse + 1 }, (_, index) =>
+    verseForKey(`${start.bookId}.${start.chapter}.${start.verse + index}`),
+  );
+  const bookName = BOOKS.find((book) => book.id === start.bookId)?.name ?? start.bookId;
+  const reference = `${bookName} ${start.chapter}:${start.verse}${start.verse === end.verse ? '' : `–${end.verse}`}`;
+  return { ok: true, value: { reference, verses } };
 }
 
 function makeRepository(response?: BibleRepositoryResult<BiblePassage>) {

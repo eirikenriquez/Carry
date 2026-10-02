@@ -13,6 +13,13 @@ const target = {
 };
 let renderer;
 
+function passage(verse) {
+  return {
+    reference: `John 3:${verse}`,
+    verses: [{ key: `JHN.3.${verse}`, bookId: 'JHN', chapter: 3, verse, text: `Verse ${verse}.` }],
+  };
+}
+
 /**
  * Mount lookup logic and return a getter for its latest rendered state.
  */
@@ -39,7 +46,7 @@ it('reports invalid input and a read failure, then allows a successful retry', a
     getPassage: jest
       .fn()
       .mockResolvedValueOnce({ ok: false, code: 'unavailable' })
-      .mockResolvedValue({ ok: true, value: { reference: 'John 3:16', verses: [] } }),
+      .mockResolvedValue({ ok: true, value: passage(16) }),
   };
   const current = await mount(repository);
   await act(async () => {
@@ -81,7 +88,7 @@ it('ignores duplicate submits and results arriving after input changes or unmoun
     current().changeQuery('John 3:17');
   });
   await act(async () => {
-    resolveRead({ ok: true, value: { reference: 'John 3:16', verses: [] } });
+    resolveRead({ ok: true, value: passage(16) });
     expect(await first).toBeNull();
   });
   expect(current().query).toBe('John 3:17');
@@ -99,6 +106,6 @@ it('ignores duplicate submits and results arriving after input changes or unmoun
   await act(async () => {
     renderer.unmount();
   });
-  resolveUnmounted({ ok: true, value: { reference: 'John 3:17', verses: [] } });
+  resolveUnmounted({ ok: true, value: passage(17) });
   expect(await unmountedRequest).toBeNull();
 });
