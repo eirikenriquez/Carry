@@ -66,7 +66,7 @@ function connect(database) {
 /**
  * Use isolated file-backed storage so each repository operation opens a real connection.
  */
-function createRepository(t) {
+function createRepository(t, onTransactionBegin) {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'carry-repository-'));
   const filename = path.join(directory, 'carry.db');
   const database = new DatabaseSync(filename);
@@ -76,11 +76,22 @@ function createRepository(t) {
     fs.rmdirSync(directory);
   });
   database.exec(personalDatabaseSchema);
-  const openPersonalDatabase = loadOpener(async () => connect(new DatabaseSync(filename)));
+  const openPersonalDatabase = loadOpener(async () => {
+    const connection = connect(new DatabaseSync(filename));
+    if (onTransactionBegin) {
+      const execAsync = connection.execAsync;
+      connection.execAsync = async (sql) => {
+        await execAsync(sql);
+        if (sql === 'BEGIN IMMEDIATE') onTransactionBegin();
+      };
+    }
+    return connection;
+  });
   const { SQLiteCarryRepository } = loadTypeScript(
     'src/infrastructure/repositories/SQLiteCarryRepository.ts',
     {
       './openPersonalDatabase': { openPersonalDatabase },
+      '../../domain/rules/getCarryStatus': require('../src/domain/rules/getCarryStatus.ts'),
       '../../domain/rules/normalizeCategoryName': require('../src/domain/rules/normalizeCategoryName.ts'),
     },
   );
@@ -283,6 +294,84 @@ test('rolls back category creation when an update fails and rejects category ID 
     await repository.update({ id: 'work', name: 'Family' }, { ...edited, categoryId: 'work' }),
     { ok: false, code: 'invalid_record' },
   );
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'work', name: 'Work' }],
+  });
+});
+
+test('checks original status and the new schedule inside the update transaction', async (t) => {
+  let transactionNow = new Date('2026-10-03T20:59:59.000Z');
+  let expireOriginalOnBegin = true;
+  let transactionStarted = false;
+  const { repository, database } = createRepository(t, () => {
+    transactionStarted = true;
+    if (expireOriginalOnBegin) transactionNow = new Date('2026-10-03T21:00:00.000Z');
+  });
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const original = carryFixture();
+  insertCarry(database, original);
+  const completed = {
+    ...carryFixture('carry-completed'),
+    reflection: reflectionFixture('reflection-completed'),
+  };
+  insertCarry(database, completed);
+  database
+    .prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)')
+    .run(
+      completed.reflection.id,
+      completed.id,
+      completed.reflection.alignmentRating,
+      completed.reflection.whatOccurred,
+      completed.reflection.insight,
+      completed.reflection.createdAt.toISOString(),
+    );
+  const now = () => {
+    assert.equal(transactionStarted, true);
+    return new Date(transactionNow.getTime());
+  };
+  const category = { id: 'new-category', name: 'New Category' };
+
+  const expiredDraft = {
+    ...original,
+    categoryId: category.id,
+    situation: 'Changed after the Carry became due',
+    scheduledAt: new Date('2026-10-03T22:00:00.000Z'),
+  };
+  assert.deepEqual(await repository.update(category, expiredDraft, now), {
+    ok: false,
+    code: 'not_upcoming',
+  });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'work', name: 'Work' }],
+  });
+
+  expireOriginalOnBegin = false;
+  transactionNow = new Date('2026-10-03T20:00:00.000Z');
+  const reflectedDraft = { ...completed, categoryId: category.id, situation: 'Changed' };
+  assert.deepEqual(await repository.update(category, reflectedDraft, now), {
+    ok: false,
+    code: 'not_upcoming',
+  });
+  assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'work', name: 'Work' }],
+  });
+
+  const expiredScheduleDraft = {
+    ...original,
+    categoryId: category.id,
+    situation: 'Invalid new schedule',
+    scheduledAt: new Date('2026-10-03T19:00:00.000Z'),
+  };
+  assert.deepEqual(await repository.update(category, expiredScheduleDraft, now), {
+    ok: false,
+    code: 'invalid_record',
+  });
   assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
   assert.deepEqual(await repository.getCategories(), {
     ok: true,

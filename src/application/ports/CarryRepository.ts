@@ -2,7 +2,7 @@ import type { Carry } from '../../domain/entities/Carry';
 import type { Category } from '../../domain/entities/Category';
 import type { Reflection } from '../../domain/entities/Reflection';
 
-export type CarryRepositoryErrorCode = 'invalid_record' | 'unavailable';
+export type CarryRepositoryErrorCode = 'invalid_record' | 'not_upcoming' | 'unavailable';
 
 export type CarryRepositoryResult<T> =
   | { readonly ok: true; readonly value: T }
@@ -26,8 +26,13 @@ export interface CarryRepository {
 
   /**
    * Update editable Carry fields and its category atomically; return null when the Carry is missing.
+   * Supplying a clock checks upcoming eligibility after acquiring the write lock.
    */
-  update(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry | null>>;
+  update(
+    category: Category,
+    carry: Carry,
+    now?: () => Date,
+  ): Promise<CarryRepositoryResult<Carry | null>>;
 
   /**
    * Save a Carry and any supplied reflection atomically; omission preserves an existing reflection.

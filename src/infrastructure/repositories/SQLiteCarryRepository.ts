@@ -7,6 +7,7 @@ import type {
 import type { Carry } from '../../domain/entities/Carry';
 import type { Category } from '../../domain/entities/Category';
 import type { AlignmentRating, Reflection } from '../../domain/entities/Reflection';
+import { getCarryStatus } from '../../domain/rules/getCarryStatus';
 import { normalizeCategoryName } from '../../domain/rules/normalizeCategoryName';
 import { openPersonalDatabase } from './openPersonalDatabase';
 
@@ -267,7 +268,11 @@ export class SQLiteCarryRepository implements CarryRepository {
   /**
    * Update only editable fields, retaining stored identity and lifecycle-owned metadata.
    */
-  async update(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry | null>> {
+  async update(
+    category: Category,
+    carry: Carry,
+    now?: () => Date,
+  ): Promise<CarryRepositoryResult<Carry | null>> {
     if (
       !category ||
       typeof category.id !== 'string' ||
@@ -286,11 +291,21 @@ export class SQLiteCarryRepository implements CarryRepository {
 
     return this.withDatabase((database) =>
       this.withTransaction(database, async () => {
-        const existing = await database.getFirstAsync<{ id: string }>(
-          'SELECT id FROM carries WHERE id = ?',
+        const existing = await database.getFirstAsync<CarryRow>(
+          `${carryQuery} WHERE c.id = ?`,
           carry.id,
         );
         if (!existing) return { ok: true, value: null };
+
+        if (now) {
+          const checkedAt = now();
+          if (getCarryStatus(readCarry(existing), checkedAt) !== 'upcoming') {
+            return { ok: false, code: 'not_upcoming' };
+          }
+          if (carry.scheduledAt.getTime() <= checkedAt.getTime()) {
+            return { ok: false, code: 'invalid_record' };
+          }
+        }
 
         const idOwner = await database.getFirstAsync<{ normalizedName: string }>(
           'SELECT normalized_name AS normalizedName FROM categories WHERE id = ?',
