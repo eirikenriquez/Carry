@@ -72,6 +72,29 @@ Original radio settings were restored; later feature checks did not clear app da
 - The mocked regression covers an actual copy throwing mid-operation; the native
   recheck covers a leftover temporary file, not a mid-copy exception.
 
+### Personal storage acceptance
+
+- A temporary startup hook ran `scripts/verify_carry_native.ts` in a prototype
+  release without Metro, in airplane mode with Wi-Fi off. Two labelled Carries
+  covered every field, optional reminder ID, and an owned reflection.
+- Save and force-stop/reopen passed (process 8192 -> 8270). Emulator reboot changed
+  the boot ID and process (1581); both records still matched every field, including
+  Date values, normalized category reuse, and latest reflection.
+- `carry.db` was at `/data/user/0/com.eirikenriquez.carry/files/SQLite/carry.db`,
+  with owner-only file permissions, separately from the unchanged Bible database.
+- Source inspection found no network calls/remote DB configuration in personal
+  storage. Historical UID traffic existed; shown accounting buckets were unchanged
+  across the offline app-restart check. This is not packet capture or proof of no
+  attempted connections, and does not identify the historical traffic's cause.
+- Cleanup removed only the two verified test Carries and owned reflection/category.
+  The startup hook was removed; the manual probe remains outside the normal app.
+  Normal release rebuilt/installed successfully; radios restored and drive mapping removed.
+  This verifies repository persistence, not a Carry form, lifecycle UI, or notifications.
+
+To repeat: temporarily call `verifyCarryStorage()` from startup, restart without
+clearing data, then call `verifyCarryStorage(true)` to clean up. Remove the hook and
+rebuild the normal app afterward; do not leave test startup code enabled.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),

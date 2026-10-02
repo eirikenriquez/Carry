@@ -66,7 +66,7 @@ SHA-256 checksums:
 - XML: `ac0fe5d87ef7c192afa199eaf05a17e172c199e9b9776624daf89614224864f3`
 - Database: `55d3853b9a27cee8541548baa0c0f731461a036d6e5ae998b60470fcb21fd311`
 
-## Personal storage foundation
+## Personal storage
 
 - `CarryRepository` defines category reuse, Carry save/read/delete, and latest-reflection retrieval.
 - The initial version-1 schema has categories, Carries, and reflections. Normalized
@@ -87,7 +87,7 @@ SHA-256 checksums:
 
 ## Planned, not implemented
 
-- Carry creation UI, persistence, and lifecycle orchestration.
-- Notification interfaces/adapters and native personal-storage acceptance checks.
+- Carry creation UI and lifecycle orchestration; the storage backend is implemented.
+- Notification interfaces/adapters.
 - Validate passage keys through the Bible repository before saving a Carry;
   personal data remains local. Add folders only when their code is needed.
