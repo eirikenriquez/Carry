@@ -37,6 +37,8 @@ The composition layer supplies the concrete implementation.
   Back returns to Books and the next verse tap starts a new selection.
 - Preview resolves through `BibleRepository.getPassage`. Selections store keys only.
 - Loading/error/ready states expose Retry. Cleanup and request guards ignore stale results.
+- Books cancels lookup on losing focus and checks focus again before navigating;
+  a late result cannot open Scripture over My Carries.
 
 ## Storage and source data
 

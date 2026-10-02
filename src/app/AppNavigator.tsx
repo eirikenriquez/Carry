@@ -1,4 +1,10 @@
-import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import { useCallback } from 'react';
+import {
+  DefaultTheme,
+  NavigationContainer,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
 import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
@@ -94,11 +100,20 @@ interface BookBrowsingProps {
  * Connect reference lookup and book browsing to navigation callbacks.
  */
 function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: BookBrowsingProps) {
+  const navigation = useNavigation();
   const lookup = useReferenceLookupViewModel(repository, books);
+  const { cancelLookup } = lookup;
+
+  // Stack screens stay mounted when covered; cancel lookups when Books loses focus.
+  useFocusEffect(
+    useCallback(() => {
+      return cancelLookup;
+    }, [cancelLookup]),
+  );
 
   async function openReference(): Promise<void> {
     const target = await lookup.lookup();
-    if (!target) return;
+    if (!target || !navigation.isFocused()) return;
     Keyboard.dismiss();
     onOpenReference(target);
   }

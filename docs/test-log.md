@@ -1,6 +1,6 @@
 # Test log
 
-Historical checks from 2 October 2026 (New Zealand time), not a fresh test run.
+Recorded checkpoints from 2-3 October 2026 (New Zealand time).
 Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 
 ## Automated checkpoints
@@ -14,6 +14,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Readability audit | 53 / 10 | Invalid dates, explicit cancellation, consistent fixtures, shared hook setup |
 | Final lookup fix | 55 / 10 | Dependency changes cancel pending requests, reset feedback, and allow retry |
 | Carry creation | 67 / 13 | Validation/clock recheck, draft preservation, save locking, list/detail loading and retry |
+| Creation review fix | 68 / 14 | Late lookup cannot navigate after Books loses focus; lookup works after returning |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -46,6 +47,10 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 - Carry creation: 15 grouped Node SQLite checks pass, adding atomic category/Carry
   insertion, category reuse, duplicate-ID rejection and rollback without orphan categories.
   Format/lint/typecheck, all 67 Jest tests, Bible integration and four Python tests pass.
+- Review fix (3 October): a controlled navigation regression failed before the fix
+  and passed afterward. It covers blur cancellation, refocus/retry and loss of focus
+  before blur cleanup. All 68 Jest tests/14 suites and existing integration checks pass;
+  the delayed-result race is a controlled test, not native fault injection.
 
 ## Offline Android acceptance
 
@@ -120,6 +125,10 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   compilation through a temporary short drive mapping. The rebuilt release launched
   successfully; no app-source workaround or dependency downgrade was added.
   The mapping was removed after verification.
+- Review-fix release (3 October) rebuilt/installed successfully. Offline My Carries
+  -> Back -> John 3:16 lookup, then Back/repeat lookup passed. No new records;
+  radios and temporary mapping restored. Full creation acceptance above predates
+  this navigation-only fix; delayed completion is covered by the regression test.
 
 ## Screenshots
 
