@@ -20,6 +20,9 @@ function verseForKey(key: string) {
   };
 }
 
+/**
+ * Supply endpoint fixtures; real passage content is covered by SQLite checks.
+ */
 function successfulPassage(selection: PassageSelection): BibleRepositoryResult<BiblePassage> {
   const verses = [verseForKey(selection.startVerseKey)];
   if (selection.endVerseKey !== selection.startVerseKey) {

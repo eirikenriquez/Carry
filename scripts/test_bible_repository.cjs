@@ -6,6 +6,9 @@ const { DatabaseSync } = require('node:sqlite');
 const ts = require('typescript');
 
 const root = path.resolve(__dirname, '..');
+/**
+ * Load local TypeScript for integration checks without creating build output.
+ */
 function loadTypeScript(relativePath) {
   const source = fs.readFileSync(path.join(root, relativePath), 'utf8');
   const compiled = ts.transpileModule(source, {
@@ -27,6 +30,9 @@ const { resolveBibleReference } = loadTypeScript(
   'src/application/services/resolveBibleReference.ts',
 );
 
+/**
+ * Adapt Node's SQLite connection to the repository's asynchronous database contract.
+ */
 function connect(database) {
   return new SQLiteBibleRepository({
     async getAllAsync(sql, ...params) {
@@ -38,6 +44,9 @@ function connect(database) {
   });
 }
 
+/**
+ * Check catalogue, chapters, passage resolution, and failures against real SQLite.
+ */
 async function verifyRepository() {
   const database = new DatabaseSync(path.join(root, 'assets/bible/web-2026-09-28.db'), {
     readOnly: true,

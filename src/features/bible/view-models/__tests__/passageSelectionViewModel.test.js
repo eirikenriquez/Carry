@@ -24,12 +24,18 @@ function passage(reference = 'James 1:1') {
   return { reference, verses: [verse(1, 1)] };
 }
 
+/**
+ * Yield to pending promise callbacks before checking hook state.
+ */
 async function flushMicrotasks() {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 }
 
+/**
+ * Mount a hook probe and flush its initial asynchronous updates inside act.
+ */
 async function mount(Probe) {
   await act(async () => {
     renderer = create(React.createElement(Probe));

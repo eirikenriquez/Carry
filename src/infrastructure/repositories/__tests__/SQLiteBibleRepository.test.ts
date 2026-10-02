@@ -16,6 +16,9 @@ const endVerse = {
   verseOrder: 5001,
 };
 
+/**
+ * Supply controlled SQLite responses for reader failure tests.
+ */
 function makeDatabase() {
   const getAllAsync = jest.fn().mockResolvedValue([]);
   const getFirstAsync = jest.fn().mockResolvedValue(null);

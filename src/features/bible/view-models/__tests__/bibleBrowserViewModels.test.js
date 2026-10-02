@@ -11,12 +11,18 @@ const { act } = React;
 
 let renderer;
 
+/**
+ * Yield to pending promise callbacks before checking hook state.
+ */
 async function flushMicrotasks() {
   await Promise.resolve();
   await Promise.resolve();
   await Promise.resolve();
 }
 
+/**
+ * Mount a hook probe and flush its initial asynchronous updates inside act.
+ */
 async function mount(Probe) {
   await act(async () => {
     renderer = create(React.createElement(Probe));

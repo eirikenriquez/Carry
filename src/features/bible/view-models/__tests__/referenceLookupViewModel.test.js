@@ -13,6 +13,9 @@ const target = {
 };
 let renderer;
 
+/**
+ * Mount lookup logic and return a getter for its latest rendered state.
+ */
 async function mount(repository) {
   let viewModel;
   function Probe() {
