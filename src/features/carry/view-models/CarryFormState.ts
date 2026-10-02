@@ -23,6 +23,7 @@ export interface CarryFormValidationIssue {
   readonly code: CarryFormIssueCode;
 }
 
+/** Give both forms the same short feedback for each validation code. */
 export function validationMessage(issue: CarryFormValidationIssue): string {
   switch (issue.code) {
     case 'invalid_date':
