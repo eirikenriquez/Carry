@@ -24,6 +24,11 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   by stronger real-SQLite assertions, leaving 37 before later increments.
 - Final lookup fix passed all automated checks above. Its two new dependency-change
   cases use controlled promises; the native audit below predates this final fix.
+- Personal storage foundation: 55 Jest tests/10 suites remain unchanged; three
+  Node SQLite schema checks pass for fields, category links/uniqueness, reflection
+  ownership, ratings, and deletion cleanup. Format/lint/typecheck, Bible integration,
+  four Python tests, and scoped whitespace checks pass. In-memory schema tests only;
+  no Carry adapter, installed personal database, or restart persistence checked yet.
 
 ## Offline Android acceptance
 

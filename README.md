@@ -44,11 +44,13 @@ npm run lint
 npm run typecheck
 npm test -- --runInBand
 npm run test:bible
+npm run test:carry
 python scripts/test_bible_data.py
 ```
 
-`test:bible` checks the repository against real SQLite; Node's experimental
-SQLite warning is expected. Python checks the data against the publisher export.
+`test:bible` checks the Bible repository; `test:carry` checks the personal schema
+against real SQLite. Node's experimental SQLite warning is expected.
+Python checks the data against the publisher export.
 
 ## Documentation
 

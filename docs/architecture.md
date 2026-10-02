@@ -9,7 +9,7 @@ Views render state; ViewModels handle interaction; infrastructure handles SQLite
 - `src/features/bible/views`: screens and reusable Bible components.
 - `src/features/bible/view-models`: loading, selection, lookup, and retry state.
 - `src/domain`: framework-independent entities, validation, and derived status.
-- `src/application/ports`: the `BibleRepository` contract.
+- `src/application/ports`: Bible and Carry repository contracts.
 - `src/application/services`: reference parsing and validation.
 - `src/infrastructure/repositories`: bundled-database loading and SQLite reads.
 
@@ -66,9 +66,18 @@ SHA-256 checksums:
 - XML: `ac0fe5d87ef7c192afa199eaf05a17e172c199e9b9776624daf89614224864f3`
 - Database: `55d3853b9a27cee8541548baa0c0f731461a036d6e5ae998b60470fcb21fd311`
 
+## Personal storage foundation
+
+- `CarryRepository` defines category reuse, Carry save/read/delete, and latest-reflection retrieval.
+- The initial version-1 schema has categories, Carries, and reflections. Normalized
+  category names are unique; each Carry owns at most one reflection, deleted with it.
+- Dates use UTC ISO text; reminders are optional, and status is not stored.
+  Category matching and date conversion belong in the forthcoming SQLite adapter.
+- Schema checks use isolated Node SQLite databases; the app does not open this database yet.
+
 ## Planned, not implemented
 
 - Carry creation UI, persistence, and lifecycle orchestration.
-- Carry repository and notification interfaces/adapters, including Expo reminders.
+- Personal database opening, SQLite Carry adapter, and notification interfaces/adapters.
 - Validate passage keys through the Bible repository before saving a Carry;
   personal data remains local. Add folders only when their code is needed.
