@@ -35,6 +35,13 @@ describe('getCarryStatus', () => {
     },
   );
 
+  it.each([
+    ['current', makeCarry(), new Date('invalid')],
+    ['scheduled', makeCarry({ scheduledAt: new Date('invalid') }), scheduledAt],
+  ] as const)('rejects an invalid %s time', (_field, carry, now) => {
+    expect(() => getCarryStatus(carry, now)).toThrow(RangeError);
+  });
+
   it('returns completed when a reflection exists', () => {
     const carry = makeCarry({
       reflection: {
@@ -49,5 +56,9 @@ describe('getCarryStatus', () => {
     const status = getCarryStatus(carry, new Date('2026-09-25T02:00:00.000Z'));
 
     expect(status).toBe('completed');
+    expect(() => getCarryStatus(carry, new Date('invalid'))).toThrow(RangeError);
+    expect(() =>
+      getCarryStatus({ ...carry, scheduledAt: new Date('invalid') }, scheduledAt),
+    ).toThrow(RangeError);
   });
 });

@@ -32,6 +32,9 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
+/**
+ * Validate a raw database row before returning book metadata.
+ */
 function parseBook(row: unknown): BibleBook | null {
   if (
     !isRecord(row) ||
@@ -51,6 +54,9 @@ function parseBook(row: unknown): BibleBook | null {
   };
 }
 
+/**
+ * Validate a verse row and check that its key matches the stored fields.
+ */
 function parseVerseRow(row: unknown): VerseRow | null {
   if (
     !isRecord(row) ||
@@ -84,6 +90,9 @@ function parseVerseRow(row: unknown): VerseRow | null {
   };
 }
 
+/**
+ * Validate an endpoint row, including the book name used in display references.
+ */
 function parseEndpoint(row: unknown): PassageEndpoint | null {
   const verse = parseVerseRow(row);
   if (!verse || !isRecord(row) || !isNonEmptyString(row.bookName)) {
@@ -93,6 +102,9 @@ function parseEndpoint(row: unknown): PassageEndpoint | null {
   return { ...verse, bookName: row.bookName };
 }
 
+/**
+ * Validate ordered verse rows and reject gaps in canonical order.
+ */
 function parseVerseRows(rows: unknown): VerseRow[] | null {
   if (!Array.isArray(rows) || rows.length === 0) {
     return null;
@@ -110,10 +122,16 @@ function parseVerseRows(rows: unknown): VerseRow[] | null {
   return verses;
 }
 
+/**
+ * Remove database-only ordering metadata from verses returned to callers.
+ */
 function toBibleVerses(rows: readonly VerseRow[]): BibleVerse[] {
   return rows.map(({ verseOrder: _verseOrder, ...verse }) => verse);
 }
 
+/**
+ * Format a passage reference across verse, chapter, or book boundaries.
+ */
 function buildReference(start: PassageEndpoint, end: PassageEndpoint): string {
   const startReference = `${start.bookName} ${start.chapter}:${start.verse}`;
   if (start.key === end.key) {
@@ -142,6 +160,9 @@ function invalidSelection<T>(): BibleRepositoryResult<T> {
 export class SQLiteBibleRepository implements BibleRepository {
   constructor(private readonly database: BibleDatabase) {}
 
+  /**
+   * Read and validate one passage endpoint using its canonical key.
+   */
   private async getEndpoint(key: string): Promise<BibleRepositoryResult<PassageEndpoint>> {
     const row = await this.database.getFirstAsync<unknown>(
       `SELECT
@@ -165,6 +186,9 @@ export class SQLiteBibleRepository implements BibleRepository {
     return endpoint ? { ok: true, value: endpoint } : unavailable();
   }
 
+  /**
+   * Read the catalogue in canonical order, rejecting invalid or duplicate books.
+   */
   async getBooks(): Promise<BibleRepositoryResult<readonly BibleBook[]>> {
     try {
       const rows = await this.database.getAllAsync<unknown>(
@@ -200,6 +224,9 @@ export class SQLiteBibleRepository implements BibleRepository {
     }
   }
 
+  /**
+   * Validate the requested chapter and read its verses in canonical order.
+   */
   async getChapter(
     bookId: string,
     chapter: number,
@@ -255,6 +282,9 @@ export class SQLiteBibleRepository implements BibleRepository {
     }
   }
 
+  /**
+   * Resolve an inclusive passage after validating its endpoints and completeness.
+   */
   async getPassage(selection: PassageSelection): Promise<BibleRepositoryResult<BiblePassage>> {
     try {
       if (
@@ -297,6 +327,7 @@ export class SQLiteBibleRepository implements BibleRepository {
         end.verseOrder,
       );
       const parsedVerses = parseVerseRows(rows);
+      // Valid endpoints alone cannot detect missing rows inside the range.
       if (!parsedVerses || parsedVerses.length !== end.verseOrder - start.verseOrder + 1) {
         return unavailable();
       }

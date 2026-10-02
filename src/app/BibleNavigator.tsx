@@ -41,6 +41,9 @@ interface ChapterReadingProps {
   readonly initialSelection?: PassageSelection;
 }
 
+/**
+ * Connect chapter loading and passage selection to the reading screen.
+ */
 function ChapterReading({ repository, bookId, chapter, initialSelection }: ChapterReadingProps) {
   const { state, retry } = useBibleChapterViewModel(repository, bookId, chapter);
   const passage = usePassageSelectionViewModel(repository, bookId, chapter, initialSelection);
@@ -62,6 +65,9 @@ interface BookBrowsingProps extends BibleNavigatorProps {
   readonly onOpenReference: (target: ReferenceTarget) => void;
 }
 
+/**
+ * Connect reference lookup and book browsing to navigation callbacks.
+ */
 function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: BookBrowsingProps) {
   const lookup = useReferenceLookupViewModel(repository, books);
 
@@ -76,8 +82,7 @@ function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: Book
     <BooksScreen
       books={books}
       onSelectBook={(book) => {
-        // Browsing away cancels any lookup still waiting for the repository.
-        lookup.changeQuery(lookup.query);
+        lookup.cancelLookup();
         Keyboard.dismiss();
         onSelectBook(book);
       }}
@@ -94,6 +99,9 @@ function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: Book
   );
 }
 
+/**
+ * Define the Bible screen stack and pass repository dependencies to each screen.
+ */
 export function BibleNavigator({ repository, books }: BibleNavigatorProps) {
   return (
     <NavigationContainer theme={theme}>
@@ -135,6 +143,7 @@ export function BibleNavigator({ repository, books }: BibleNavigatorProps) {
           })}
         >
           {({ route }: NativeStackScreenProps<BibleRoutes, 'Verses'>) => (
+            // Remount local reading state when the book or chapter changes.
             <ChapterReading
               key={`${route.params.bookId}.${route.params.chapter}`}
               repository={repository}

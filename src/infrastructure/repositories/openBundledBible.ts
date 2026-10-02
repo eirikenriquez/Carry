@@ -10,6 +10,9 @@ import { SQLiteBibleRepository } from './SQLiteBibleRepository';
 
 const databaseName = 'web-2026-09-28.db';
 
+/**
+ * Enable read-only queries and confirm the expected bundled dataset version.
+ */
 async function validateDatabase(database: SQLiteDatabase): Promise<void> {
   await database.execAsync('PRAGMA query_only = ON');
   const metadata = await database.getFirstAsync<{ value: string }>(
@@ -21,6 +24,9 @@ async function validateDatabase(database: SQLiteDatabase): Promise<void> {
   }
 }
 
+/**
+ * Install the bundled Bible if absent, then open a validated read-only repository.
+ */
 export async function openBundledBible(): Promise<BibleRepositoryResult<BibleRepository>> {
   let database: SQLiteDatabase | undefined;
   let temporary: File | undefined;

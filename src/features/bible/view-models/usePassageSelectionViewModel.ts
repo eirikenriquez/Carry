@@ -14,11 +14,16 @@ type PassageSelectionViewModel = {
   readonly retryPreview: () => void;
 };
 
-type SelectionRecord = {
-  readonly selection: PassageSelection;
-  readonly anchorVerseNumber: number;
-  readonly completed: boolean;
-};
+type SelectionRecord =
+  | {
+      readonly phase: 'awaitingEnd';
+      readonly selection: PassageSelection;
+      readonly anchorVerseNumber: number;
+    }
+  | {
+      readonly phase: 'complete';
+      readonly selection: PassageSelection;
+    };
 
 type SelectionState = {
   readonly repository: BibleRepository;
@@ -35,6 +40,9 @@ type PreviewRecord = {
 
 const loadingState: BibleLoadState<BiblePassage> = { status: 'loading' };
 
+/**
+ * Manage same-chapter tap selection and its resolved passage preview.
+ */
 export function usePassageSelectionViewModel(
   repository: BibleRepository,
   bookId: string,
@@ -45,9 +53,8 @@ export function usePassageSelectionViewModel(
     repository,
     bookId,
     chapter,
-    record: initialSelection
-      ? { selection: initialSelection, anchorVerseNumber: 0, completed: true }
-      : null,
+    // A lookup selection is already complete; the next tap starts over.
+    record: initialSelection ? { selection: initialSelection, phase: 'complete' } : null,
   }));
   const [previewRecord, setPreviewRecord] = useState<PreviewRecord | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -64,13 +71,17 @@ export function usePassageSelectionViewModel(
 
   const activeSelectionRecord = sameScope ? selectionState.record : null;
   const selection = activeSelectionRecord?.selection ?? null;
-  const preview =
-    activeSelectionRecord === null
-      ? null
-      : previewRecord?.selectionRecord === activeSelectionRecord &&
-          previewRecord.attempt === attempt
-        ? previewRecord.state
-        : loadingState;
+  // Show results only for the current selection and retry attempt.
+  let preview: BibleLoadState<BiblePassage> | null = null;
+  if (activeSelectionRecord !== null) {
+    preview = loadingState;
+    if (
+      previewRecord?.selectionRecord === activeSelectionRecord &&
+      previewRecord.attempt === attempt
+    ) {
+      preview = previewRecord.state;
+    }
+  }
 
   useEffect(() => {
     if (activeSelectionRecord === null) return undefined;
@@ -107,37 +118,35 @@ export function usePassageSelectionViewModel(
     };
   }, [activeSelectionRecord, attempt, repository]);
 
+  /**
+   * Start a selection or complete its range using numeric verse order.
+   */
   const selectVerse = useCallback(
     (verse: BibleVerse): void => {
       if (verse.bookId !== bookId || verse.chapter !== chapter) return;
 
-      let nextSelection: PassageSelection;
-      let anchorVerseNumber: number;
-      let completed: boolean;
+      let record: SelectionRecord;
 
-      if (activeSelectionRecord === null || activeSelectionRecord.completed) {
-        nextSelection = { startVerseKey: verse.key, endVerseKey: verse.key };
-        anchorVerseNumber = verse.verse;
-        completed = false;
+      if (activeSelectionRecord === null || activeSelectionRecord.phase === 'complete') {
+        record = {
+          phase: 'awaitingEnd',
+          selection: { startVerseKey: verse.key, endVerseKey: verse.key },
+          anchorVerseNumber: verse.verse,
+        };
       } else {
         const anchorVerseKey = activeSelectionRecord.selection.startVerseKey;
-        nextSelection =
+        const selection =
           verse.verse < activeSelectionRecord.anchorVerseNumber
             ? { startVerseKey: verse.key, endVerseKey: anchorVerseKey }
             : { startVerseKey: anchorVerseKey, endVerseKey: verse.key };
-        anchorVerseNumber = activeSelectionRecord.anchorVerseNumber;
-        completed = true;
+        record = { phase: 'complete', selection };
       }
 
       setSelectionState({
         repository,
         bookId,
         chapter,
-        record: {
-          selection: nextSelection,
-          anchorVerseNumber,
-          completed,
-        },
+        record,
       });
     },
     [activeSelectionRecord, bookId, chapter, repository],

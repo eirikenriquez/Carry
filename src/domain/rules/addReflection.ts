@@ -31,6 +31,9 @@ function toAlignmentRating(value: number): AlignmentRating | undefined {
   return undefined;
 }
 
+/**
+ * Add one reflection at or after the scheduled time without modifying the original Carry.
+ */
 export function addReflection(
   carry: Carry,
   input: AddReflectionInput,

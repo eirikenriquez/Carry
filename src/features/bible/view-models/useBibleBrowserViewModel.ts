@@ -19,7 +19,9 @@ type BibleBrowserViewModel = {
   readonly retry: () => void;
 };
 
-// CarryApp supplies a stable loader; retries reuse the repository it opened.
+/**
+ * Load the book catalogue and reuse the opened repository when retrying.
+ */
 export function useBibleBrowserViewModel(loadBible: LoadBible): BibleBrowserViewModel {
   const [state, setState] = useState<BibleLoadState<BibleBrowserData>>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);

@@ -1,91 +1,74 @@
-# Carry source architecture
+# Architecture
 
-This project follows the lightweight MVVM, Repository, and Service structure planned in Milestone 1. The dependency direction is:
+Carry uses lightweight MVVM, Repository, and Service boundaries from Milestone 1.
+Views render state; ViewModels handle interaction; infrastructure handles SQLite.
 
-```text
-React Native View
-  -> ViewModel
-    -> application ports and services
-      -> repository and notification interfaces
-        <- SQLite and Expo adapters
-```
+## Current structure
 
-## Planned responsibilities
+- `src/app`: wires dependencies and React Navigation.
+- `src/features/bible/views`: screens and reusable Bible components.
+- `src/features/bible/view-models`: loading, selection, lookup, and retry state.
+- `src/domain`: framework-independent entities, validation, and derived status.
+- `src/application/ports`: the `BibleRepository` contract.
+- `src/application/services`: reference parsing and validation.
+- `src/infrastructure/repositories`: bundled-database loading and SQLite reads.
 
-- `src/app`: the composition root. It creates concrete adapters and passes dependencies into services, ViewModels, and Views.
-- `src/features/<feature>/views`: React Native screens and components. Views render state and forward user actions.
-- `src/features/<feature>/view-models`: presentation state and commands for a feature.
-- `src/domain/entities`: framework-independent entities such as Carry, Category, PassageSelection, Reflection, and CarryStatus.
-- `src/application/ports`: interfaces including CarryOperations, CarryRepository, BibleRepository, and NotificationService.
-- `src/application/services`: orchestration such as CarryLifecycleService.
-- `src/infrastructure/repositories`: SQLite implementations for personal carry data and the bundled World English Bible data.
-- `src/infrastructure/notifications`: the Expo Notifications adapter for Android.
+Views and ViewModels depend on the repository contract, not SQLite directly.
+The composition layer supplies the concrete implementation.
 
-Only folders containing real code are created during setup. The remaining folders will be introduced with their first feature instead of being added as empty placeholders.
+## Domain decisions
 
-## Implemented domain model
+- Carries hold a category ID, situation, schedule, intention, passage keys,
+  optional reminder ID, and optional embedded reflection.
+- Categories are matched ignoring case and repeated whitespace; no duplicate
+  normalized name is stored.
+- Reflections use a whole-number alignment rating from 1 to 5.
+- Carry status is derived from schedule and reflection, not persisted.
+- Form validation returns issues; invalid current times or stored schedules throw in lifecycle rules.
 
-- `Carry` stores stable relationships, user-entered intention data, scheduled and creation times, and optional reminder and reflection identifiers.
-- `Category` has a stable identifier and display name. Category matching trims whitespace, collapses repeated spaces, and ignores case without storing a second public name.
-- `PassageSelection` stores canonical start and end verse keys. `BibleRepository` confirms that both keys exist and form an ordered range; the later Carry save workflow must call it before persistence.
-- `Reflection` belongs to one Carry and uses a whole-number alignment rating from 1 to 5.
-- `CarryStatus` is derived from scheduled time and reflection existence instead of being persisted.
+## Bible flows
 
-User-correctable domain validation returns explicit issues. Programming errors, such as an invalid injected current time, throw an error rather than being presented as form feedback.
+- Browsing: Books -> Chapters -> Verses; navigation passes IDs, not Scripture text.
+- Selection: first tap selects one verse, second completes an ordered same-chapter
+  range, third starts again. Clear and chapter changes reset selection.
+- Lookup: full book names plus verse/range; the repository validates the keys.
+  Typed backwards ranges are rejected. Lookup opens a fresh reading screen;
+  Back returns to Books and the next verse tap starts a new selection.
+- Preview resolves through `BibleRepository.getPassage`. Selections store keys only.
+- Loading/error/ready states expose Retry. Cleanup and request guards ignore stale results.
 
-## Boundary rules
+## Storage and source data
 
-- Views and ViewModels do not access SQLite or Expo Notifications directly.
-- CarryLifecycleService coordinates creating, editing, deleting, completing, and scheduling reminders for carries.
-- Repository and notification interfaces point inward; SQLite and Expo-specific code implement those interfaces at the infrastructure edge.
-- Personal carry data remains local. No remote repository is planned for it.
+- Bible reads use parameterized SQL and numeric canonical order, not string sorting.
+- `openBundledBible` stages the first copy, validates its dataset version, then
+  promotes it. Failed/stale temporary copies are cleaned up for retry.
+- The versioned Bible is opened with `query_only`; personal data will use a
+  separate writable database. Existing permanent Bible files are not auto-repaired.
+- Keys follow publisher codes, e.g. `JAS.1.19`. Dataset updates need new assets,
+  checksums, and compatibility review before migrating saved keys.
+- Source: [eBible.org Protestant WEB](https://ebible.org/engwebp/) (`engwebp`,
+  American spelling), [VPL archive](https://ebible.org/Scriptures/engwebp_vpl.zip).
+  Retrieved 1 October 2026; XML dated 28 September 2026. The snapshot identifies
+  the edition, not the rights page's older “2020 stable text” label.
+- [Rights](https://ebible.org/engwebp/copyright.htm): public-domain text;
+  World English Bible is a trademark. Changed text must not be labelled WEB.
+  The retained archive includes `engwebp_about.htm`.
+- Import: `python scripts/build_bible.py` verifies the pinned archive and creates
+  `assets/bible/web-2026-09-28.db`; no runtime Scripture download.
+- UTF-8 export whitespace is trimmed; wording/punctuation stay unchanged.
+  Notes, formatting, introductions, and headings are absent from the VPL export.
+- Dataset: 66 books, 1,189 chapters, 31,103 entries. Five empty entries remain empty:
+  Luke 17:36, Acts 8:37, Acts 15:34, Acts 24:7, Romans 16:25.
 
-`App.tsx` delegates to the composition root in `src/app`. The framework-independent
-types, factories, rules, and unit tests under `src/domain` implement the first
-application model. Bible browsing views live under `src/features/bible/views`.
+SHA-256 checksums:
 
-## Implemented Scripture boundary
+- Archive: `7d2e0b91ba43e2500fcab9c64d9db1962750deeff4e1186aed4c30220f5689be`
+- XML: `ac0fe5d87ef7c192afa199eaf05a17e172c199e9b9776624daf89614224864f3`
+- Database: `55d3853b9a27cee8541548baa0c0f731461a036d6e5ae998b60470fcb21fd311`
 
-`BibleRepository` exposes books, chapter verses, and resolved passages. Its
-results distinguish invalid selections from unavailable local data.
-`SQLiteBibleRepository` implements the interface using parameterized reads and
-canonical numeric ordering, rather than sorting verse-key strings.
+## Planned, not implemented
 
-`openBundledBible` copies the packaged database into the app's document SQLite
-directory only when the versioned file is absent. It checks the dataset version
-and enables SQLite's connection-level `query_only` setting. This database is
-separate from future writable Carry storage. Changing the dataset requires an
-explicit key-compatibility and migration review.
-
-`CarryApp` supplies the loader to `useBibleBrowserViewModel`. Once books are loaded,
-it supplies the repository and books to `BibleNavigator`. React Navigation's
-native stack manages Books -> Chapters -> Verses; route parameters contain book
-IDs and chapter numbers, not duplicated Scripture text.
-
-`useBibleChapterViewModel` reads the selected chapter through the repository.
-ViewModels map results into loading, error, or ready state and expose Retry.
-Effect cleanup prevents late requests from replacing a newer chapter. Views
-receive data and callbacks without importing navigation, SQLite, or Expo storage.
-
-`usePassageSelectionViewModel` owns the screen-local start/end keys and preview
-state. It orders endpoints numerically within the current chapter and calls
-`BibleRepository.getPassage` rather than duplicating passage resolution in Views.
-New selections, Clear and chapter changes invalidate older preview requests.
-The reading component is keyed by book/chapter so changing scope remounts local
-selection state. `PassagePreview` displays resolved text in a bounded scroll area.
-
-`resolveBibleReference` matches full book names from the loaded metadata, parses
-single verses or same-chapter ranges, and validates the canonical keys through
-`BibleRepository.getPassage`. It rejects invalid or descending typed ranges and
-returns a keys-only navigation target. It does not perform keyword search.
-
-`useReferenceLookupViewModel` owns input, loading and feedback. Input changes,
-unmounting or choosing browsing invalidate pending results; duplicate submits
-are ignored. The composition layer opens a fresh reading screen with a validated
-initial selection. This selection is complete, so the next tap starts over.
-The preview reuses the existing passage resolver; Scripture is not passed as
-navigation state. Direct lookup returns to Books on Back; browsing retains its
-Books -> Chapters -> Verses flow.
-
-Carry saving remains a future increment; this is not yet a complete creation
-flow. No selected Scripture text is persisted.
+- Carry creation UI, persistence, and lifecycle orchestration.
+- Carry repository and notification interfaces/adapters, including Expo reminders.
+- Validate passage keys through the Bible repository before saving a Carry;
+  personal data remains local. Add folders only when their code is needed.

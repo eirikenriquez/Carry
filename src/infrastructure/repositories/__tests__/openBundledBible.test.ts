@@ -4,6 +4,7 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
 import { openBundledBible } from '../openBundledBible';
 
+// Track file operations in memory so loader recovery does not need device storage.
 const mockFiles = new Set<string>();
 const destinationUri = 'file:///documents/SQLite/web-2026-09-28.db';
 const temporaryUri = `${destinationUri}.tmp`;

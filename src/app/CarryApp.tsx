@@ -6,7 +6,9 @@ import { BibleLoadFeedback } from '../features/bible/views/BibleLoadFeedback';
 import { openBundledBible } from '../infrastructure/repositories/openBundledBible';
 import { BibleNavigator } from './BibleNavigator';
 
-// Composition root: future repositories, services, and ViewModels are wired here.
+/**
+ * Wire the Bible loader into browsing and show startup feedback until it is ready.
+ */
 export function CarryApp() {
   const { state, retry } = useBibleBrowserViewModel(openBundledBible);
 

@@ -10,6 +10,10 @@ export interface ReferenceTarget {
 
 type ReferenceErrorCode = 'invalid_format' | 'unknown_book' | 'invalid_selection' | 'unavailable';
 
+type ReferenceLookupResult =
+  | { readonly ok: true; readonly value: ReferenceTarget }
+  | { readonly ok: false; readonly code: ReferenceErrorCode };
+
 const REFERENCE_PATTERN = /^(.*?)\s+(\d+)\s*:\s*(\d+)(?:\s*[-–]\s*(\d+))?$/u;
 
 function normalizeBookName(name: string): string {
@@ -20,21 +24,18 @@ function isPositiveSafeInteger(value: number): boolean {
   return Number.isSafeInteger(value) && value > 0;
 }
 
-function failure(code: ReferenceErrorCode): {
-  readonly ok: false;
-  readonly code: ReferenceErrorCode;
-} {
+function failure(code: ReferenceErrorCode): ReferenceLookupResult {
   return { ok: false, code };
 }
 
+/**
+ * Parse a full-name reference and validate its verse keys through the repository.
+ */
 export async function resolveBibleReference(
   input: string,
   books: readonly BibleBook[],
   repository: BibleRepository,
-): Promise<
-  | { readonly ok: true; readonly value: ReferenceTarget }
-  | { readonly ok: false; readonly code: ReferenceErrorCode }
-> {
+): Promise<ReferenceLookupResult> {
   const match = REFERENCE_PATTERN.exec(input.trim());
   if (!match) return failure('invalid_format');
 
@@ -75,6 +76,7 @@ export async function resolveBibleReference(
   };
 
   try {
+    // Numeric bounds alone cannot confirm that a verse exists in this edition.
     const passage = await repository.getPassage(selection);
     if (passage.ok) {
       return { ok: true, value: { bookId: book.id, chapter, selection } };
