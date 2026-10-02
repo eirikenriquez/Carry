@@ -20,6 +20,11 @@ export interface CarryRepository {
   getOrCreateCategory(category: Category): Promise<CarryRepositoryResult<Category>>;
 
   /**
+   * Create a reflection-free, reminder-free Carry and its category atomically.
+   */
+  create(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry>>;
+
+  /**
    * Save a Carry and any supplied reflection atomically; omission preserves an existing reflection.
    */
   save(carry: Carry): Promise<CarryRepositoryResult<Carry>>;

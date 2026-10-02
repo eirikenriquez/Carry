@@ -159,6 +159,94 @@ test('reuses normalized categories without changing their identity or display sp
   });
 });
 
+test('creates Carries with new or normalized-reused categories', async (t) => {
+  const { repository } = createRepository(t);
+  const first = carryFixture();
+  assert.deepEqual(await repository.create({ id: 'work', name: '  Work   Stress ' }, first), {
+    ok: true,
+    value: first,
+  });
+
+  const second = { ...carryFixture('carry-2'), categoryId: 'another-work-id' };
+  assert.deepEqual(
+    await repository.create({ id: 'another-work-id', name: 'work stress' }, second),
+    { ok: true, value: { ...second, categoryId: 'work' } },
+  );
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'work', name: 'Work Stress' }],
+  });
+});
+
+test('rolls back failed creation, retries, and rejects duplicate Carry IDs', async (t) => {
+  const { repository, database } = createRepository(t);
+  const carry = { ...carryFixture('carry-retry'), categoryId: 'family' };
+  database.exec(`CREATE TRIGGER fail_create BEFORE INSERT ON carries
+    WHEN NEW.id = 'carry-retry'
+    BEGIN SELECT RAISE(ABORT, 'Simulated create failure'); END;`);
+  assert.deepEqual(await repository.create({ id: 'family', name: 'Family' }, carry), {
+    ok: false,
+    code: 'unavailable',
+  });
+  assert.deepEqual(await repository.getCategories(), { ok: true, value: [] });
+  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
+
+  database.exec('DROP TRIGGER fail_create');
+  assert.deepEqual(await repository.create({ id: 'family', name: 'Family' }, carry), {
+    ok: true,
+    value: carry,
+  });
+  const conflicting = {
+    ...carry,
+    categoryId: 'new-category',
+    situation: 'A replacement record',
+  };
+  assert.deepEqual(
+    await repository.create({ id: 'new-category', name: 'New Category' }, conflicting),
+    { ok: false, code: 'invalid_record' },
+  );
+  assert.deepEqual(await repository.findById(carry.id), { ok: true, value: carry });
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'family', name: 'Family' }],
+  });
+});
+
+test('rejects invalid new Carry drafts without writing categories or Carries', async (t) => {
+  const { repository } = createRepository(t);
+  const valid = carryFixture();
+  for (const [category, candidate] of [
+    [
+      { id: 'blank-category', name: ' ' },
+      { ...valid, categoryId: 'blank-category' },
+    ],
+    [{ id: 'other', name: 'Work' }, valid],
+    [
+      { id: 'work', name: 'Work' },
+      { ...valid, situation: ' ' },
+    ],
+    [
+      { id: 'work', name: 'Work' },
+      { ...valid, scheduledAt: new Date('invalid') },
+    ],
+    [
+      { id: 'work', name: 'Work' },
+      { ...valid, reflection: reflectionFixture() },
+    ],
+    [
+      { id: 'work', name: 'Work' },
+      { ...valid, reminderId: 'reminder-1' },
+    ],
+  ]) {
+    assert.deepEqual(await repository.create(category, candidate), {
+      ok: false,
+      code: 'invalid_record',
+    });
+  }
+  assert.deepEqual(await repository.getCategories(), { ok: true, value: [] });
+  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
+});
+
 test('reads Carries, restores optional fields, and orders the latest reflection deterministically', async (t) => {
   const { repository, database } = createRepository(t);
   assert.deepEqual(await repository.findById('missing'), { ok: true, value: null });
