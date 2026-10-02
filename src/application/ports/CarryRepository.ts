@@ -20,7 +20,7 @@ export interface CarryRepository {
   getOrCreateCategory(category: Category): Promise<CarryRepositoryResult<Category>>;
 
   /**
-   * Insert or update a Carry and its optional reflection in one transaction.
+   * Save a Carry and any supplied reflection atomically; omission preserves an existing reflection.
    */
   save(carry: Carry): Promise<CarryRepositoryResult<Carry>>;
 

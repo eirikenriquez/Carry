@@ -37,6 +37,11 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   stable category identity/spelling, optional reminder/reflection reads, date conversion,
   deterministic latest-reflection ordering, missing records, and invalid stored dates.
   TypeScript/lint pass; repository operations reopen an isolated desktop database file.
+- Personal writes: 12 grouped Node SQLite checks pass for full-field round trips,
+  updates, nullable reminder IDs, reflection preservation/ownership, deletion cascade,
+  and save/delete rollback with retry. SQL triggers simulate write failures, not disk
+  exhaustion. Format/lint/typecheck, 55 Jest tests/10 suites, Bible integration, and
+  four Python tests pass. Android personal-data restart checks remain outstanding.
 
 ## Offline Android acceptance
 

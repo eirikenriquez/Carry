@@ -43,7 +43,9 @@ const carryQuery = `SELECT c.id, c.category_id AS categoryId, c.situation,
  */
 function readDate(value: string): Date {
   const date = new Date(value);
-  if (!Number.isFinite(date.getTime())) throw new Error('Invalid stored personal date.');
+  if (!Number.isFinite(date.getTime()) || date.toISOString() !== value) {
+    throw new Error('Invalid stored personal date.');
+  }
   return date;
 }
 
@@ -90,10 +92,7 @@ function readCarry(row: CarryRow): Carry {
   };
 }
 
-export class SQLiteCarryRepository implements Pick<
-  CarryRepository,
-  'getCategories' | 'getOrCreateCategory' | 'findById' | 'findAll' | 'latestReflection'
-> {
+export class SQLiteCarryRepository implements CarryRepository {
   /**
    * Give each operation its own initialized connection and always close it afterward.
    */
@@ -118,6 +117,24 @@ export class SQLiteCarryRepository implements Pick<
       );
       return { ok: true, value: rows.map((row) => ({ id: row.id, name: row.name })) };
     });
+  }
+
+  /**
+   * Commit the whole write or roll it back on validation or SQLite failure.
+   */
+  private async withTransaction<T>(
+    database: SQLiteDatabase,
+    operation: () => Promise<CarryRepositoryResult<T>>,
+  ): Promise<CarryRepositoryResult<T>> {
+    await database.execAsync('BEGIN IMMEDIATE');
+    try {
+      const result = await operation();
+      await database.execAsync(result.ok ? 'COMMIT' : 'ROLLBACK');
+      return result;
+    } catch (error) {
+      await database.execAsync('ROLLBACK').catch(() => undefined);
+      throw error;
+    }
   }
 
   /**
@@ -157,6 +174,104 @@ export class SQLiteCarryRepository implements Pick<
         `${carryQuery} ORDER BY c.scheduled_at, c.id`,
       );
       return { ok: true, value: rows.map(readCarry) };
+    });
+  }
+
+  /**
+   * Save a Carry and any supplied reflection atomically, preserving an omitted reflection.
+   */
+  async save(carry: Carry): Promise<CarryRepositoryResult<Carry>> {
+    const text = [
+      carry.id,
+      carry.categoryId,
+      carry.situation,
+      carry.ifThenIntention,
+      carry.passage.startVerseKey,
+      carry.passage.endVerseKey,
+    ];
+    const dates = [carry.scheduledAt, carry.createdAt];
+    const reflection = carry.reflection;
+    if (reflection) {
+      text.push(reflection.id, reflection.whatOccurred, reflection.insight);
+      dates.push(reflection.createdAt);
+    }
+    if (
+      text.some((value) => !value.trim()) ||
+      dates.some((value) => !Number.isFinite(value.getTime())) ||
+      (reflection &&
+        (!Number.isInteger(reflection.alignmentRating) ||
+          reflection.alignmentRating < 1 ||
+          reflection.alignmentRating > 5))
+    ) {
+      return { ok: false, code: 'invalid_record' };
+    }
+
+    return this.withDatabase((database) =>
+      this.withTransaction(database, async () => {
+        const category = await database.getFirstAsync<{ id: string }>(
+          'SELECT id FROM categories WHERE id = ?',
+          carry.categoryId,
+        );
+        if (!category) return { ok: false, code: 'invalid_record' };
+        if (reflection) {
+          const owner = await database.getFirstAsync<{ carryId: string }>(
+            'SELECT carry_id AS carryId FROM reflections WHERE id = ?',
+            reflection.id,
+          );
+          if (owner && owner.carryId !== carry.id) return { ok: false, code: 'invalid_record' };
+        }
+
+        await database.runAsync(
+          `INSERT INTO carries (id, category_id, situation,
+        scheduled_at, start_verse_key, end_verse_key, if_then_intention, reminder_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET category_id = excluded.category_id,
+        situation = excluded.situation, scheduled_at = excluded.scheduled_at,
+        start_verse_key = excluded.start_verse_key, end_verse_key = excluded.end_verse_key,
+        if_then_intention = excluded.if_then_intention, reminder_id = excluded.reminder_id,
+        created_at = excluded.created_at`,
+          carry.id,
+          carry.categoryId,
+          carry.situation,
+          carry.scheduledAt.toISOString(),
+          carry.passage.startVerseKey,
+          carry.passage.endVerseKey,
+          carry.ifThenIntention,
+          carry.reminderId ?? null,
+          carry.createdAt.toISOString(),
+        );
+        if (reflection) {
+          await database.runAsync(
+            `INSERT INTO reflections (id, carry_id, alignment_rating,
+          what_occurred, insight, created_at) VALUES (?, ?, ?, ?, ?, ?)
+          ON CONFLICT(carry_id) DO UPDATE SET id = excluded.id,
+          alignment_rating = excluded.alignment_rating, what_occurred = excluded.what_occurred,
+          insight = excluded.insight, created_at = excluded.created_at`,
+            reflection.id,
+            carry.id,
+            reflection.alignmentRating,
+            reflection.whatOccurred,
+            reflection.insight,
+            reflection.createdAt.toISOString(),
+          );
+        }
+        const row = await database.getFirstAsync<CarryRow>(
+          `${carryQuery} WHERE c.id = ?`,
+          carry.id,
+        );
+        if (!row) return { ok: false, code: 'unavailable' };
+        return { ok: true, value: readCarry(row) };
+      }),
+    );
+  }
+
+  /**
+   * Delete the Carry and its owned reflection; categories remain reusable.
+   */
+  async delete(id: string): Promise<CarryRepositoryResult<void>> {
+    return this.withDatabase(async (database) => {
+      await database.runAsync('DELETE FROM carries WHERE id = ?', id);
+      return { ok: true, value: undefined };
     });
   }
 

@@ -79,12 +79,15 @@ SHA-256 checksums:
 - Schema/opener checks use Node SQLite, including a temporary file reopened after
   closing. The opener is not wired into the app yet; callers must close its connection.
 - The adapter opens/closes a private connection per operation. Category reuse,
-  Carry reads, and latest-reflection lookup are implemented; save/delete are next.
+  Carry save/read/delete and latest-reflection lookup are implemented.
   Carry lists sort by schedule/ID; latest reflections sort by creation time/ID.
+- Saves transact the Carry and any supplied reflection together. Omitting a reflection
+  preserves an existing one; deleting a Carry cascades to it, retaining the category.
+  Parameterized writes return controlled failures and never schedule reminders.
 
 ## Planned, not implemented
 
 - Carry creation UI, persistence, and lifecycle orchestration.
-- Carry save/delete operations and notification interfaces/adapters.
+- Notification interfaces/adapters and native personal-storage acceptance checks.
 - Validate passage keys through the Bible repository before saving a Carry;
   personal data remains local. Add folders only when their code is needed.

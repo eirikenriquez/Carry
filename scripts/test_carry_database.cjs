@@ -101,6 +101,16 @@ function carryFixture(id = 'carry-1') {
   };
 }
 
+function reflectionFixture(id = 'reflection-2') {
+  return {
+    id,
+    alignmentRating: 4,
+    whatOccurred: 'I listened first.',
+    insight: 'Pausing helped.',
+    createdAt: new Date('2026-10-04T01:00:00.000Z'),
+  };
+}
+
 /**
  * Seed a stored record independently of the repository's read implementation.
  */
@@ -164,13 +174,7 @@ test('reads Carries, restores optional fields, and orders the latest reflection 
     scheduledAt: new Date('2026-10-03T20:00:00.000Z'),
   };
   insertCarry(database, second);
-  const reflection = {
-    id: 'reflection-2',
-    alignmentRating: 4,
-    whatOccurred: 'I listened first.',
-    insight: 'Pausing helped.',
-    createdAt: new Date('2026-10-04T01:00:00.000Z'),
-  };
+  const reflection = reflectionFixture();
   const insertReflection = database.prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)');
   insertReflection.run(
     'reflection-1',
@@ -240,6 +244,94 @@ test('initializes once and preserves stored data when the database file is reope
     ['carry.db', { useNewConnection: true }],
     ['carry.db', { useNewConnection: true }],
   ]);
+});
+
+test('saves, updates, and deletes complete Carries while preserving reusable categories', async (t) => {
+  const { repository, database } = createRepository(t);
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  await repository.getOrCreateCategory({ id: 'family', name: 'Family' });
+  const original = carryFixture();
+  assert.deepEqual(await repository.save(original), { ok: true, value: original });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
+  const edited = {
+    ...original,
+    categoryId: 'family',
+    situation: 'A family conversation',
+    scheduledAt: new Date('2026-10-04T01:00:00.000Z'),
+    passage: { startVerseKey: 'JHN.3.16', endVerseKey: 'JHN.3.16' },
+    ifThenIntention: 'If I get frustrated, then I will pause.',
+    reminderId: 'reminder-1',
+  };
+  assert.deepEqual(await repository.save(edited), { ok: true, value: edited });
+  assert.deepEqual(await repository.findById(edited.id), { ok: true, value: edited });
+  const reflected = { ...edited, reminderId: undefined, reflection: reflectionFixture() };
+  assert.deepEqual(await repository.save(reflected), { ok: true, value: reflected });
+  assert.deepEqual(await repository.findById(reflected.id), { ok: true, value: reflected });
+  assert.deepEqual(await repository.save({ ...reflected, reflection: undefined }), {
+    ok: true,
+    value: reflected,
+  });
+  assert.deepEqual(await repository.latestReflection('family'), {
+    ok: true,
+    value: reflected.reflection,
+  });
+  assert.deepEqual(await repository.delete(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await repository.delete(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
+  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
+  assert.equal(database.prepare('SELECT count(*) AS count FROM reflections').get().count, 0);
+  assert.equal((await repository.getCategories()).value.length, 2);
+  assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
+});
+
+test('rejects invalid records and prevents a reflection from moving between Carries', async (t) => {
+  const { repository } = createRepository(t);
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const original = carryFixture();
+  for (const candidate of [
+    { ...original, situation: ' ' },
+    { ...original, scheduledAt: new Date('invalid') },
+    { ...original, categoryId: 'missing' },
+    { ...original, reflection: { ...reflectionFixture(), alignmentRating: 2.5 } },
+  ]) {
+    assert.deepEqual(await repository.save(candidate), { ok: false, code: 'invalid_record' });
+  }
+  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
+  const reflected = { ...original, reflection: reflectionFixture() };
+  assert.deepEqual(await repository.save(reflected), { ok: true, value: reflected });
+  assert.deepEqual(await repository.save({ ...reflected, id: 'carry-2' }), {
+    ok: false,
+    code: 'invalid_record',
+  });
+  assert.deepEqual(await repository.findById(reflected.id), { ok: true, value: reflected });
+  assert.deepEqual(await repository.findById('carry-2'), { ok: true, value: null });
+});
+
+test('rolls back partial save/delete failures and succeeds after the failure is removed', async (t) => {
+  const { repository, database } = createRepository(t);
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const original = carryFixture();
+  await repository.save(original);
+  database.exec(`CREATE TRIGGER fail_reflection BEFORE INSERT ON reflections
+    BEGIN SELECT RAISE(ABORT, 'Simulated write failure'); END;`);
+  const changed = {
+    ...original,
+    situation: 'Changed',
+    reminderId: 'new-reminder',
+    reflection: reflectionFixture(),
+  };
+  assert.deepEqual(await repository.save(changed), { ok: false, code: 'unavailable' });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
+  assert.equal(database.prepare('SELECT count(*) AS count FROM reflections').get().count, 0);
+  database.exec('DROP TRIGGER fail_reflection');
+  assert.deepEqual(await repository.save(changed), { ok: true, value: changed });
+  database.exec(`CREATE TRIGGER fail_delete BEFORE DELETE ON reflections
+    BEGIN SELECT RAISE(ABORT, 'Simulated delete failure'); END;`);
+  assert.deepEqual(await repository.delete(original.id), { ok: false, code: 'unavailable' });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: changed });
+  database.exec('DROP TRIGGER fail_delete');
+  assert.deepEqual(await repository.delete(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
 });
 
 test('rejects unknown or damaged schemas without replacing existing data', async () => {
