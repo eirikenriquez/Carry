@@ -11,9 +11,11 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
   by book and chapter.
 - Select and preview a verse or same-chapter range.
 - Look up full-name references such as `John 3:16` or `James 1:19-20`.
+- Create a Carry with a category, situation, future schedule and if-then plan.
+- Reopen saved Carries offline, including after restarting the app.
 
-Carry saving is not available in the UI yet. Lookup excludes abbreviations, keyword
-search, and cross-chapter ranges.
+Reminders, editing, deletion and reflection UI are not implemented yet.
+Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements
 

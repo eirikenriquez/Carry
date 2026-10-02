@@ -8,9 +8,10 @@ Views render state; ViewModels handle interaction; infrastructure handles SQLite
 - `src/app`: wires dependencies and React Navigation.
 - `src/features/bible/views`: screens and reusable Bible components.
 - `src/features/bible/view-models`: loading, selection, lookup, and retry state.
+- `src/features/carry`: creation, list and detail views with their ViewModels.
 - `src/domain`: framework-independent entities, validation, and derived status.
 - `src/application/ports`: Bible and Carry repository contracts.
-- `src/application/services`: reference parsing and validation.
+- `src/application/services`: reference validation and Carry creation coordination.
 - `src/infrastructure/repositories`: database opening and SQLite repositories.
 
 Views and ViewModels depend on the repository contract, not SQLite directly.
@@ -36,6 +37,8 @@ The composition layer supplies the concrete implementation.
   Back returns to Books and the next verse tap starts a new selection.
 - Preview resolves through `BibleRepository.getPassage`. Selections store keys only.
 - Loading/error/ready states expose Retry. Cleanup and request guards ignore stale results.
+- Books cancels lookup on losing focus and checks focus again before navigating;
+  a late result cannot open Scripture over My Carries.
 
 ## Storage and source data
 
@@ -68,7 +71,7 @@ SHA-256 checksums:
 
 ## Personal storage
 
-- `CarryRepository` defines category reuse, Carry save/read/delete, and latest-reflection retrieval.
+- `CarryRepository` defines atomic creation, category reuse, save/read/delete and latest-reflection retrieval.
 - The initial version-1 schema has categories, Carries, and reflections. Normalized
   category names are unique; each Carry owns at most one reflection, deleted with it.
 - Dates use UTC ISO text; reminders are optional, and status is not stored.
@@ -76,8 +79,9 @@ SHA-256 checksums:
 - `openPersonalDatabase` opens a private connection, enables foreign keys before
   its transaction, and initializes only an empty version-0 database. Version 1
   is reused after column checks; unknown or damaged schemas fail without reset.
-- Schema/opener checks use Node SQLite, including a temporary file reopened after
-  closing. The opener is not wired into the app yet; callers must close its connection.
+- The app supplies `SQLiteCarryRepository` to Carry ViewModels. Each operation
+  opens the personal database and closes its private connection afterward.
+  Schema/opener checks also use Node SQLite, including file reopen.
 - The adapter opens/closes a private connection per operation. Category reuse,
   Carry save/read/delete and latest-reflection lookup are implemented.
   Carry lists sort by schedule/ID; latest reflections sort by creation time/ID.
@@ -85,9 +89,22 @@ SHA-256 checksums:
   preserves an existing one; deleting a Carry cascades to it, retaining the category.
   Parameterized writes return controlled failures and never schedule reminders.
 
+## Carry creation flow
+
+- Passage preview opens a draft. Change passage pushes the Bible picker above it;
+  only the selected keys change when returning, so other fields remain intact.
+- Native Android pickers combine local date/time into one Date, stored as UTC ISO.
+  The intention is one free-text field, with an if-then example.
+- `createCarryRecord` checks domain fields and resolves the passage before writing.
+  It rechecks the clock after that asynchronous read to reject an expired schedule.
+- `create` reuses/creates the category and inserts the Carry in one transaction.
+  It rejects duplicate Carry IDs; the separate `save` operation remains an upsert.
+- Per-draft UUIDs survive retries. An immediate save lock prevents double taps;
+  navigation is blocked during writing. Cancelling before Save writes nothing.
+- Successful Save replaces the draft with read-only detail. My Carries lists all
+  saved records for reopening; this is not the full grouped FR-06 history feature.
+
 ## Planned, not implemented
 
-- Carry creation UI and lifecycle orchestration; the storage backend is implemented.
-- Notification interfaces/adapters.
-- Validate passage keys through the Bible repository before saving a Carry;
-  personal data remains local. Add folders only when their code is needed.
+- Notifications, editing/deletion, reflection UI and full lifecycle orchestration.
+- Grouped history and automatic status refresh as time passes.

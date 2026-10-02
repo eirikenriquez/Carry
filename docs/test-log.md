@@ -1,6 +1,6 @@
 # Test log
 
-Historical checks from 2 October 2026 (New Zealand time), not a fresh test run.
+Recorded checkpoints from 2-3 October 2026 (New Zealand time).
 Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 
 ## Automated checkpoints
@@ -13,6 +13,8 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Reference lookup | 51 / 10 | Parsing, bounds, invalid references, retry, duplicate/stale requests |
 | Readability audit | 53 / 10 | Invalid dates, explicit cancellation, consistent fixtures, shared hook setup |
 | Final lookup fix | 55 / 10 | Dependency changes cancel pending requests, reset feedback, and allow retry |
+| Carry creation | 67 / 13 | Validation/clock recheck, draft preservation, save locking, list/detail loading and retry |
+| Creation review fix | 68 / 14 | Late lookup cannot navigate after Books loses focus; lookup works after returning |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -42,6 +44,13 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   and save/delete rollback with retry. SQL triggers simulate write failures, not disk
   exhaustion. Format/lint/typecheck, 55 Jest tests/10 suites, Bible integration, and
   four Python tests pass. Native restart verification followed; results are recorded below.
+- Carry creation: 15 grouped Node SQLite checks pass, adding atomic category/Carry
+  insertion, category reuse, duplicate-ID rejection and rollback without orphan categories.
+  Format/lint/typecheck, all 67 Jest tests, Bible integration and four Python tests pass.
+- Review fix (3 October): a controlled navigation regression failed before the fix
+  and passed afterward. It covers blur cancellation, refocus/retry and loss of focus
+  before blur cleanup. All 68 Jest tests/14 suites and existing integration checks pass;
+  the delayed-result race is a controlled test, not native fault injection.
 
 ## Offline Android acceptance
 
@@ -95,6 +104,32 @@ To repeat: temporarily call `verifyCarryStorage()` from startup, restart without
 clearing data, then call `verifyCarryStorage(true)` to clean up. Remove the hook and
 rebuild the normal app afterward; do not leave test startup code enabled.
 
+### Carry creation acceptance
+
+- The normal release UI ran offline without Metro; no startup test hook was used.
+  Empty Save showed category, situation, schedule and intention errors. A filled
+  form with a past date showed future-time feedback without losing entered text.
+- Native date/time selection passed; changing either preserved the other.
+  Dismissing the time picker left the schedule unchanged.
+- Changing James 1:19-20 to John 3:16 preserved category, situation, schedule and
+  intention. Back from Scripture picking also preserved the draft.
+- Save displayed one Upcoming Carry. My Carries reopened it; force-stop/relaunch
+  with airplane mode on and Wi-Fi off preserved every entered value and Scripture.
+  SQLite readback confirmed UTC schedule, passage keys, no reminder and no reflection.
+- Cancelling a second draft created neither a Carry nor its typed category.
+  Exact-ID cleanup removed only the saved verification Carry and unused category;
+  a database backup was retained outside the repo. Radios/root mode were restored.
+- Native linking initially used stale generated data and the app failed to launch.
+  Regenerating that cache included the picker. Windows mixed-root code generation
+  and long CMake paths required code generation from the real checkout followed by
+  compilation through a temporary short drive mapping. The rebuilt release launched
+  successfully; no app-source workaround or dependency downgrade was added.
+  The mapping was removed after verification.
+- Review-fix release (3 October) rebuilt/installed successfully. Offline My Carries
+  -> Back -> John 3:16 lookup, then Back/repeat lookup passed. No new records;
+  radios and temporary mapping restored. Full creation acceptance above predates
+  this navigation-only fix; delayed completion is covered by the regression test.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -111,6 +146,9 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   [range](evidence/lookup/range-offline-api33.png),
   [invalid range](evidence/lookup/invalid-offline-api33.png),
   [empty entry](evidence/lookup/empty-offline-api33.png).
+- Creation: [validation](evidence/creation/validation.png),
+  [populated form](evidence/creation/form.png), [saved detail](evidence/creation/saved.png),
+  [list](evidence/creation/list.png), [offline reopening](evidence/creation/reopened-offline.png).
 
 ## Limits and environment
 
@@ -124,5 +162,11 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   Native cache/deprecation warnings remain; no dependency downgrade was applied.
 - Ten moderate transitive Expo CLI audit advisories were recorded at the
   bundled-data checkpoint; that historical count is not a current security audit.
+- The creation dependency audit reported 13 advisories (8 moderate, 5 high).
+  The picker flag traces through Expo; suggested fixes include incompatible
+  downgrades. No automatic fix was applied; runtime exploitability was not assessed.
 - Lookup starts at the chapter beginning; the preview shows the selected passage.
-  No automatic scroll, keyword search, cross-chapter lookup, or Carry creation UI was tested.
+  No automatic scroll, keyword search or cross-chapter lookup was tested.
+- Creation duplicate-save races, failure/retry and stale reads use controlled tests.
+  Native checks cover representative input, not every timing race or storage failure.
+  Reminders, edit/delete/reflection UI and automatic status refresh remain untested.

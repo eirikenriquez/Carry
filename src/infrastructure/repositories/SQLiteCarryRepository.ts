@@ -92,6 +92,38 @@ function readCarry(row: CarryRow): Carry {
   };
 }
 
+/**
+ * Validate stored fields without duplicating the creation service's lifecycle rules.
+ */
+function isValidCarryRecord(carry: Carry): boolean {
+  const text = [
+    carry.id,
+    carry.categoryId,
+    carry.situation,
+    carry.ifThenIntention,
+    carry.passage.startVerseKey,
+    carry.passage.endVerseKey,
+  ];
+  const dates = [carry.scheduledAt, carry.createdAt];
+  const reflection = carry.reflection;
+  if (reflection) {
+    text.push(reflection.id, reflection.whatOccurred, reflection.insight);
+    dates.push(reflection.createdAt);
+    if (
+      !Number.isInteger(reflection.alignmentRating) ||
+      reflection.alignmentRating < 1 ||
+      reflection.alignmentRating > 5
+    ) {
+      return false;
+    }
+  }
+
+  return (
+    text.every((value) => Boolean(value.trim())) &&
+    dates.every((value) => Number.isFinite(value.getTime()))
+  );
+}
+
 export class SQLiteCarryRepository implements CarryRepository {
   /**
    * Give each operation its own initialized connection and always close it afterward.
@@ -161,6 +193,77 @@ export class SQLiteCarryRepository implements CarryRepository {
     });
   }
 
+  /**
+   * Keep category creation in the same transaction as the Carry insert.
+   */
+  async create(category: Category, carry: Carry): Promise<CarryRepositoryResult<Carry>> {
+    const name = category.name.trim().replace(/\s+/g, ' ');
+    const normalized = normalizeCategoryName(name);
+    if (
+      !category.id.trim() ||
+      !normalized ||
+      !isValidCarryRecord(carry) ||
+      carry.categoryId !== category.id ||
+      carry.reflection !== undefined ||
+      carry.reminderId !== undefined
+    ) {
+      return { ok: false, code: 'invalid_record' };
+    }
+
+    return this.withDatabase((database) =>
+      this.withTransaction(database, async () => {
+        const duplicate = await database.getFirstAsync<{ id: string }>(
+          'SELECT id FROM carries WHERE id = ?',
+          carry.id,
+        );
+        if (duplicate) return { ok: false, code: 'invalid_record' };
+
+        const idOwner = await database.getFirstAsync<{ normalizedName: string }>(
+          'SELECT normalized_name AS normalizedName FROM categories WHERE id = ?',
+          category.id,
+        );
+        if (idOwner && idOwner.normalizedName !== normalized) {
+          return { ok: false, code: 'invalid_record' };
+        }
+
+        await database.runAsync(
+          `INSERT INTO categories (id, name, normalized_name)
+          VALUES (?, ?, ?) ON CONFLICT(normalized_name) DO NOTHING`,
+          category.id,
+          name,
+          normalized,
+        );
+        const storedCategory = await database.getFirstAsync<Category>(
+          'SELECT id, name FROM categories WHERE normalized_name = ?',
+          normalized,
+        );
+        if (!storedCategory) return { ok: false, code: 'unavailable' };
+
+        const storedCarry = { ...carry, categoryId: storedCategory.id };
+        await database.runAsync(
+          `INSERT INTO carries (id, category_id, situation, scheduled_at,
+          start_verse_key, end_verse_key, if_then_intention, reminder_id, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          storedCarry.id,
+          storedCarry.categoryId,
+          storedCarry.situation,
+          storedCarry.scheduledAt.toISOString(),
+          storedCarry.passage.startVerseKey,
+          storedCarry.passage.endVerseKey,
+          storedCarry.ifThenIntention,
+          storedCarry.reminderId ?? null,
+          storedCarry.createdAt.toISOString(),
+        );
+        const row = await database.getFirstAsync<CarryRow>(
+          `${carryQuery} WHERE c.id = ?`,
+          storedCarry.id,
+        );
+        if (!row) return { ok: false, code: 'unavailable' };
+        return { ok: true, value: readCarry(row) };
+      }),
+    );
+  }
+
   async findById(id: string): Promise<CarryRepositoryResult<Carry | null>> {
     return this.withDatabase(async (database) => {
       const row = await database.getFirstAsync<CarryRow>(`${carryQuery} WHERE c.id = ?`, id);
@@ -181,30 +284,8 @@ export class SQLiteCarryRepository implements CarryRepository {
    * Save a Carry and any supplied reflection atomically, preserving an omitted reflection.
    */
   async save(carry: Carry): Promise<CarryRepositoryResult<Carry>> {
-    const text = [
-      carry.id,
-      carry.categoryId,
-      carry.situation,
-      carry.ifThenIntention,
-      carry.passage.startVerseKey,
-      carry.passage.endVerseKey,
-    ];
-    const dates = [carry.scheduledAt, carry.createdAt];
+    if (!isValidCarryRecord(carry)) return { ok: false, code: 'invalid_record' };
     const reflection = carry.reflection;
-    if (reflection) {
-      text.push(reflection.id, reflection.whatOccurred, reflection.insight);
-      dates.push(reflection.createdAt);
-    }
-    if (
-      text.some((value) => !value.trim()) ||
-      dates.some((value) => !Number.isFinite(value.getTime())) ||
-      (reflection &&
-        (!Number.isInteger(reflection.alignmentRating) ||
-          reflection.alignmentRating < 1 ||
-          reflection.alignmentRating > 5))
-    ) {
-      return { ok: false, code: 'invalid_record' };
-    }
 
     return this.withDatabase((database) =>
       this.withTransaction(database, async () => {
