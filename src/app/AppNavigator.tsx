@@ -23,18 +23,21 @@ import { ReferenceLookupForm } from '../features/bible/views/ReferenceLookupForm
 import { BooksScreen } from '../features/bible/views/BooksScreen';
 import { ChaptersScreen } from '../features/bible/views/ChaptersScreen';
 import { VersesScreen } from '../features/bible/views/VersesScreen';
-import { CarryDetailFlow, CarryListFlow, CreateCarryFlow } from './CarryScreens';
+import { CarryDetailFlow, CarryListFlow, CreateCarryFlow, EditCarryFlow } from './CarryScreens';
+
+type PassageTarget = { screen: 'CreateCarry' } | { screen: 'EditCarry'; carryId: string };
 
 type AppRoutes = {
-  Books: { selectForCarry?: boolean } | undefined;
-  Chapters: { bookId: string; selectForCarry?: boolean };
+  Books: { selectForCarry?: PassageTarget } | undefined;
+  Chapters: { bookId: string; selectForCarry?: PassageTarget };
   Verses: {
     bookId: string;
     chapter: number;
     selection?: PassageSelection;
-    selectForCarry?: boolean;
+    selectForCarry?: PassageTarget;
   };
   CreateCarry: { selection: PassageSelection };
+  EditCarry: { carryId: string; selection?: PassageSelection };
   Carries: undefined;
   CarryDetail: { carryId: string };
 };
@@ -223,7 +226,12 @@ export function AppNavigator({ repository, carryRepository, books }: AppNavigato
               onUsePassage={(selection) => {
                 if (route.params.selectForCarry) {
                   // The draft stays mounted below this picker; only its passage changes.
-                  navigation.popTo('CreateCarry', { selection });
+                  const target = route.params.selectForCarry;
+                  if (target.screen === 'EditCarry') {
+                    navigation.popTo('EditCarry', { carryId: target.carryId, selection });
+                  } else {
+                    navigation.popTo('CreateCarry', { selection });
+                  }
                 } else {
                   navigation.push('CreateCarry', { selection });
                 }
@@ -239,7 +247,27 @@ export function AppNavigator({ repository, carryRepository, books }: AppNavigato
               selection={route.params.selection}
               onSaved={(carryId) => navigation.replace('CarryDetail', { carryId })}
               onCancel={() => navigation.goBack()}
-              onChangePassage={() => navigation.push('Books', { selectForCarry: true })}
+              onChangePassage={() =>
+                navigation.push('Books', { selectForCarry: { screen: 'CreateCarry' } })
+              }
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="EditCarry" options={{ title: 'Edit Carry' }}>
+          {({ route, navigation }: NativeStackScreenProps<AppRoutes, 'EditCarry'>) => (
+            <EditCarryFlow
+              key={route.params.carryId}
+              repository={carryRepository}
+              bibleRepository={repository}
+              carryId={route.params.carryId}
+              selection={route.params.selection}
+              onSaved={() => navigation.goBack()}
+              onCancel={() => navigation.goBack()}
+              onChangePassage={() =>
+                navigation.push('Books', {
+                  selectForCarry: { screen: 'EditCarry', carryId: route.params.carryId },
+                })
+              }
             />
           )}
         </Stack.Screen>
@@ -259,6 +287,7 @@ export function AppNavigator({ repository, carryRepository, books }: AppNavigato
               bibleRepository={repository}
               carryId={route.params.carryId}
               onViewCarries={() => navigation.popTo('Carries')}
+              onEdit={() => navigation.push('EditCarry', { carryId: route.params.carryId })}
             />
           )}
         </Stack.Screen>

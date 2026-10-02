@@ -12,10 +12,16 @@ export interface CarryDetailScreenProps {
   readonly state: CarryLoadState<CarryDetail>;
   readonly onRetry: () => void;
   readonly onViewCarries: () => void;
+  readonly onEdit: () => void;
 }
 
-/** Show persisted values and resolved Scripture without lifecycle actions yet. */
-export function CarryDetailScreen({ state, onRetry, onViewCarries }: CarryDetailScreenProps) {
+/** Show persisted values and offer editing only while the Carry is upcoming. */
+export function CarryDetailScreen({
+  state,
+  onRetry,
+  onViewCarries,
+  onEdit,
+}: CarryDetailScreenProps) {
   if (state.status === 'loading') {
     return <CarryLoadFeedback resourceLabel="Carry" />;
   }
@@ -74,6 +80,16 @@ export function CarryDetailScreen({ state, onRetry, onViewCarries }: CarryDetail
           <Text style={styles.fieldLabel}>If-then plan</Text>
           <Text style={styles.fieldValue}>{carry.ifThenIntention}</Text>
         </View>
+
+        {status === 'upcoming' ? (
+          <Pressable
+            accessibilityRole="button"
+            onPress={onEdit}
+            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          >
+            <Text style={styles.backButtonText}>Edit Carry</Text>
+          </Pressable>
+        ) : null}
 
         <Pressable
           accessibilityRole="button"
