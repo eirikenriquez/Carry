@@ -9,32 +9,35 @@ const ts = require('typescript');
 const {
   personalDatabaseSchema,
 } = require('../src/infrastructure/repositories/personalDatabaseSchema.ts');
-const openerPath = path.join(
-  __dirname,
-  '../src/infrastructure/repositories/openPersonalDatabase.ts',
-);
 
 /**
  * Run the actual opener using a real SQLite connection in place of Expo's native bridge.
  */
-function loadOpener(openConnection) {
-  const compiled = ts.transpileModule(fs.readFileSync(openerPath, 'utf8'), {
-    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
-  });
+function loadTypeScript(relativePath, dependencies) {
+  const compiled = ts.transpileModule(
+    fs.readFileSync(path.join(__dirname, '..', relativePath), 'utf8'),
+    {
+      compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 },
+    },
+  );
   const loaded = { exports: {} };
   function requireDependency(name) {
-    if (name === 'expo-sqlite') return { openDatabaseAsync: openConnection };
-    if (name === './personalDatabaseSchema') {
-      return require('../src/infrastructure/repositories/personalDatabaseSchema.ts');
-    }
-    throw new Error(`Unexpected opener dependency: ${name}`);
+    if (Object.hasOwn(dependencies, name)) return dependencies[name];
+    throw new Error(`Unexpected storage dependency: ${name}`);
   }
   new Function('exports', 'require', 'module', compiled.outputText)(
     loaded.exports,
     requireDependency,
     loaded,
   );
-  return loaded.exports.openPersonalDatabase;
+  return loaded.exports;
+}
+
+function loadOpener(openConnection) {
+  return loadTypeScript('src/infrastructure/repositories/openPersonalDatabase.ts', {
+    'expo-sqlite': { openDatabaseAsync: openConnection },
+    './personalDatabaseSchema': require('../src/infrastructure/repositories/personalDatabaseSchema.ts'),
+  }).openPersonalDatabase;
 }
 
 /**
@@ -45,17 +48,164 @@ function connect(database) {
     async execAsync(sql) {
       database.exec(sql);
     },
-    async getFirstAsync(sql) {
-      return database.prepare(sql).get() ?? null;
+    async getFirstAsync(sql, ...params) {
+      return database.prepare(sql).get(...params) ?? null;
     },
-    async getAllAsync(sql) {
-      return database.prepare(sql).all();
+    async getAllAsync(sql, ...params) {
+      return database.prepare(sql).all(...params);
+    },
+    async runAsync(sql, ...params) {
+      return database.prepare(sql).run(...params);
     },
     async closeAsync() {
       database.close();
     },
   };
 }
+
+/**
+ * Use isolated file-backed storage so each repository operation opens a real connection.
+ */
+function createRepository(t) {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'carry-repository-'));
+  const filename = path.join(directory, 'carry.db');
+  const database = new DatabaseSync(filename);
+  t.after(() => {
+    database.close();
+    fs.unlinkSync(filename);
+    fs.rmdirSync(directory);
+  });
+  database.exec(personalDatabaseSchema);
+  const openPersonalDatabase = loadOpener(async () => connect(new DatabaseSync(filename)));
+  const { SQLiteCarryRepository } = loadTypeScript(
+    'src/infrastructure/repositories/SQLiteCarryRepository.ts',
+    {
+      './openPersonalDatabase': { openPersonalDatabase },
+      '../../domain/rules/normalizeCategoryName': require('../src/domain/rules/normalizeCategoryName.ts'),
+    },
+  );
+  return { repository: new SQLiteCarryRepository(), database };
+}
+
+function carryFixture(id = 'carry-1') {
+  return {
+    id,
+    categoryId: 'work',
+    situation: 'A difficult conversation',
+    scheduledAt: new Date('2026-10-03T21:00:00.000Z'),
+    passage: { startVerseKey: 'JAS.1.19', endVerseKey: 'JAS.1.20' },
+    ifThenIntention: 'If I feel defensive, then I will listen first.',
+    createdAt: new Date('2026-10-02T01:00:00.000Z'),
+    reminderId: undefined,
+    reflection: undefined,
+  };
+}
+
+/**
+ * Seed a stored record independently of the repository's read implementation.
+ */
+function insertCarry(database, carry) {
+  database
+    .prepare(
+      `INSERT INTO carries (id, category_id, situation, scheduled_at,
+    start_verse_key, end_verse_key, if_then_intention, reminder_id, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      carry.id,
+      carry.categoryId,
+      carry.situation,
+      carry.scheduledAt.toISOString(),
+      carry.passage.startVerseKey,
+      carry.passage.endVerseKey,
+      carry.ifThenIntention,
+      carry.reminderId ?? null,
+      carry.createdAt.toISOString(),
+    );
+}
+
+test('reuses normalized categories without changing their identity or display spelling', async (t) => {
+  const { repository } = createRepository(t);
+  assert.deepEqual(await repository.getCategories(), { ok: true, value: [] });
+  assert.deepEqual(await repository.getOrCreateCategory({ id: 'work', name: '  Work  Stress ' }), {
+    ok: true,
+    value: { id: 'work', name: 'Work Stress' },
+  });
+  assert.deepEqual(await repository.getOrCreateCategory({ id: 'other-id', name: 'work stress' }), {
+    ok: true,
+    value: { id: 'work', name: 'Work Stress' },
+  });
+  await repository.getOrCreateCategory({ id: 'family', name: 'Family' });
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [
+      { id: 'family', name: 'Family' },
+      { id: 'work', name: 'Work Stress' },
+    ],
+  });
+  assert.deepEqual(await repository.getOrCreateCategory({ id: 'blank', name: ' ' }), {
+    ok: false,
+    code: 'invalid_record',
+  });
+});
+
+test('reads Carries, restores optional fields, and orders the latest reflection deterministically', async (t) => {
+  const { repository, database } = createRepository(t);
+  assert.deepEqual(await repository.findById('missing'), { ok: true, value: null });
+  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
+  assert.deepEqual(await repository.latestReflection('work'), { ok: true, value: null });
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const first = carryFixture();
+  insertCarry(database, first);
+  assert.deepEqual(await repository.findById(first.id), { ok: true, value: first });
+  const second = {
+    ...carryFixture('carry-2'),
+    reminderId: 'notification-2',
+    scheduledAt: new Date('2026-10-03T20:00:00.000Z'),
+  };
+  insertCarry(database, second);
+  const reflection = {
+    id: 'reflection-2',
+    alignmentRating: 4,
+    whatOccurred: 'I listened first.',
+    insight: 'Pausing helped.',
+    createdAt: new Date('2026-10-04T01:00:00.000Z'),
+  };
+  const insertReflection = database.prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)');
+  insertReflection.run(
+    'reflection-1',
+    first.id,
+    3,
+    'I paused.',
+    'Listen more.',
+    '2026-10-03T23:00:00.000Z',
+  );
+  insertReflection.run(
+    reflection.id,
+    second.id,
+    4,
+    reflection.whatOccurred,
+    reflection.insight,
+    reflection.createdAt.toISOString(),
+  );
+  assert.deepEqual(await repository.findById(second.id), {
+    ok: true,
+    value: { ...second, reflection },
+  });
+  assert.deepEqual(
+    (await repository.findAll()).value.map((carry) => carry.id),
+    ['carry-2', 'carry-1'],
+  );
+  assert.deepEqual(await repository.latestReflection('work'), { ok: true, value: reflection });
+  database
+    .prepare('UPDATE reflections SET created_at = ? WHERE id = ?')
+    .run(reflection.createdAt.toISOString(), 'reflection-1');
+  assert.deepEqual(await repository.latestReflection('work'), { ok: true, value: reflection });
+  assert.deepEqual(await repository.latestReflection('missing'), { ok: true, value: null });
+
+  database.prepare('UPDATE carries SET scheduled_at = ? WHERE id = ?').run('not a date', first.id);
+  assert.deepEqual(await repository.findById(first.id), { ok: false, code: 'unavailable' });
+});
 
 test('initializes once and preserves stored data when the database file is reopened', async (t) => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'carry-database-'));

@@ -33,6 +33,10 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   four opener), including file reopen, incompatible-schema preservation, rollback/retry,
   and controlled opening/foreign-key failures. Format/lint/typecheck and all 55 Jest
   tests/10 suites pass. No Android personal-data persistence check yet.
+- Personal reads/category reuse: nine grouped Node SQLite checks pass, including
+  stable category identity/spelling, optional reminder/reflection reads, date conversion,
+  deterministic latest-reflection ordering, missing records, and invalid stored dates.
+  TypeScript/lint pass; repository operations reopen an isolated desktop database file.
 
 ## Offline Android acceptance
 
