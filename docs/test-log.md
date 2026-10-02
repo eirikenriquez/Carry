@@ -32,7 +32,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 - Personal database opener: seven grouped Node SQLite checks now pass (three schema,
   four opener), including file reopen, incompatible-schema preservation, rollback/retry,
   and controlled opening/foreign-key failures. Format/lint/typecheck and all 55 Jest
-  tests/10 suites pass. No Android personal-data persistence check yet.
+  tests/10 suites pass. Native persistence had not been checked at this checkpoint.
 - Personal reads/category reuse: nine grouped Node SQLite checks pass, including
   stable category identity/spelling, optional reminder/reflection reads, date conversion,
   deterministic latest-reflection ordering, missing records, and invalid stored dates.
@@ -41,7 +41,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   updates, nullable reminder IDs, reflection preservation/ownership, deletion cascade,
   and save/delete rollback with retry. SQL triggers simulate write failures, not disk
   exhaustion. Format/lint/typecheck, 55 Jest tests/10 suites, Bible integration, and
-  four Python tests pass. Android personal-data restart checks remain outstanding.
+  four Python tests pass. Native restart verification followed; results are recorded below.
 
 ## Offline Android acceptance
 
@@ -125,4 +125,4 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Ten moderate transitive Expo CLI audit advisories were recorded at the
   bundled-data checkpoint; that historical count is not a current security audit.
 - Lookup starts at the chapter beginning; the preview shows the selected passage.
-  No automatic scroll, keyword search, cross-chapter lookup, or Carry saving was tested.
+  No automatic scroll, keyword search, cross-chapter lookup, or Carry creation UI was tested.

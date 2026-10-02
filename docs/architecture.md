@@ -42,7 +42,7 @@ The composition layer supplies the concrete implementation.
 - Bible reads use parameterized SQL and numeric canonical order, not string sorting.
 - `openBundledBible` stages the first copy, validates its dataset version, then
   promotes it. Failed/stale temporary copies are cleaned up for retry.
-- The versioned Bible is opened with `query_only`; personal data will use a
+- The versioned Bible is opened with `query_only`; personal data uses a
   separate writable database. Existing permanent Bible files are not auto-repaired.
 - Keys follow publisher codes, e.g. `JAS.1.19`. Dataset updates need new assets,
   checksums, and compatibility review before migrating saved keys.
