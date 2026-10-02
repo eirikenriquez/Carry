@@ -146,7 +146,6 @@ it('ignores duplicate saves and locks the draft after success', async () => {
   const bibleCheck = new Promise((resolve) => {
     resolveBibleCheck = resolve;
   });
-  options.bibleRepository.getPassage.mockReturnValueOnce(bibleCheck);
   let resolveCreate;
   options.carryRepository.create.mockImplementation(
     (_category, carry) =>
@@ -156,6 +155,8 @@ it('ignores duplicate saves and locks the draft after success', async () => {
   );
   const { current, update } = await mount(options);
   await fillDraft(current);
+  // Delay Save's validation read, not the preview read performed while mounting.
+  options.bibleRepository.getPassage.mockReturnValueOnce(bibleCheck);
 
   let firstSave;
   let duplicateSave;

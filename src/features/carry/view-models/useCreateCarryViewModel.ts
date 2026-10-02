@@ -232,6 +232,7 @@ export function useCreateCarryViewModel({
     setSaveError(null);
   }, []);
 
+  /** Lock immediately so two taps before a React rerender cannot start two writes. */
   const save = useCallback(async (): Promise<void> => {
     if (saving.current || saved.current !== null) return;
     saving.current = true;
@@ -250,7 +251,7 @@ export function useCreateCarryViewModel({
           carryRepository,
           carryId: identity.carryId,
           categoryId: identity.categoryId,
-          now: now(),
+          now,
         },
       );
 

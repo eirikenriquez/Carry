@@ -3,7 +3,7 @@ import type { Category } from '../../domain/entities/Category';
 import type { PassageSelection } from '../../domain/entities/PassageSelection';
 import { createCarry as buildCarry } from '../../domain/factories/createCarry';
 import type { BibleRepository } from '../ports/BibleRepository';
-import type { CarryRepository } from '../ports/CarryRepository';
+import type { CarryRepository, CarryRepositoryResult } from '../ports/CarryRepository';
 
 export interface CreateCarryDraft {
   readonly categoryName: string;
@@ -18,7 +18,7 @@ export interface CreateCarryRecordContext {
   readonly carryRepository: CarryRepository;
   readonly carryId: string;
   readonly categoryId: string;
-  readonly now: Date;
+  readonly now: () => Date;
 }
 
 export type CreateCarryRecordValidationIssue = {
@@ -50,7 +50,7 @@ export async function createCarryRecord(
       passage: draft.passage,
       ifThenIntention: draft.ifThenIntention,
     },
-    context.now,
+    context.now(),
   );
 
   const issues: CreateCarryRecordValidationIssue[] = [];
@@ -101,10 +101,20 @@ export async function createCarryRecord(
     return { ok: false, code: 'unavailable', source: 'bible' };
   }
 
-  const category: Category = { id: created.carry.categoryId, name: categoryName };
-  let stored: Awaited<ReturnType<CarryRepository['create']>>;
+  // A slow Bible read may outlast a near-term schedule; check again before writing.
+  const revalidated = buildCarry(created.carry, context.now());
+  if (!revalidated.ok) {
+    return {
+      ok: false,
+      code: 'validation',
+      issues: [{ field: 'scheduledAt', code: 'must_be_future' }],
+    };
+  }
+
+  const category: Category = { id: revalidated.carry.categoryId, name: categoryName };
+  let stored: CarryRepositoryResult<Carry>;
   try {
-    stored = await context.carryRepository.create(category, created.carry);
+    stored = await context.carryRepository.create(category, revalidated.carry);
   } catch {
     return { ok: false, code: 'unavailable', source: 'storage' };
   }

@@ -67,12 +67,14 @@ function makeDraft(overrides: Partial<CreateCarryDraft> = {}): CreateCarryDraft 
 const CONTEXT_BASE = {
   carryId: 'carry-1',
   categoryId: 'category-1',
-  now: NOW,
+  now: () => NOW,
 };
 
 describe('createCarryRecord', () => {
   it('validates the passage and stores normalized values with the category', async () => {
     const { bibleRepository, carryRepository, getPassage, create } = makeRepositories();
+    const writeTime = new Date('2026-10-02T00:00:01.000Z');
+    const now = jest.fn().mockReturnValueOnce(NOW).mockReturnValueOnce(writeTime);
     const result = await createCarryRecord(
       makeDraft({
         passage: { startVerseKey: ' JHN.3.16 ', endVerseKey: ' JHN.3.16 ' },
@@ -81,6 +83,7 @@ describe('createCarryRecord', () => {
         ...CONTEXT_BASE,
         bibleRepository,
         carryRepository,
+        now,
       },
     );
 
@@ -93,9 +96,10 @@ describe('createCarryRecord', () => {
         scheduledAt: new Date('2026-10-03T12:00:00.000Z'),
         passage: SELECTION,
         ifThenIntention: 'I will pause and pray.',
-        createdAt: NOW,
+        createdAt: writeTime,
       },
     });
+    expect(now).toHaveBeenCalledTimes(2);
     expect(getPassage).toHaveBeenCalledWith(SELECTION);
     expect(create).toHaveBeenCalledWith(
       { id: 'category-1', name: 'Peace' },
@@ -166,6 +170,32 @@ describe('createCarryRecord', () => {
     await expect(
       createCarryRecord(makeDraft(), { ...CONTEXT_BASE, bibleRepository, carryRepository }),
     ).resolves.toEqual({ ok: false, code: 'unavailable', source: 'bible' });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('rejects a schedule that expires while the Bible passage is being checked', async () => {
+    let resolvePassage: (result: BibleRepositoryResult<BiblePassage>) => void = () => undefined;
+    const delayedPassage = new Promise<BibleRepositoryResult<BiblePassage>>((resolve) => {
+      resolvePassage = resolve;
+    });
+    const { bibleRepository, carryRepository, getPassage, create } = makeRepositories();
+    getPassage.mockReturnValueOnce(delayedPassage);
+
+    let currentTime = NOW;
+    const now = jest.fn(() => currentTime);
+    const result = createCarryRecord(
+      makeDraft({ scheduledAt: new Date('2026-10-02T00:00:02.000Z') }),
+      { ...CONTEXT_BASE, bibleRepository, carryRepository, now },
+    );
+    currentTime = new Date('2026-10-02T00:00:03.000Z');
+    resolvePassage({ ok: true, value: makePassage(SELECTION) });
+
+    await expect(result).resolves.toEqual({
+      ok: false,
+      code: 'validation',
+      issues: [{ field: 'scheduledAt', code: 'must_be_future' }],
+    });
+    expect(now).toHaveBeenCalledTimes(2);
     expect(create).not.toHaveBeenCalled();
   });
 
