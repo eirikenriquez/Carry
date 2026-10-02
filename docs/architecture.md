@@ -104,7 +104,20 @@ SHA-256 checksums:
 - Successful Save replaces the draft with read-only detail. My Carries lists all
   saved records for reopening; this is not the full grouped FR-06 history feature.
 
+## Carry editing flow
+
+- Detail offers Edit for upcoming Carries. The shared form has a separate edit
+  ViewModel; Scripture picking changes only passage keys, not other draft fields.
+- `prepareCarryDraft` shares field validation with creation. `updateCarryRecord`
+  checks the original's eligibility and rechecks after asynchronous passage reads.
+- Update-only storage reuses/creates a category atomically without renaming shared
+  categories. It preserves ID, creation date, reminder ID and reflection; missing
+  records are not recreated. The supplied clock also checks eligibility after
+  SQLite acquires its write lock.
+- Save returns to refreshed detail; cancellation writes nothing. Reminder
+  rescheduling is a separate integration, not a side effect of this update.
+
 ## Planned, not implemented
 
-- Notifications, editing/deletion, reflection UI and full lifecycle orchestration.
+- Notifications, deletion, reflection UI and full lifecycle orchestration.
 - Grouped history and automatic status refresh as time passes.

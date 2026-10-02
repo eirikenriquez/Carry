@@ -15,6 +15,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Final lookup fix | 55 / 10 | Dependency changes cancel pending requests, reset feedback, and allow retry |
 | Carry creation | 67 / 13 | Validation/clock recheck, draft preservation, save locking, list/detail loading and retry |
 | Creation review fix | 68 / 14 | Late lookup cannot navigate after Books loses focus; lookup works after returning |
+| Carry editing | 83 / 17 | Eligibility/clock rechecks, validation, prefill/retry, draft preservation, save locking and picker routing |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -51,6 +52,10 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   and passed afterward. It covers blur cancellation, refocus/retry and loss of focus
   before blur cleanup. All 68 Jest tests/14 suites and existing integration checks pass;
   the delayed-result race is a controlled test, not native fault injection.
+- Editing: 19 grouped Node SQLite checks pass, including update-only missing-record
+  handling, canonical metadata, category reassignment, rollback and eligibility
+  after acquiring the transaction lock. All 83 Jest tests, Bible integration,
+  four Python checks, format/lint/typecheck and whitespace checks pass.
 
 ## Offline Android acceptance
 
@@ -130,6 +135,24 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   radios and temporary mapping restored. Full creation acceptance above predates
   this navigation-only fix; delayed completion is covered by the regression test.
 
+### Carry editing acceptance
+
+- Release rebuilt/installed on 3 October; normal UI used offline without Metro.
+  Edit prefilled category, situation, schedule, passage and intention.
+- Empty category and past schedule were rejected; SQLite retained the original.
+  Cancel returned unchanged detail. Back from the Scripture picker preserved the
+  draft; John 3:16 -> James 1:19-20 changed only its passage selection.
+- Save changed category/situation/intention and the native date/time selection
+  from 5 October 12:40 to 6 October 14:15 NZDT. Updated detail and list refreshed;
+  force-stop/reopen retained every value, including keys `JAS.1.19`–`JAS.1.20`.
+- SQLite read-back retained Carry ID `fa5a0938-598f-42dd-97b5-e6fd14bb9bde`
+  and creation time `2026-10-02T23:41:18.231Z`. Updated schedule is
+  `2026-10-06T01:15:00.000Z`; the original category was not renamed.
+  Other-record isolation and reminder/reflection preservation use real SQLite tests.
+- Backed up and removed only the disposable Carry and its two unused categories.
+  No app reset; airplane mode, Wi-Fi, non-root adb and temporary mapping restored.
+  Expiry/lock-wait and duplicate-save races use controlled tests, not native timing.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -149,6 +172,8 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Creation: [validation](evidence/creation/validation.png),
   [populated form](evidence/creation/form.png), [saved detail](evidence/creation/saved.png),
   [list](evidence/creation/list.png), [offline reopening](evidence/creation/reopened-offline.png).
+- Editing: [before](evidence/editing/before.png), [validation](evidence/editing/validation.png),
+  [saved changes](evidence/editing/saved.png), [offline reopening](evidence/editing/reopened-offline.png).
 
 ## Limits and environment
 
@@ -169,4 +194,4 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No automatic scroll, keyword search or cross-chapter lookup was tested.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
-  Reminders, edit/delete/reflection UI and automatic status refresh remain untested.
+  Reminders, deletion/reflection UI and automatic status refresh remain untested.

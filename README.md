@@ -13,8 +13,9 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 - Look up full-name references such as `John 3:16` or `James 1:19-20`.
 - Create a Carry with a category, situation, future schedule and if-then plan.
 - Reopen saved Carries offline, including after restarting the app.
+- Edit an upcoming Carry without changing its identity or other saved Carries.
 
-Reminders, editing, deletion and reflection UI are not implemented yet.
+Reminders, deletion and reflection UI are not implemented yet.
 Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements
