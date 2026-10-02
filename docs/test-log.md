@@ -11,6 +11,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Browsing | 41 / 7 | Retry, repository reuse, chapter changes, empty results |
 | Selection | 45 / 8 | Tap progression, backwards ordering, reset, stale previews |
 | Reference lookup | 51 / 10 | Parsing, bounds, invalid references, retry, duplicate/stale requests |
+| Readability audit | 53 / 10 | Invalid dates, explicit cancellation, consistent fixtures, shared hook setup |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -35,6 +36,12 @@ Original radio settings were restored; later feature checks did not clear app da
 - Lookup: single/range and numbered-book references passed, including cold restart.
   Invalid book/chapter/verse and descending range stayed on Books with feedback.
   Back, fresh-tap replacement, Clear, and empty-entry preview passed.
+- Audit recheck: a rebuilt release passed offline cold launch, John 3:16 lookup,
+  fresh-tap replacement, forward/backwards ranges, third-tap reset, Clear, Back,
+  descending-range feedback, and Genesis chapter-change reset. Format, lint,
+  TypeScript, all 53 Jest tests, real SQLite checks, and four Python tests passed.
+  Radios were restored and the temporary drive mapping removed. No new visual
+  or accessibility audit was performed; cancellation races remain mocked checks.
 
 ### Copy-recovery recheck
 
