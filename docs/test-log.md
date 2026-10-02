@@ -24,6 +24,24 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   by stronger real-SQLite assertions, leaving 37 before later increments.
 - Final lookup fix passed all automated checks above. Its two new dependency-change
   cases use controlled promises; the native audit below predates this final fix.
+- Personal storage foundation: 55 Jest tests/10 suites remain unchanged; three
+  Node SQLite schema checks pass for fields, category links/uniqueness, reflection
+  ownership, ratings, and deletion cleanup. Format/lint/typecheck, Bible integration,
+  four Python tests, and scoped whitespace checks pass. In-memory schema tests only;
+  no Carry adapter, installed personal database, or restart persistence checked yet.
+- Personal database opener: seven grouped Node SQLite checks now pass (three schema,
+  four opener), including file reopen, incompatible-schema preservation, rollback/retry,
+  and controlled opening/foreign-key failures. Format/lint/typecheck and all 55 Jest
+  tests/10 suites pass. Native persistence had not been checked at this checkpoint.
+- Personal reads/category reuse: nine grouped Node SQLite checks pass, including
+  stable category identity/spelling, optional reminder/reflection reads, date conversion,
+  deterministic latest-reflection ordering, missing records, and invalid stored dates.
+  TypeScript/lint pass; repository operations reopen an isolated desktop database file.
+- Personal writes: 12 grouped Node SQLite checks pass for full-field round trips,
+  updates, nullable reminder IDs, reflection preservation/ownership, deletion cascade,
+  and save/delete rollback with retry. SQL triggers simulate write failures, not disk
+  exhaustion. Format/lint/typecheck, 55 Jest tests/10 suites, Bible integration, and
+  four Python tests pass. Native restart verification followed; results are recorded below.
 
 ## Offline Android acceptance
 
@@ -53,6 +71,29 @@ Original radio settings were restored; later feature checks did not clear app da
   cold restart passed and the original database was restored afterward.
 - The mocked regression covers an actual copy throwing mid-operation; the native
   recheck covers a leftover temporary file, not a mid-copy exception.
+
+### Personal storage acceptance
+
+- A temporary startup hook ran `scripts/verify_carry_native.ts` in a prototype
+  release without Metro, in airplane mode with Wi-Fi off. Two labelled Carries
+  covered every field, optional reminder ID, and an owned reflection.
+- Save and force-stop/reopen passed (process 8192 -> 8270). Emulator reboot changed
+  the boot ID and process (1581); both records still matched every field, including
+  Date values, normalized category reuse, and latest reflection.
+- `carry.db` was at `/data/user/0/com.eirikenriquez.carry/files/SQLite/carry.db`,
+  with owner-only file permissions, separately from the unchanged Bible database.
+- Source inspection found no network calls/remote DB configuration in personal
+  storage. Historical UID traffic existed; shown accounting buckets were unchanged
+  across the offline app-restart check. This is not packet capture or proof of no
+  attempted connections, and does not identify the historical traffic's cause.
+- Cleanup removed only the two verified test Carries and owned reflection/category.
+  The startup hook was removed; the manual probe remains outside the normal app.
+  Normal release rebuilt/installed successfully; radios restored and drive mapping removed.
+  This verifies repository persistence, not a Carry form, lifecycle UI, or notifications.
+
+To repeat: temporarily call `verifyCarryStorage()` from startup, restart without
+clearing data, then call `verifyCarryStorage(true)` to clean up. Remove the hook and
+rebuild the normal app afterward; do not leave test startup code enabled.
 
 ## Screenshots
 
@@ -84,4 +125,4 @@ Original radio settings were restored; later feature checks did not clear app da
 - Ten moderate transitive Expo CLI audit advisories were recorded at the
   bundled-data checkpoint; that historical count is not a current security audit.
 - Lookup starts at the chapter beginning; the preview shows the selected passage.
-  No automatic scroll, keyword search, cross-chapter lookup, or Carry saving was tested.
+  No automatic scroll, keyword search, cross-chapter lookup, or Carry creation UI was tested.
