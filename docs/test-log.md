@@ -16,6 +16,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Carry creation | 67 / 13 | Validation/clock recheck, draft preservation, save locking, list/detail loading and retry |
 | Creation review fix | 68 / 14 | Late lookup cannot navigate after Books loses focus; lookup works after returning |
 | Carry editing | 83 / 17 | Eligibility/clock rechecks, validation, prefill/retry, draft preservation, save locking and picker routing |
+| Carry deletion | 95 / 21 | Upcoming-only deletion, transaction-lock clock check, missing IDs, confirmation, double-tap locking and stale callbacks |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -56,6 +57,10 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   handling, canonical metadata, category reassignment, rollback and eligibility
   after acquiring the transaction lock. All 83 Jest tests, Bible integration,
   four Python checks, format/lint/typecheck and whitespace checks pass.
+- Deletion: 20 grouped Node SQLite checks pass. The added case isolates eligibility
+  after the deletion write lock; existing checks cover isolation, category retention
+  and rollback. All 95 Jest tests, Bible integration and four Python checks pass.
+  Final ViewModel formatting, lint and strict TypeScript checks pass.
 
 ## Offline Android acceptance
 
@@ -153,6 +158,24 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No app reset; airplane mode, Wi-Fi, non-root adb and temporary mapping restored.
   Expiry/lock-wait and duplicate-save races use controlled tests, not native timing.
 
+### Carry deletion acceptance
+
+- Normal x86_64 release rebuilt/installed on API 33, offline without Metro.
+  Two labelled, disposable Carries sharing a category were seeded through SQLite;
+  this is deletion acceptance, not another creation-form test.
+- Upcoming detail showed the permanent-deletion confirmation. Cancel and Android
+  Back gesture dismissed it; complete Carry/category/reflection database snapshots
+  matched after both actions. The original database was empty and backed up.
+- Confirmed deletion returned to the refreshed list with only the other Carry.
+  SQLite comparison verified every remaining field and the shared category stayed
+  unchanged. Offline force-stop/relaunch (process 17845 -> 19521) kept the target
+  absent; the reopened database matched the post-deletion snapshot exactly.
+- Guarded exact-ID cleanup removed only the remaining fixture and unused category;
+  the original empty personal database state was restored without app reset.
+  Backups remain outside Git; radios/non-root adb restored, no drive mapping left.
+- Expiry, failed writes, repeated requests and stale confirmations use controlled
+  tests, not native timing/fault injection. Reminder cancellation remains separate.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -174,6 +197,10 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   [list](evidence/creation/list.png), [offline reopening](evidence/creation/reopened-offline.png).
 - Editing: [before](evidence/editing/before.png), [validation](evidence/editing/validation.png),
   [saved changes](evidence/editing/saved.png), [offline reopening](evidence/editing/reopened-offline.png).
+- Deletion: [confirmation](evidence/deletion/confirmation.png),
+  [Cancel leaves detail unchanged](evidence/deletion/cancelled.png),
+  [refreshed list](evidence/deletion/deleted-list.png),
+  [offline reopening](evidence/deletion/reopened-offline.png).
 
 ## Limits and environment
 
@@ -194,4 +221,4 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No automatic scroll, keyword search or cross-chapter lookup was tested.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
-  Reminders, deletion/reflection UI and automatic status refresh remain untested.
+  Reminders, reflection UI and automatic status refresh remain untested.

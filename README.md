@@ -14,8 +14,9 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 - Create a Carry with a category, situation, future schedule and if-then plan.
 - Reopen saved Carries offline, including after restarting the app.
 - Edit an upcoming Carry without changing its identity or other saved Carries.
+- Delete an upcoming Carry after confirmation, keeping its reusable category.
 
-Reminders, deletion and reflection UI are not implemented yet.
+Reminders and reflection UI are not implemented yet.
 Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements
