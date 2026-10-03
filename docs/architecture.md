@@ -1,7 +1,7 @@
 # Architecture
 
 Carry uses lightweight MVVM, Repository, and Service boundaries from Milestone 1.
-Views render state; ViewModels handle interaction; infrastructure handles SQLite.
+Views render state; ViewModels handle interaction; infrastructure handles SQLite and notifications.
 
 ## Current structure
 
@@ -10,9 +10,10 @@ Views render state; ViewModels handle interaction; infrastructure handles SQLite
 - `src/features/bible/view-models`: loading, selection, lookup, and retry state.
 - `src/features/carry`: Carry forms, list and detail views with their ViewModels.
 - `src/domain`: framework-independent entities, validation, and derived status.
-- `src/application/ports`: Bible and Carry repository contracts.
+- `src/application/ports`: repository and notification contracts.
 - `src/application/services`: reference validation and Carry lifecycle coordination.
 - `src/infrastructure/repositories`: database opening and SQLite repositories.
+- `src/infrastructure/notifications`: the Expo local-notification adapter.
 
 Views and ViewModels depend on the repository contract, not SQLite directly.
 The composition layer supplies the concrete implementation.
@@ -100,7 +101,7 @@ SHA-256 checksums:
 - `create` reuses/creates the category and inserts the Carry in one transaction.
   It rejects duplicate Carry IDs; the separate `save` operation remains an upsert.
 - Per-draft UUIDs survive retries. An immediate save lock prevents double taps;
-  navigation is blocked during writing. Cancelling before Save writes nothing.
+  navigation is blocked during saving/scheduling. Cancelling before Save writes nothing.
 - Successful Save replaces the draft with read-only detail. My Carries lists all
   saved records for reopening; this is not the full grouped FR-06 history feature.
 
@@ -129,5 +130,24 @@ SHA-256 checksums:
 
 ## Planned, not implemented
 
-- Notifications, reflection UI and full lifecycle orchestration.
+- Edit/delete reminder synchronization, reflection UI and full lifecycle orchestration.
 - Grouped history and automatic status refresh as time passes.
+
+## Local reminders
+
+- `NotificationService` separates the application from Expo; Views and ViewModels
+  never call Expo Notifications directly. No remote push token or server is used.
+- Creation saves the Carry first, then requests notification access and schedules
+  at its time minus 15 minutes. Denial/failure preserves the Carry with clear feedback.
+  Check the cutoff again after permission; past reminder times are skipped.
+- A narrow update stores the returned ID in the existing `reminder_id` column.
+  Failed linkage triggers cancellation; failed cancellation warns of a possible orphan.
+  SQLite and Android scheduling are separate operations, not an atomic transaction.
+- Generic notification content contains only a Carry ID as data. The app layer
+  handles launch/live taps, waits for navigation, and loads the existing detail screen.
+  Consumed responses are deduplicated and cleared rather than reopened on startup.
+- Android uses a reminder channel and exact-alarm manifest permission. Foreground
+  presentation is configured at startup, but permission is requested only on Save.
+  Delivery still depends on Android access/settings; native timing evaluation is separate.
+- Edit/delete synchronization is the next increment; this branch alone does not
+  complete FR-03 or demonstrate the ten-trial NFR-06 reliability target.

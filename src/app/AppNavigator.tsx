@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   DefaultTheme,
   NavigationContainer,
+  useNavigationContainerRef,
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
@@ -13,6 +14,7 @@ import { Keyboard, Pressable, Text } from 'react-native';
 
 import type { BibleRepository } from '../application/ports/BibleRepository';
 import type { CarryRepository } from '../application/ports/CarryRepository';
+import type { NotificationService } from '../application/ports/NotificationService';
 import type { BibleBook } from '../domain/entities/BibleBook';
 import type { PassageSelection } from '../domain/entities/PassageSelection';
 import type { ReferenceTarget } from '../application/services/resolveBibleReference';
@@ -24,10 +26,11 @@ import { BooksScreen } from '../features/bible/views/BooksScreen';
 import { ChaptersScreen } from '../features/bible/views/ChaptersScreen';
 import { VersesScreen } from '../features/bible/views/VersesScreen';
 import { CarryDetailFlow, CarryListFlow, CreateCarryFlow, EditCarryFlow } from './CarryScreens';
+import { useReminderNavigation } from './useReminderNavigation';
 
 type PassageTarget = { screen: 'CreateCarry' } | { screen: 'EditCarry'; carryId: string };
 
-type AppRoutes = {
+export type AppRoutes = {
   Books: { selectForCarry?: PassageTarget } | undefined;
   Chapters: { bookId: string; selectForCarry?: PassageTarget };
   Verses: {
@@ -39,7 +42,7 @@ type AppRoutes = {
   CreateCarry: { selection: PassageSelection };
   EditCarry: { carryId: string; selection?: PassageSelection };
   Carries: undefined;
-  CarryDetail: { carryId: string };
+  CarryDetail: { carryId: string; reminderMessage?: string };
 };
 
 const Stack = createNativeStackNavigator<AppRoutes>();
@@ -51,6 +54,7 @@ const theme = {
 interface AppNavigatorProps {
   readonly repository: BibleRepository;
   readonly carryRepository: CarryRepository;
+  readonly notifications: NotificationService;
   readonly books: readonly BibleBook[];
 }
 
@@ -145,9 +149,19 @@ function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: Book
 /**
  * Wire Bible selection and personal Carry screens without passing stored text through routes.
  */
-export function AppNavigator({ repository, carryRepository, books }: AppNavigatorProps) {
+export function AppNavigator({
+  repository,
+  carryRepository,
+  notifications,
+  books,
+}: AppNavigatorProps) {
+  const navigationRef = useNavigationContainerRef<AppRoutes>();
+  const [navigationReady, setNavigationReady] = useState(false);
+  const handleNavigationReady = useCallback(() => setNavigationReady(true), []);
+  useReminderNavigation(navigationRef, navigationReady);
+
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer ref={navigationRef} onReady={handleNavigationReady} theme={theme}>
       <Stack.Navigator initialRouteName="Books">
         <Stack.Screen
           name="Books"
@@ -245,7 +259,13 @@ export function AppNavigator({ repository, carryRepository, books }: AppNavigato
               repository={carryRepository}
               bibleRepository={repository}
               selection={route.params.selection}
-              onSaved={(carryId) => navigation.replace('CarryDetail', { carryId })}
+              notifications={notifications}
+              onSaved={(carryId, reminderMessage) =>
+                navigation.replace('CarryDetail', {
+                  carryId,
+                  reminderMessage: reminderMessage ?? undefined,
+                })
+              }
               onCancel={() => navigation.goBack()}
               onChangePassage={() =>
                 navigation.push('Books', { selectForCarry: { screen: 'CreateCarry' } })
@@ -287,6 +307,7 @@ export function AppNavigator({ repository, carryRepository, books }: AppNavigato
               bibleRepository={repository}
               carryId={route.params.carryId}
               onViewCarries={() => navigation.popTo('Carries')}
+              reminderMessage={route.params.reminderMessage}
               onEdit={() => navigation.push('EditCarry', { carryId: route.params.carryId })}
             />
           )}

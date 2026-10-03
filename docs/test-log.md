@@ -1,6 +1,6 @@
 # Test log
 
-Recorded checkpoints from 2-3 October 2026 (New Zealand time).
+Recorded checkpoints from 2-4 October 2026 (New Zealand time).
 Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 
 ## Automated checkpoints
@@ -17,6 +17,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Creation review fix | 68 / 14 | Late lookup cannot navigate after Books loses focus; lookup works after returning |
 | Carry editing | 83 / 17 | Eligibility/clock rechecks, validation, prefill/retry, draft preservation, save locking and picker routing |
 | Carry deletion | 95 / 21 | Upcoming-only deletion, transaction-lock clock check, missing IDs, confirmation, double-tap locking and stale callbacks |
+| Local reminders | 107 / 24 | Permission/cutoff handling, notification linkage/compensation, saved-Carry preservation, launch/live tap routing and deduplication |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -176,6 +177,30 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Expiry, failed writes, repeated requests and stale confirmations use controlled
   tests, not native timing/fault injection. Reminder cancellation remains separate.
 
+## Local reminder acceptance (4 October)
+
+- 21 real SQLite checks, complete Bible integration and four Python source checks pass.
+- Reminder tests use controlled notification APIs/clocks; they do not establish delivery reliability.
+- Native build initially mixed C:/R: codegen paths, then Java 25 caused Prefab warning rejection.
+  The retry with CLI Java 20 and a short mapping built and installed successfully.
+  The normal API 33 release opens without Metro.
+- The user denied Android notification permission on an eligible Save. The saved
+  detail retained the Carry and explained that notification permission was off.
+  Permission choices are manual; this is a native denial check, not delivery evidence.
+- A second eligible Save linked one reminder ID. Android queued an exact alarm for
+  4 October 02:20 NZDT, 15 minutes before its 02:35 situation time.
+- With airplane mode on, Wi-Fi off and the background app process killed (not
+  force-stopped), one notification arrived at 02:20. Its ID matched SQLite.
+  Tapping it cold-opened the correct detail, including passage, situation and intention.
+- Normal force-stop/launcher reopening returned to Bible books, not the consumed
+  notification. SQLite comparison retained every Carry field and reminder ID.
+- Warm tap routing, cutoff/storage failures and compensation use controlled tests;
+  this single emulator trial does not establish ten-trial reliability.
+- Guarded exact-ID cleanup removed only the two disposable Carries and their unused
+  test category. Database backups remain outside Git; airplane/Wi-Fi and non-root adb
+  were restored. Notification permission remains enabled as chosen by the user.
+- Edit/delete notification synchronization and formal ten-trial evaluation are not included.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -201,6 +226,9 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   [Cancel leaves detail unchanged](evidence/deletion/cancelled.png),
   [refreshed list](evidence/deletion/deleted-list.png),
   [offline reopening](evidence/deletion/reopened-offline.png).
+- Reminders: [offline delivery](evidence/reminders/delivered-offline.png),
+  [tap destination](evidence/reminders/opened-offline.png),
+  [normal restart](evidence/reminders/restarted-offline.png).
 
 ## Limits and environment
 
@@ -221,4 +249,5 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No automatic scroll, keyword search or cross-chapter lookup was tested.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
-  Reminders, reflection UI and automatic status refresh remain untested.
+  Reflection UI and automatic status refresh remain untested. Representative reminder
+  acceptance is recorded above; edit/delete synchronization remains pending.

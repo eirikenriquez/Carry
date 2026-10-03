@@ -2,7 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../../../application/ports/BibleRepository';
 import type { CarryRepository } from '../../../application/ports/CarryRepository';
+import type { NotificationService } from '../../../application/ports/NotificationService';
 import { createCarryRecord } from '../../../application/services/createCarryRecord';
+import { scheduleCarryReminder } from '../../../application/services/scheduleCarryReminder';
 import type { BiblePassage } from '../../../domain/entities/BiblePassage';
 import type { Carry } from '../../../domain/entities/Carry';
 import type { Category } from '../../../domain/entities/Category';
@@ -14,6 +16,7 @@ import type { CarryLoadState } from './CarryLoadState';
 export interface CreateCarryViewModelOptions {
   readonly bibleRepository: BibleRepository;
   readonly carryRepository: CarryRepository;
+  readonly notifications: NotificationService;
   readonly initialSelection: PassageSelection;
   readonly createId: () => string;
   readonly now: () => Date;
@@ -30,6 +33,7 @@ export interface CreateCarryViewModel {
   readonly saveError: string | null;
   readonly isSaving: boolean;
   readonly savedCarry: Carry | null;
+  readonly reminderMessage: string | null;
   readonly onChangeCategory: (value: string) => void;
   readonly onChangeSituation: (value: string) => void;
   readonly onChangeIntention: (value: string) => void;
@@ -41,6 +45,7 @@ export interface CreateCarryViewModel {
 export function useCreateCarryViewModel({
   bibleRepository,
   carryRepository,
+  notifications,
   initialSelection,
   createId,
   now,
@@ -68,6 +73,7 @@ export function useCreateCarryViewModel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedCarry, setSavedCarry] = useState<Carry | null>(null);
+  const [reminderMessage, setReminderMessage] = useState<string | null>(null);
 
   const mounted = useRef(false);
   const saving = useRef(false);
@@ -205,8 +211,8 @@ export function useCreateCarryViewModel({
         },
       );
 
-      if (!mounted.current) return;
       if (!result.ok) {
+        if (!mounted.current) return;
         if (result.code === 'validation') {
           const nextErrors: CarryFormErrors = {};
           for (const issue of result.issues) nextErrors[issue.field] = validationMessage(issue);
@@ -222,14 +228,36 @@ export function useCreateCarryViewModel({
       }
 
       saved.current = result.carry;
-      setSavedCarry(result.carry);
+      // Storage has succeeded. A reminder failure must not invite another Carry save.
+      const reminder = await scheduleCarryReminder(
+        result.carry,
+        carryRepository,
+        notifications,
+        now,
+      );
+      if (!mounted.current) return;
+      const messages = {
+        scheduled: 'Reminder scheduled 15 minutes before your Carry.',
+        too_late: 'Carry saved. It is too close to its time for a 15-minute reminder.',
+        permission_denied:
+          'Carry saved. Reminders are disabled because notification permission is off.',
+        failed: 'Carry saved, but its reminder could not be scheduled.',
+        cleanup_failed:
+          'Carry saved, but a reminder could not be linked or cancelled. It may still appear.',
+      };
+      setReminderMessage(messages[reminder.status]);
+      setSavedCarry(
+        reminder.status === 'scheduled'
+          ? { ...result.carry, reminderId: reminder.reminderId }
+          : result.carry,
+      );
     } catch {
       if (mounted.current) setSaveError('Something went wrong while saving. Please try again.');
     } finally {
       saving.current = false;
       if (mounted.current) setIsSaving(false);
     }
-  }, [bibleRepository, carryRepository, draft, identity, now]);
+  }, [bibleRepository, carryRepository, notifications, draft, identity, now]);
 
   const passagePreview: CarryLoadState<BiblePassage> =
     previewRecord !== null &&
@@ -250,6 +278,7 @@ export function useCreateCarryViewModel({
     saveError,
     isSaving,
     savedCarry,
+    reminderMessage,
     onChangeCategory,
     onChangeSituation,
     onChangeIntention,

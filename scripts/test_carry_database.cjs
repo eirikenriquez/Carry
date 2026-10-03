@@ -648,6 +648,51 @@ test('saves, updates, and deletes complete Carries while preserving reusable cat
   assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
 });
 
+test('links a reminder by updating only an existing Carry reminder_id', async (t) => {
+  const { repository, database } = createRepository(t);
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const original = carryFixture();
+  insertCarry(database, original);
+
+  assert.deepEqual(await repository.setReminderId(original.id, 'notification-1'), {
+    ok: true,
+    value: true,
+  });
+  assert.deepEqual(await repository.findById(original.id), {
+    ok: true,
+    value: { ...original, reminderId: 'notification-1' },
+  });
+  assert.deepEqual(await repository.setReminderId('missing', 'notification-2'), {
+    ok: true,
+    value: false,
+  });
+  assert.deepEqual(await repository.findById('missing'), { ok: true, value: null });
+  assert.deepEqual(await repository.setReminderId(' ', 'notification-3'), {
+    ok: false,
+    code: 'invalid_record',
+  });
+  assert.deepEqual(await repository.setReminderId(original.id, '  '), {
+    ok: false,
+    code: 'invalid_record',
+  });
+  assert.equal(database.prepare('SELECT count(*) AS count FROM carries').get().count, 1);
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'work', name: 'Work' }],
+  });
+
+  database.exec(`CREATE TRIGGER fail_reminder_link BEFORE UPDATE OF reminder_id ON carries
+    BEGIN SELECT RAISE(ABORT, 'Simulated reminder link failure'); END;`);
+  assert.deepEqual(await repository.setReminderId(original.id, 'notification-2'), {
+    ok: false,
+    code: 'unavailable',
+  });
+  assert.deepEqual(await repository.findById(original.id), {
+    ok: true,
+    value: { ...original, reminderId: 'notification-1' },
+  });
+});
+
 test('rejects invalid records and prevents a reflection from moving between Carries', async (t) => {
   const { repository } = createRepository(t);
   await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
