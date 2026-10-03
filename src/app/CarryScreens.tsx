@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import type { BibleRepository } from '../application/ports/BibleRepository';
 import type { CarryRepository } from '../application/ports/CarryRepository';
+import type { NotificationService } from '../application/ports/NotificationService';
 import type { PassageSelection } from '../domain/entities/PassageSelection';
 import { useCreateCarryViewModel } from '../features/carry/view-models/useCreateCarryViewModel';
 import { useEditCarryViewModel } from '../features/carry/view-models/useEditCarryViewModel';
@@ -21,7 +22,8 @@ interface CreateCarryFlowProps {
   readonly repository: CarryRepository;
   readonly bibleRepository: BibleRepository;
   readonly selection: PassageSelection;
-  readonly onSaved: (carryId: string) => void;
+  readonly notifications: NotificationService;
+  readonly onSaved: (carryId: string, reminderMessage: string | null) => void;
   readonly onCancel: () => void;
   readonly onChangePassage: () => void;
 }
@@ -31,12 +33,14 @@ export function CreateCarryFlow({
   repository,
   bibleRepository,
   selection,
+  notifications,
   onSaved,
   onCancel,
   onChangePassage,
 }: CreateCarryFlowProps) {
   const model = useCreateCarryViewModel({
     carryRepository: repository,
+    notifications,
     bibleRepository,
     initialSelection: selection,
     createId: randomUUID,
@@ -46,8 +50,8 @@ export function CreateCarryFlow({
   // A database transaction cannot be cancelled; wait before leaving this draft.
   usePreventRemove(model.isSaving, () => undefined);
   useEffect(() => {
-    if (model.savedCarry) onSaved(model.savedCarry.id);
-  }, [model.savedCarry, onSaved]);
+    if (model.savedCarry) onSaved(model.savedCarry.id, model.reminderMessage);
+  }, [model.savedCarry, model.reminderMessage, onSaved]);
 
   return (
     <CarryFormScreen
@@ -174,6 +178,7 @@ interface CarryDetailFlowProps {
   readonly repository: CarryRepository;
   readonly bibleRepository: BibleRepository;
   readonly carryId: string;
+  readonly reminderMessage?: string;
   readonly onViewCarries: () => void;
   readonly onEdit: () => void;
 }
@@ -183,6 +188,7 @@ export function CarryDetailFlow({
   repository,
   bibleRepository,
   carryId,
+  reminderMessage,
   onViewCarries,
   onEdit,
 }: CarryDetailFlowProps) {
@@ -195,6 +201,7 @@ export function CarryDetailFlow({
   return (
     <CarryDetailScreen
       state={model.state}
+      reminderMessage={reminderMessage}
       onRetry={model.retry}
       onViewCarries={onViewCarries}
       onEdit={onEdit}

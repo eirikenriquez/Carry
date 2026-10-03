@@ -41,6 +41,11 @@ function makeOptions(overrides = {}) {
   return {
     bibleRepository,
     carryRepository,
+    notifications: {
+      requestPermission: jest.fn(async () => false),
+      schedule: jest.fn(),
+      cancel: jest.fn(),
+    },
     initialSelection: INITIAL_SELECTION,
     createId: jest.fn().mockReturnValueOnce('carry-id').mockReturnValueOnce('category-id'),
     now: jest.fn(() => NOW),
@@ -188,6 +193,41 @@ it('ignores duplicate saves and locks the draft after success', async () => {
   });
   expect(current().draft.situation).toBe(submittedSituation);
   expect(options.carryRepository.create).toHaveBeenCalledTimes(1);
+  expect(options.notifications.requestPermission).toHaveBeenCalledTimes(1);
+  expect(current().reminderMessage).toContain('Reminders are disabled');
+});
+
+it('keeps a saved Carry when scheduling fails and blocks duplicate saves while permission is pending', async () => {
+  const options = makeOptions();
+  let resolvePermission;
+  options.notifications.requestPermission.mockImplementation(
+    () =>
+      new Promise((resolve) => {
+        resolvePermission = resolve;
+      }),
+  );
+  options.notifications.schedule.mockRejectedValue(new Error('Notifications unavailable'));
+  const { current } = await mount(options);
+  await fillDraft(current);
+
+  let save;
+  await act(async () => {
+    save = current().save();
+  });
+  expect(current().isSaving).toBe(true);
+  expect(options.carryRepository.create).toHaveBeenCalledTimes(1);
+  await act(async () => current().save());
+  await act(async () => {
+    resolvePermission(true);
+    await save;
+  });
+
+  expect(current().savedCarry.id).toBe('carry-id');
+  expect(current().saveError).toBeNull();
+  expect(current().reminderMessage).toContain('reminder could not be scheduled');
+  await act(async () => current().save());
+  expect(options.carryRepository.create).toHaveBeenCalledTimes(1);
+  expect(options.notifications.schedule).toHaveBeenCalledTimes(1);
 });
 
 it('updates only the passage, ignores stale previews, and retries category loading', async () => {

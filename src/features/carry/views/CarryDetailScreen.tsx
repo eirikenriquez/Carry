@@ -18,6 +18,7 @@ import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
 export interface CarryDetailScreenProps {
   readonly state: CarryLoadState<CarryDetail>;
+  readonly reminderMessage?: string;
   readonly onRetry: () => void;
   readonly onViewCarries: () => void;
   readonly onEdit: () => void;
@@ -29,6 +30,7 @@ export interface CarryDetailScreenProps {
 /** Show persisted values and offer changes only while the Carry is upcoming. */
 export function CarryDetailScreen({
   state,
+  reminderMessage,
   onRetry,
   onViewCarries,
   onEdit,
@@ -87,11 +89,12 @@ export function CarryDetailScreen({
 
         <View style={styles.statusCard}>
           <Text style={styles.statusLabel}>{formatCarryStatus(status)}</Text>
-          {status === 'upcoming' ? (
-            <Text style={styles.reminderNote}>
-              Your schedule is saved, but this prototype does not send reminders yet.
-            </Text>
-          ) : null}
+          <Text accessibilityLiveRegion="polite" style={styles.reminderNote}>
+            {reminderMessage ??
+              (carry.reminderId
+                ? 'A reminder was scheduled for 15 minutes before this Carry.'
+                : 'No reminder is linked to this Carry.')}
+          </Text>
         </View>
 
         {deleteError ? (

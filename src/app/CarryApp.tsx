@@ -5,9 +5,15 @@ import { useBibleBrowserViewModel } from '../features/bible/view-models/useBible
 import { BibleLoadFeedback } from '../features/bible/views/BibleLoadFeedback';
 import { openBundledBible } from '../infrastructure/repositories/openBundledBible';
 import { SQLiteCarryRepository } from '../infrastructure/repositories/SQLiteCarryRepository';
+import {
+  configureNotificationPresentation,
+  ExpoNotificationService,
+} from '../infrastructure/notifications/ExpoNotificationService';
 import { AppNavigator } from './AppNavigator';
 
 const carryRepository = new SQLiteCarryRepository();
+const notifications = new ExpoNotificationService();
+configureNotificationPresentation();
 
 /**
  * Supply separate Bible and personal repositories, keeping Bible startup feedback intact.
@@ -22,6 +28,7 @@ export function CarryApp() {
         <AppNavigator
           repository={state.data.repository}
           carryRepository={carryRepository}
+          notifications={notifications}
           books={state.data.books}
         />
       ) : (
