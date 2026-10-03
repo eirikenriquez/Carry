@@ -1,7 +1,8 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import {
   DefaultTheme,
   NavigationContainer,
+  useNavigationContainerRef,
   useFocusEffect,
   useNavigation,
 } from '@react-navigation/native';
@@ -25,6 +26,7 @@ import { BooksScreen } from '../features/bible/views/BooksScreen';
 import { ChaptersScreen } from '../features/bible/views/ChaptersScreen';
 import { VersesScreen } from '../features/bible/views/VersesScreen';
 import { CarryDetailFlow, CarryListFlow, CreateCarryFlow, EditCarryFlow } from './CarryScreens';
+import { useReminderNavigation } from './useReminderNavigation';
 
 type PassageTarget = { screen: 'CreateCarry' } | { screen: 'EditCarry'; carryId: string };
 
@@ -153,8 +155,13 @@ export function AppNavigator({
   notifications,
   books,
 }: AppNavigatorProps) {
+  const navigationRef = useNavigationContainerRef<AppRoutes>();
+  const [navigationReady, setNavigationReady] = useState(false);
+  const handleNavigationReady = useCallback(() => setNavigationReady(true), []);
+  useReminderNavigation(navigationRef, navigationReady);
+
   return (
-    <NavigationContainer theme={theme}>
+    <NavigationContainer ref={navigationRef} onReady={handleNavigationReady} theme={theme}>
       <Stack.Navigator initialRouteName="Books">
         <Stack.Screen
           name="Books"
