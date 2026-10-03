@@ -1,4 +1,12 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  Alert,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCarryStatus } from '../../../domain/rules/getCarryStatus';
@@ -13,25 +21,62 @@ export interface CarryDetailScreenProps {
   readonly onRetry: () => void;
   readonly onViewCarries: () => void;
   readonly onEdit: () => void;
+  readonly onDelete: () => void;
+  readonly isDeleting: boolean;
+  readonly deleteError: string | null;
 }
 
-/** Show persisted values and offer editing only while the Carry is upcoming. */
+/** Show persisted values and offer changes only while the Carry is upcoming. */
 export function CarryDetailScreen({
   state,
   onRetry,
   onViewCarries,
   onEdit,
+  onDelete,
+  isDeleting,
+  deleteError,
 }: CarryDetailScreenProps) {
   if (state.status === 'loading') {
-    return <CarryLoadFeedback resourceLabel="Carry" />;
+    return (
+      <View style={styles.loadState}>
+        <CarryLoadFeedback resourceLabel="Carry" />
+        {deleteError ? (
+          <Text accessibilityRole="alert" style={styles.deleteError}>
+            {deleteError}
+          </Text>
+        ) : null}
+      </View>
+    );
   }
 
   if (state.status === 'error') {
-    return <CarryLoadError resourceLabel="Carry" onRetry={onRetry} />;
+    return (
+      <View style={styles.loadState}>
+        <CarryLoadError resourceLabel="Carry" onRetry={onRetry} />
+        {deleteError ? (
+          <Text accessibilityRole="alert" style={styles.deleteError}>
+            {deleteError}
+          </Text>
+        ) : null}
+      </View>
+    );
   }
 
   const { carry, categoryName, passage } = state.data;
   const status = getCarryStatus(carry, new Date());
+
+  /** Ask for native confirmation; cancellation does not write. */
+  function requestDelete(): void {
+    Alert.alert(
+      'Delete this Carry?',
+      'This permanently deletes this Carry. This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: onDelete },
+      ],
+      { cancelable: true },
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
@@ -48,6 +93,21 @@ export function CarryDetailScreen({
             </Text>
           ) : null}
         </View>
+
+        {deleteError ? (
+          <Text accessibilityRole="alert" style={styles.deleteError}>
+            {deleteError}
+          </Text>
+        ) : null}
+
+        {isDeleting ? (
+          <View style={styles.deletingFeedback}>
+            <ActivityIndicator accessibilityLabel="Deleting Carry" color="#111111" />
+            <Text accessibilityLiveRegion="polite" style={styles.deletingText}>
+              Deleting Carry…
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.field}>
           <Text style={styles.fieldLabel}>Category</Text>
@@ -84,17 +144,45 @@ export function CarryDetailScreen({
         {status === 'upcoming' ? (
           <Pressable
             accessibilityRole="button"
+            accessibilityState={{ disabled: isDeleting }}
+            disabled={isDeleting}
             onPress={onEdit}
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.backButton,
+              isDeleting && styles.disabled,
+              pressed && !isDeleting && styles.pressed,
+            ]}
           >
             <Text style={styles.backButtonText}>Edit Carry</Text>
           </Pressable>
         ) : null}
 
+        {status === 'upcoming' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isDeleting, busy: isDeleting }}
+            disabled={isDeleting}
+            onPress={requestDelete}
+            style={({ pressed }) => [
+              styles.deleteButton,
+              isDeleting && styles.disabled,
+              pressed && !isDeleting && styles.pressed,
+            ]}
+          >
+            <Text style={styles.deleteButtonText}>{isDeleting ? 'Deleting…' : 'Delete Carry'}</Text>
+          </Pressable>
+        ) : null}
+
         <Pressable
           accessibilityRole="button"
+          accessibilityState={{ disabled: isDeleting }}
+          disabled={isDeleting}
           onPress={onViewCarries}
-          style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
+          style={({ pressed }) => [
+            styles.backButton,
+            isDeleting && styles.disabled,
+            pressed && !isDeleting && styles.pressed,
+          ]}
         >
           <Text style={styles.backButtonText}>Back to Carries</Text>
         </Pressable>
@@ -104,6 +192,7 @@ export function CarryDetailScreen({
 }
 
 const styles = StyleSheet.create({
+  loadState: { flex: 1 },
   safeArea: { flex: 1, backgroundColor: '#ffffff' },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 28 },
   screenTitle: { color: '#111111', fontSize: 28, fontWeight: '600', lineHeight: 36 },
@@ -116,6 +205,9 @@ const styles = StyleSheet.create({
   },
   statusLabel: { color: '#111111', fontSize: 17, fontWeight: '600', lineHeight: 24 },
   reminderNote: { marginTop: 6, color: '#555555', fontSize: 14, lineHeight: 21 },
+  deleteError: { marginTop: 14, color: '#a12622', fontSize: 15, lineHeight: 22 },
+  deletingFeedback: { alignItems: 'center', marginTop: 20 },
+  deletingText: { marginTop: 6, color: '#333333', fontSize: 14, lineHeight: 20 },
   field: { marginTop: 22 },
   fieldLabel: { color: '#555555', fontSize: 14, lineHeight: 20 },
   fieldValue: { marginTop: 4, color: '#111111', fontSize: 17, lineHeight: 25 },
@@ -145,5 +237,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   backButtonText: { color: '#111111', fontSize: 16, lineHeight: 24 },
+  deleteButton: {
+    minHeight: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#a12622',
+    borderRadius: 4,
+    paddingHorizontal: 16,
+  },
+  deleteButtonText: { color: '#a12622', fontSize: 16, lineHeight: 24 },
+  disabled: { opacity: 0.5 },
   pressed: { opacity: 0.65, backgroundColor: '#f2f2f2' },
 });

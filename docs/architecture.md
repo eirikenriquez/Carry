@@ -8,10 +8,10 @@ Views render state; ViewModels handle interaction; infrastructure handles SQLite
 - `src/app`: wires dependencies and React Navigation.
 - `src/features/bible/views`: screens and reusable Bible components.
 - `src/features/bible/view-models`: loading, selection, lookup, and retry state.
-- `src/features/carry`: creation, list and detail views with their ViewModels.
+- `src/features/carry`: Carry forms, list and detail views with their ViewModels.
 - `src/domain`: framework-independent entities, validation, and derived status.
 - `src/application/ports`: Bible and Carry repository contracts.
-- `src/application/services`: reference validation and Carry creation coordination.
+- `src/application/services`: reference validation and Carry lifecycle coordination.
 - `src/infrastructure/repositories`: database opening and SQLite repositories.
 
 Views and ViewModels depend on the repository contract, not SQLite directly.
@@ -117,7 +117,17 @@ SHA-256 checksums:
 - Save returns to refreshed detail; cancellation writes nothing. Reminder
   rescheduling is a separate integration, not a side effect of this update.
 
+## Carry deletion flow
+
+- Upcoming detail offers native confirmation; Cancel/dismissal writes nothing.
+- The detail ViewModel locks repeated requests and ignores old confirmations/results
+  after focus, Carry ID, or repository changes. Leaving is blocked during deletion.
+- `deleteUpcomingCarry` supplies the clock to repository deletion. SQLite checks
+  the stored status after acquiring its write lock; overdue/reflected records stay.
+- Missing IDs succeed without changes. Successful deletion returns to the refreshed
+  list; shared categories remain reusable. Reminder cancellation is separate work.
+
 ## Planned, not implemented
 
-- Notifications, deletion, reflection UI and full lifecycle orchestration.
+- Notifications, reflection UI and full lifecycle orchestration.
 - Grouped history and automatic status refresh as time passes.

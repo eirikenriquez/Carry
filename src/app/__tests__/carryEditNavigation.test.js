@@ -6,6 +6,7 @@ let mockActiveScreen = 'EditCarry';
 let mockRoute = { params: { carryId: 'carry-7' } };
 let mockEditFlowProps;
 let mockCreateFlowProps;
+let mockDetailFlowProps;
 let mockVersesProps;
 const mockSelection = { startVerseKey: 'JHN.3.16', endVerseKey: 'JHN.3.16' };
 const mockNavigation = {
@@ -45,7 +46,10 @@ jest.mock('../CarryScreens', () => ({
     return null;
   },
   CarryListFlow: () => null,
-  CarryDetailFlow: () => null,
+  CarryDetailFlow: (props) => {
+    mockDetailFlowProps = props;
+    return null;
+  },
 }));
 jest.mock('../../features/bible/view-models/useBibleChapterViewModel', () => ({
   useBibleChapterViewModel: () => ({ state: { status: 'ready', data: [] }, retry: jest.fn() }),
@@ -93,6 +97,7 @@ it('routes Scripture picks back to the matching edit or create draft', async () 
   mockRoute = { params: { carryId: 'carry-7' } };
   mockEditFlowProps = undefined;
   mockCreateFlowProps = undefined;
+  mockDetailFlowProps = undefined;
   mockVersesProps = undefined;
   mockNavigation.push.mockClear();
   mockNavigation.popTo.mockClear();
@@ -132,6 +137,11 @@ it('routes Scripture picks back to the matching edit or create draft', async () 
     expect(mockNavigation.popTo).toHaveBeenNthCalledWith(2, 'CreateCarry', {
       selection: mockSelection,
     });
+
+    await showScreen(renderer, 'CarryDetail', { params: { carryId: 'directly-created' } });
+    expect(mockDetailFlowProps.carryId).toBe('directly-created');
+    await React.act(async () => mockDetailFlowProps.onViewCarries());
+    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(3, 'Carries');
   } finally {
     await unmountProbe(renderer);
   }
