@@ -433,6 +433,27 @@ export class SQLiteCarryRepository implements CarryRepository {
     );
   }
 
+  /** Update only the notification link; false means the saved Carry no longer exists. */
+  async setReminderId(id: string, reminderId: string): Promise<CarryRepositoryResult<boolean>> {
+    if (
+      typeof id !== 'string' ||
+      !id.trim() ||
+      typeof reminderId !== 'string' ||
+      !reminderId.trim()
+    ) {
+      return { ok: false, code: 'invalid_record' };
+    }
+
+    return this.withDatabase(async (database) => {
+      const result = await database.runAsync(
+        'UPDATE carries SET reminder_id = ? WHERE id = ?',
+        reminderId,
+        id,
+      );
+      return { ok: true, value: result.changes > 0 };
+    });
+  }
+
   /**
    * Delete the Carry and its owned reflection; categories remain reusable.
    */

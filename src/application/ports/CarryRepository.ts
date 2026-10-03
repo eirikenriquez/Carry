@@ -39,6 +39,9 @@ export interface CarryRepository {
    */
   save(carry: Carry): Promise<CarryRepositoryResult<Carry>>;
 
+  /** Attach a newly scheduled notification without replacing other stored Carry fields. */
+  setReminderId(id: string, reminderId: string): Promise<CarryRepositoryResult<boolean>>;
+
   /**
    * Return null when the requested Carry does not exist.
    */
