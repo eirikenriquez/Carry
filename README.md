@@ -15,8 +15,9 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 - Reopen saved Carries offline, including after restarting the app.
 - Edit an upcoming Carry without changing its identity or other saved Carries.
 - Delete an upcoming Carry after confirmation, keeping its reusable category.
+- Schedule a local reminder 15 minutes before an eligible Carry; tap it to reopen details.
 
-Reminders and reflection UI are not implemented yet.
+Edit/delete reminder synchronization and reflection UI remain pending.
 Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements
