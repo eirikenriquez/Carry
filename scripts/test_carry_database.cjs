@@ -379,6 +379,81 @@ test('checks original status and the new schedule inside the update transaction'
   });
 });
 
+test('deletes only an upcoming Carry using status read under the write lock', async (t) => {
+  let transactionNow = new Date('2026-10-03T20:59:59.000Z');
+  let makeOriginalDueOnBegin = true;
+  let monitorDelete = false;
+  let beginCount = 0;
+  let deleteWriteLockAcquired = false;
+  const { repository, database } = createRepository(t, () => {
+    if (!monitorDelete) return;
+    beginCount += 1;
+    if (beginCount === 2) {
+      deleteWriteLockAcquired = true;
+      if (makeOriginalDueOnBegin) transactionNow = new Date('2026-10-03T21:00:00.000Z');
+    }
+  });
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  await repository.getOrCreateCategory({ id: 'family', name: 'Family' });
+  const original = carryFixture();
+  const other = carryFixture('carry-2');
+  const completed = {
+    ...carryFixture('carry-completed'),
+    scheduledAt: new Date('2026-10-04T21:00:00.000Z'),
+    reflection: reflectionFixture('reflection-completed'),
+  };
+  insertCarry(database, original);
+  insertCarry(database, other);
+  insertCarry(database, completed);
+  database
+    .prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)')
+    .run(
+      completed.reflection.id,
+      completed.id,
+      completed.reflection.alignmentRating,
+      completed.reflection.whatOccurred,
+      completed.reflection.insight,
+      completed.reflection.createdAt.toISOString(),
+    );
+  const now = () => {
+    assert.equal(deleteWriteLockAcquired, true);
+    return new Date(transactionNow.getTime());
+  };
+  const deleteWithLock = async (id) => {
+    monitorDelete = true;
+    beginCount = 0;
+    deleteWriteLockAcquired = false;
+    try {
+      return await repository.delete(id, now);
+    } finally {
+      monitorDelete = false;
+    }
+  };
+
+  assert.deepEqual(await deleteWithLock(original.id), {
+    ok: false,
+    code: 'not_upcoming',
+  });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
+
+  makeOriginalDueOnBegin = false;
+  transactionNow = new Date('2026-10-03T20:00:00.000Z');
+  assert.deepEqual(await deleteWithLock(completed.id), {
+    ok: false,
+    code: 'not_upcoming',
+  });
+  assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
+
+  assert.deepEqual(await deleteWithLock(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await deleteWithLock(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await deleteWithLock('missing'), { ok: true, value: undefined });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
+  assert.deepEqual(await repository.findById(other.id), { ok: true, value: other });
+  assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
+  assert.equal(database.prepare('SELECT count(*) AS count FROM categories').get().count, 2);
+  assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
+});
+
 test('rolls back failed creation, retries, and rejects duplicate Carry IDs', async (t) => {
   const { repository, database } = createRepository(t);
   const carry = { ...carryFixture('carry-retry'), categoryId: 'family' };

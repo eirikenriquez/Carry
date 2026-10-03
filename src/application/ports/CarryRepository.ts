@@ -48,8 +48,9 @@ export interface CarryRepository {
 
   /**
    * Delete a Carry and its reflection; a missing ID is already deleted.
+   * Supplying a clock restricts deletion to a currently upcoming Carry.
    */
-  delete(id: string): Promise<CarryRepositoryResult<void>>;
+  delete(id: string, now?: () => Date): Promise<CarryRepositoryResult<void>>;
 
   /**
    * Find the newest reflection by creation time, breaking ties by reflection ID.

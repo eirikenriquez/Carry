@@ -436,11 +436,24 @@ export class SQLiteCarryRepository implements CarryRepository {
   /**
    * Delete the Carry and its owned reflection; categories remain reusable.
    */
-  async delete(id: string): Promise<CarryRepositoryResult<void>> {
-    return this.withDatabase(async (database) => {
-      await database.runAsync('DELETE FROM carries WHERE id = ?', id);
-      return { ok: true, value: undefined };
-    });
+  async delete(id: string, now?: () => Date): Promise<CarryRepositoryResult<void>> {
+    return this.withDatabase((database) =>
+      this.withTransaction(database, async () => {
+        if (now) {
+          const existing = await database.getFirstAsync<CarryRow>(
+            `${carryQuery} WHERE c.id = ?`,
+            id,
+          );
+          if (!existing) return { ok: true, value: undefined };
+          if (getCarryStatus(readCarry(existing), now()) !== 'upcoming') {
+            return { ok: false, code: 'not_upcoming' };
+          }
+        }
+
+        await database.runAsync('DELETE FROM carries WHERE id = ?', id);
+        return { ok: true, value: undefined };
+      }),
+    );
   }
 
   /**
