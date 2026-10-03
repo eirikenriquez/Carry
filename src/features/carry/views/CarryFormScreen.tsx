@@ -14,22 +14,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { BiblePassage } from '../../../domain/entities/BiblePassage';
 import type { Category } from '../../../domain/entities/Category';
-import type { CreateCarryRecordValidationIssue } from '../../../application/services/createCarryRecord';
-import type { CreateCarryDraftState } from '../view-models/useCreateCarryViewModel';
+import type { CarryFormDraft, CarryFormErrors, CarryFormMode } from '../view-models/CarryFormState';
 import type { CarryLoadState } from '../view-models/CarryLoadState';
 
-type CreateCarryField = CreateCarryRecordValidationIssue['field'];
-
-export interface CreateCarryScreenProps {
-  readonly draft: CreateCarryDraftState;
+export interface CarryFormScreenProps {
+  readonly draft: CarryFormDraft;
   readonly categories: readonly Category[];
   readonly categoryLoadFailed: boolean;
   readonly onRetryCategories: () => void;
   readonly passagePreview: CarryLoadState<BiblePassage>;
   readonly onRetryPassage: () => void;
-  readonly errors: Partial<Record<CreateCarryField, string>>;
+  readonly errors: CarryFormErrors;
   readonly saveError: string | null;
   readonly isSaving: boolean;
+  readonly mode?: CarryFormMode;
   readonly onChangeCategory: (value: string) => void;
   readonly onChangeSituation: (value: string) => void;
   readonly onChangeIntention: (value: string) => void;
@@ -58,7 +56,7 @@ function formatTime(value: Date): string {
 }
 
 /** Render draft fields and native pickers; validation and saving stay in the ViewModel. */
-export function CreateCarryScreen({
+export function CarryFormScreen({
   draft,
   categories,
   categoryLoadFailed,
@@ -68,6 +66,7 @@ export function CreateCarryScreen({
   errors,
   saveError,
   isSaving,
+  mode = 'create',
   onChangeCategory,
   onChangeSituation,
   onChangeIntention,
@@ -75,7 +74,7 @@ export function CreateCarryScreen({
   onChangePassage,
   onSave,
   onCancel,
-}: CreateCarryScreenProps) {
+}: CarryFormScreenProps) {
   const selectedSchedule = draft.scheduledAt ?? new Date();
 
   /** Change the local calendar date without discarding the selected clock time. */
@@ -112,7 +111,7 @@ export function CreateCarryScreen({
       >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <Text accessibilityRole="header" style={styles.screenTitle}>
-            Create a Carry
+            {mode === 'create' ? 'Create a Carry' : 'Edit Carry'}
           </Text>
           <Text style={styles.intro}>
             Choose a moment, connect it with Scripture, and make a small plan for how to respond.
@@ -314,7 +313,9 @@ export function CreateCarryScreen({
             </Pressable>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={isSaving ? 'Saving Carry' : 'Save Carry'}
+              accessibilityLabel={
+                isSaving ? 'Saving Carry' : mode === 'create' ? 'Save Carry' : 'Save changes'
+              }
               accessibilityState={{ disabled: isSaving, busy: isSaving }}
               disabled={isSaving}
               onPress={onSave}
@@ -327,7 +328,9 @@ export function CreateCarryScreen({
               {isSaving ? (
                 <ActivityIndicator color="#ffffff" />
               ) : (
-                <Text style={styles.primaryButtonText}>Save Carry</Text>
+                <Text style={styles.primaryButtonText}>
+                  {mode === 'create' ? 'Save Carry' : 'Save changes'}
+                </Text>
               )}
             </Pressable>
           </View>
