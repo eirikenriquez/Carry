@@ -187,12 +187,20 @@ export function CarryDetailFlow({
   onEdit,
 }: CarryDetailFlowProps) {
   const model = useCarryDetailViewModel(repository, bibleRepository, carryId, useIsFocused());
+  usePreventRemove(model.isDeleting, () => undefined);
+  useEffect(() => {
+    if (model.deletedCarryId !== null) onViewCarries();
+  }, [model.deletedCarryId, onViewCarries]);
+
   return (
     <CarryDetailScreen
       state={model.state}
       onRetry={model.retry}
       onViewCarries={onViewCarries}
       onEdit={onEdit}
+      onDelete={() => void model.deleteCarry()}
+      isDeleting={model.isDeleting}
+      deleteError={model.deleteError}
     />
   );
 }
