@@ -2,22 +2,25 @@ import type { Carry } from '../../domain/entities/Carry';
 import { getCarryStatus } from '../../domain/rules/getCarryStatus';
 import type { BibleRepository } from '../ports/BibleRepository';
 import type { CarryRepository, CarryRepositoryResult } from '../ports/CarryRepository';
+import type { NotificationService } from '../ports/NotificationService';
 import {
   prepareCarryDraft,
   type CarryRecordDraft,
   type CarryRecordValidationIssue,
 } from './prepareCarryDraft';
+import { syncCarryReminder, type ReminderSyncStatus } from './syncCarryReminder';
 
 export interface UpdateCarryRecordContext {
   readonly bibleRepository: BibleRepository;
   readonly carryRepository: CarryRepository;
+  readonly notifications: NotificationService;
   readonly carryId: string;
   readonly categoryId: string;
   readonly now: () => Date;
 }
 
 export type UpdateCarryRecordResult =
-  | { readonly ok: true; readonly carry: Carry }
+  | { readonly ok: true; readonly carry: Carry; readonly reminderStatus: ReminderSyncStatus }
   | {
       readonly ok: false;
       readonly code: 'validation';
@@ -104,7 +107,13 @@ export async function updateCarryRecord(
       return { ok: false, code: 'unavailable', source: 'storage' };
     }
     if (stored.value === null) return { ok: false, code: 'not_found' };
-    return { ok: true, carry: stored.value };
+    const reminder = await syncCarryReminder(
+      stored.value,
+      context.carryRepository,
+      context.notifications,
+      context.now,
+    );
+    return { ok: true, carry: reminder.carry, reminderStatus: reminder.status };
   } catch {
     return { ok: false, code: 'unavailable', source: 'storage' };
   }
