@@ -2,7 +2,8 @@ import type { Carry } from '../../domain/entities/Carry';
 import type { Category } from '../../domain/entities/Category';
 import type { Reflection } from '../../domain/entities/Reflection';
 
-export type CarryRepositoryErrorCode = 'invalid_record' | 'not_upcoming' | 'unavailable';
+export type CarryRepositoryErrorCode =
+  'invalid_record' | 'not_upcoming' | 'not_ready' | 'already_reflected' | 'unavailable';
 
 export type CarryRepositoryResult<T> =
   | { readonly ok: true; readonly value: T }
@@ -38,6 +39,13 @@ export interface CarryRepository {
    * Save a Carry and any supplied reflection atomically; omission preserves an existing reflection.
    */
   save(carry: Carry): Promise<CarryRepositoryResult<Carry>>;
+
+  /** Attach one reflection only when the existing Carry is ready and unreflected. */
+  recordReflection(
+    carryId: string,
+    reflection: Reflection,
+    now: () => Date,
+  ): Promise<CarryRepositoryResult<Carry | null>>;
 
   /** Update or clear the notification link without recreating a missing Carry. */
   setReminderId(id: string, reminderId: string | null): Promise<CarryRepositoryResult<boolean>>;
