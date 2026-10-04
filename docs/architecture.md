@@ -19,6 +19,8 @@ Views render state; ViewModels handle interaction; repositories and services iso
 The flatter, Ignite-inspired layout groups files by responsibility without changing
 MVVM boundaries. Screens and ViewModels never call SQLite or Expo Notifications
 directly; app wiring supplies implementations through contracts.
+Bible and Carry screens share the `LoadState` type. Create/edit ViewModels share
+`usePassagePreview` for passage loading and retry; their draft and save logic stay separate.
 
 ## Domain decisions
 

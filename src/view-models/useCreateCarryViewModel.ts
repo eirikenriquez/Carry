@@ -13,6 +13,7 @@ import { clearFieldError, sameSelection, validationMessage } from './CarryFormSt
 import type { CarryFormDraft, CarryFormErrors } from './CarryFormState';
 import type { LoadState } from './LoadState';
 import { reminderFeedback } from './reminderFeedback';
+import { usePassagePreview } from './usePassagePreview';
 
 export interface CreateCarryViewModelOptions {
   readonly bibleRepository: BibleRepository;
@@ -62,14 +63,7 @@ export function useCreateCarryViewModel({
   const [categories, setCategories] = useState<readonly Category[]>([]);
   const [categoryLoadFailed, setCategoryLoadFailed] = useState(false);
   const [categoryAttempt, setCategoryAttempt] = useState(0);
-  const [previewAttempt, setPreviewAttempt] = useState(0);
   const [appliedSelection, setAppliedSelection] = useState(() => ({ ...initialSelection }));
-  const [previewRecord, setPreviewRecord] = useState<{
-    readonly startVerseKey: string;
-    readonly endVerseKey: string;
-    readonly attempt: number;
-    readonly state: LoadState<BiblePassage>;
-  } | null>(null);
   const [errors, setErrors] = useState<CarryFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -79,6 +73,7 @@ export function useCreateCarryViewModel({
   const mounted = useRef(false);
   const saving = useRef(false);
   const saved = useRef<Carry | null>(null);
+  const passagePreview = usePassagePreview({ bibleRepository, selection: draft.passage });
 
   // Sync picker changes during render so a new preview never belongs to an old selection.
   if (!isSaving && savedCarry === null && !sameSelection(appliedSelection, initialSelection)) {
@@ -119,49 +114,9 @@ export function useCreateCarryViewModel({
     };
   }, [carryRepository, categoryAttempt]);
 
-  const passageStartVerseKey = draft.passage.startVerseKey;
-  const passageEndVerseKey = draft.passage.endVerseKey;
-
-  useEffect(() => {
-    let active = true;
-    const startVerseKey = passageStartVerseKey;
-    const endVerseKey = passageEndVerseKey;
-
-    async function loadPassage(): Promise<void> {
-      try {
-        const result = await bibleRepository.getPassage({ startVerseKey, endVerseKey });
-        if (!active) return;
-        setPreviewRecord({
-          startVerseKey,
-          endVerseKey,
-          attempt: previewAttempt,
-          state: result.ok ? { status: 'ready', data: result.value } : { status: 'error' },
-        });
-      } catch {
-        if (active) {
-          setPreviewRecord({
-            startVerseKey,
-            endVerseKey,
-            attempt: previewAttempt,
-            state: { status: 'error' },
-          });
-        }
-      }
-    }
-
-    void loadPassage();
-    return () => {
-      active = false;
-    };
-  }, [bibleRepository, passageStartVerseKey, passageEndVerseKey, previewAttempt]);
-
   const onRetryCategories = useCallback((): void => {
     setCategoryLoadFailed(false);
     setCategoryAttempt((current) => current + 1);
-  }, []);
-
-  const onRetryPassage = useCallback((): void => {
-    setPreviewAttempt((current) => current + 1);
   }, []);
 
   const onChangeCategory = useCallback((value: string): void => {
@@ -251,21 +206,13 @@ export function useCreateCarryViewModel({
     }
   }, [bibleRepository, carryRepository, notifications, draft, identity, now]);
 
-  const passagePreview: LoadState<BiblePassage> =
-    previewRecord !== null &&
-    previewRecord.startVerseKey === draft.passage.startVerseKey &&
-    previewRecord.endVerseKey === draft.passage.endVerseKey &&
-    previewRecord.attempt === previewAttempt
-      ? previewRecord.state
-      : { status: 'loading' };
-
   return {
     draft,
     categories,
     categoryLoadFailed,
     onRetryCategories,
-    passagePreview,
-    onRetryPassage,
+    passagePreview: passagePreview.state,
+    onRetryPassage: passagePreview.retry,
     errors,
     saveError,
     isSaving,

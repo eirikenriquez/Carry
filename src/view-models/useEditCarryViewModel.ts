@@ -18,6 +18,7 @@ import {
 } from './CarryFormState';
 import type { LoadState } from './LoadState';
 import { reminderFeedback } from './reminderFeedback';
+import { usePassagePreview } from './usePassagePreview';
 
 export type EditCarryLoadState = 'loading' | 'error' | 'not_found' | 'not_upcoming' | 'ready';
 
@@ -68,13 +69,6 @@ export function useEditCarryViewModel({
   const [categories, setCategories] = useState<readonly Category[]>([]);
   const [categoryLoadFailed, setCategoryLoadFailed] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
-  const [previewAttempt, setPreviewAttempt] = useState(0);
-  const [previewRecord, setPreviewRecord] = useState<{
-    readonly startVerseKey: string;
-    readonly endVerseKey: string;
-    readonly attempt: number;
-    readonly state: LoadState<BiblePassage>;
-  } | null>(null);
   const [errors, setErrors] = useState<CarryFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -86,6 +80,7 @@ export function useEditCarryViewModel({
   const saved = useRef<Carry | null>(null);
   const hydratedCarryId = useRef<string | null>(null);
   const [appliedSelection, setAppliedSelection] = useState<PassageSelection | null>(null);
+  const passagePreview = usePassagePreview({ bibleRepository, selection: draft?.passage ?? null });
 
   // Apply a picker result after prefill while preserving the rest of the local draft.
   if (selection === undefined) {
@@ -172,55 +167,11 @@ export function useEditCarryViewModel({
     };
   }, [carryId, carryRepository, loadAttempt, now]);
 
-  const passageStartVerseKey = draft?.passage.startVerseKey ?? null;
-  const passageEndVerseKey = draft?.passage.endVerseKey ?? null;
-
-  useEffect(() => {
-    if (passageStartVerseKey === null || passageEndVerseKey === null) {
-      return;
-    }
-
-    let active = true;
-    const startVerseKey = passageStartVerseKey;
-    const endVerseKey = passageEndVerseKey;
-
-    async function loadPassage(): Promise<void> {
-      try {
-        const result = await bibleRepository.getPassage({ startVerseKey, endVerseKey });
-        if (!active) return;
-        setPreviewRecord({
-          startVerseKey,
-          endVerseKey,
-          attempt: previewAttempt,
-          state: result.ok ? { status: 'ready', data: result.value } : { status: 'error' },
-        });
-      } catch {
-        if (active) {
-          setPreviewRecord({
-            startVerseKey,
-            endVerseKey,
-            attempt: previewAttempt,
-            state: { status: 'error' },
-          });
-        }
-      }
-    }
-
-    void loadPassage();
-    return () => {
-      active = false;
-    };
-  }, [bibleRepository, passageEndVerseKey, passageStartVerseKey, previewAttempt]);
-
   const retry = useCallback((): void => {
     if (saving.current) return;
     setCategoryLoadFailed(false);
     setLoadState('loading');
     setLoadAttempt((current) => current + 1);
-  }, []);
-
-  const onRetryPassage = useCallback((): void => {
-    setPreviewAttempt((current) => current + 1);
   }, []);
 
   const onChangeCategory = useCallback((value: string): void => {
@@ -311,14 +262,6 @@ export function useEditCarryViewModel({
     }
   }, [bibleRepository, carryId, carryRepository, notifications, categoryId, draft, now]);
 
-  const passagePreview: LoadState<BiblePassage> =
-    previewRecord !== null &&
-    previewRecord.startVerseKey === passageStartVerseKey &&
-    previewRecord.endVerseKey === passageEndVerseKey &&
-    previewRecord.attempt === previewAttempt
-      ? previewRecord.state
-      : { status: 'loading' };
-
   return {
     loadState,
     retry,
@@ -326,8 +269,8 @@ export function useEditCarryViewModel({
     categories,
     categoryLoadFailed,
     onRetryCategories: retry,
-    passagePreview,
-    onRetryPassage,
+    passagePreview: passagePreview.state,
+    onRetryPassage: passagePreview.retry,
     errors,
     saveError,
     isSaving,

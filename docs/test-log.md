@@ -22,6 +22,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Carry status refresh | 119 / 27 | Clock after delayed loading, resume across a schedule, focus refresh and listener cleanup |
 | Reflection entry | 137 / 30 | Validation, guarded save, draft/retry state, duplicate/stale requests, form feedback and ready-only navigation |
 | Folder clarity audit | 137 / 30 | Existing coverage retained after moving files, imports, and test-script paths |
+| Shared loading and preview | 137 / 30 | Existing coverage retained for create/edit previews, stale reads, draft preservation and save guards |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Folder audit: 24 personal SQLite checks and Bible integration passed. Android
