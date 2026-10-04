@@ -78,9 +78,10 @@ export function CreateCarryFlow({
 interface EditCarryFlowProps {
   readonly repository: CarryRepository;
   readonly bibleRepository: BibleRepository;
+  readonly notifications: NotificationService;
   readonly carryId: string;
   readonly selection?: PassageSelection;
-  readonly onSaved: () => void;
+  readonly onSaved: (reminderMessage: string | null) => void;
   readonly onCancel: () => void;
   readonly onChangePassage: () => void;
 }
@@ -89,6 +90,7 @@ interface EditCarryFlowProps {
 export function EditCarryFlow({
   repository,
   bibleRepository,
+  notifications,
   carryId,
   selection,
   onSaved,
@@ -98,6 +100,7 @@ export function EditCarryFlow({
   const model = useEditCarryViewModel({
     carryRepository: repository,
     bibleRepository,
+    notifications,
     carryId,
     selection,
     createId: randomUUID,
@@ -106,8 +109,8 @@ export function EditCarryFlow({
 
   usePreventRemove(model.isSaving, () => undefined);
   useEffect(() => {
-    if (model.savedCarry) onSaved();
-  }, [model.savedCarry, onSaved]);
+    if (model.savedCarry) onSaved(model.reminderMessage);
+  }, [model.savedCarry, model.reminderMessage, onSaved]);
 
   if (model.loadState === 'loading') return <CarryLoadFeedback resourceLabel="Carry" />;
   if (model.loadState === 'error') {
@@ -157,16 +160,29 @@ export function EditCarryFlow({
 
 interface CarryListFlowProps {
   readonly repository: CarryRepository;
+  readonly reminderMessage?: string;
+  readonly onClearReminderMessage: () => void;
   readonly onOpenCarry: (carryId: string) => void;
   readonly onBrowseBible: () => void;
 }
 
 /** Refresh the lightweight reopening list each time it receives focus. */
-export function CarryListFlow({ repository, onOpenCarry, onBrowseBible }: CarryListFlowProps) {
-  const model = useCarryListViewModel(repository, useIsFocused());
+export function CarryListFlow({
+  repository,
+  reminderMessage,
+  onClearReminderMessage,
+  onOpenCarry,
+  onBrowseBible,
+}: CarryListFlowProps) {
+  const isFocused = useIsFocused();
+  const model = useCarryListViewModel(repository, isFocused);
+  useEffect(() => {
+    if (!isFocused && reminderMessage) onClearReminderMessage();
+  }, [isFocused, reminderMessage, onClearReminderMessage]);
   return (
     <CarryListScreen
       state={model.state}
+      reminderMessage={reminderMessage}
       onRetry={model.retry}
       onOpenCarry={onOpenCarry}
       onBrowseBible={onBrowseBible}
@@ -177,9 +193,10 @@ export function CarryListFlow({ repository, onOpenCarry, onBrowseBible }: CarryL
 interface CarryDetailFlowProps {
   readonly repository: CarryRepository;
   readonly bibleRepository: BibleRepository;
+  readonly notifications: NotificationService;
   readonly carryId: string;
   readonly reminderMessage?: string;
-  readonly onViewCarries: () => void;
+  readonly onViewCarries: (reminderMessage?: string) => void;
   readonly onEdit: () => void;
 }
 
@@ -187,16 +204,23 @@ interface CarryDetailFlowProps {
 export function CarryDetailFlow({
   repository,
   bibleRepository,
+  notifications,
   carryId,
   reminderMessage,
   onViewCarries,
   onEdit,
 }: CarryDetailFlowProps) {
-  const model = useCarryDetailViewModel(repository, bibleRepository, carryId, useIsFocused());
+  const model = useCarryDetailViewModel(
+    repository,
+    bibleRepository,
+    notifications,
+    carryId,
+    useIsFocused(),
+  );
   usePreventRemove(model.isDeleting, () => undefined);
   useEffect(() => {
-    if (model.deletedCarryId !== null) onViewCarries();
-  }, [model.deletedCarryId, onViewCarries]);
+    if (model.deletedCarryId !== null) onViewCarries(model.deleteWarning ?? undefined);
+  }, [model.deletedCarryId, model.deleteWarning, onViewCarries]);
 
   return (
     <CarryDetailScreen

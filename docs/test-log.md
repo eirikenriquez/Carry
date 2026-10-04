@@ -18,6 +18,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Carry editing | 83 / 17 | Eligibility/clock rechecks, validation, prefill/retry, draft preservation, save locking and picker routing |
 | Carry deletion | 95 / 21 | Upcoming-only deletion, transaction-lock clock check, missing IDs, confirmation, double-tap locking and stale callbacks |
 | Local reminders | 107 / 24 | Permission/cutoff handling, notification linkage/compensation, saved-Carry preservation, launch/live tap routing and deduplication |
+| Reminder synchronization | 116 / 26 | Repeated refresh ordering, cancellation/link failures, deletion warnings, save locking and feedback routing |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -201,6 +202,52 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   were restored. Notification permission remains enabled as chosen by the user.
 - Edit/delete notification synchronization and formal ten-trial evaluation are not included.
 
+## Reminder synchronization checkpoint (4 October)
+
+- 116 Jest tests, 21 SQLite checks, complete Bible integration, four Python checks,
+  format/lint/typecheck and Git whitespace checks pass.
+- Controlled tests cover cancel -> unlink -> schedule ordering, repeated edits,
+  permission/cutoff failures, pending/delivered notification cancellation and deletion warnings.
+- Normal x86_64 release built successfully with CLI Java 20 and the short R: mapping.
+  Installation and native acceptance were not completed: emulator activation timed
+  out twice and its ADB shell did not respond. The pending diagnostic was cancelled;
+  no fixture or personal-data mutation was performed. The build mapping was removed.
+- Next: install the release, verify replacement/no duplicate alarms after edits,
+  confirm test-record deletion cancels its alarm, and inspect offline restart behaviour.
+  No native synchronization or ten-trial reliability claim is made at this checkpoint.
+
+### Native follow-up
+
+- After the emulator recovered, the same release installed without resetting data.
+  The empty personal database was backed up; one labelled fixture was seeded through
+  SQLite. This checks synchronization, not creation-form acceptance.
+- Saving an eligible edit linked one alarm at 14:15 NZDT for a 14:30 Carry.
+  Changing its time to 14:35 replaced that alarm with one at 14:20 and a new stored ID.
+  A text-only edit refreshed the ID again, kept the edited text and left only one alarm.
+- Airplane mode/Wi-Fi off, background process kill (not force-stop) and launcher
+  reopening changed PID 4460 -> 4904. Detail retained all fields; database snapshots
+  matched byte-for-byte, including the latest reminder ID.
+- At 14:15:28, no active Carry notification existed and only the 14:20 replacement
+  remained queued. This is one representative cancellation check, not ten-trial reliability.
+- Paused at confirmation before deleting the disposable Carry. Deletion cancellation
+  and fixture cleanup remain pending; radios/non-root adb restored while awaiting approval.
+  Backups: Local Temp/carry-reminder-sync-4ea5d248-78ad-4c78-86d3-c895e5ff7833.
+
+### Deletion follow-up
+
+- The fixture became overdue during the approval pause. Only its backed-up schedule
+  was reset to a future time through guarded SQLite test setup; no app rule changed.
+  Saving through Edit cleared its previously delivered tray notification and linked
+  a fresh alarm for 17:15:45 NZDT. This is cancellation evidence, not a timing trial.
+- User-approved Delete returned to the empty list. SQLite held no Carries/reflections;
+  Android held no queued Carry alarm or active Carry notification.
+- Offline force-stop/relaunch (PID 4904 -> 6725) kept the Carry absent. Post-deletion
+  database snapshots matched byte-for-byte. Notification absence was checked before
+  force-stop, so stopping the app did not establish the cancellation result.
+- Guarded cleanup removed only the unused fixture category, restoring the original
+  empty personal tables. Backups retained outside Git; radios/non-root adb restored.
+  Native cancellation acceptance is complete; formal ten-trial evaluation remains separate.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -229,6 +276,10 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Reminders: [offline delivery](evidence/reminders/delivered-offline.png),
   [tap destination](evidence/reminders/opened-offline.png),
   [normal restart](evidence/reminders/restarted-offline.png).
+- Reminder synchronization: [edited detail](evidence/reminder-sync/edited.png),
+  [offline reopening](evidence/reminder-sync/reopened-offline.png),
+  [deleted list](evidence/reminder-sync/deleted.png),
+  [deleted after offline restart](evidence/reminder-sync/deleted-reopened-offline.png).
 
 ## Limits and environment
 
@@ -250,4 +301,4 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
   Reflection UI and automatic status refresh remain untested. Representative reminder
-  acceptance is recorded above; edit/delete synchronization remains pending.
+  acceptance is recorded above; formal ten-trial notification reliability remains untested.

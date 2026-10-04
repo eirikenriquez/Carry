@@ -24,10 +24,16 @@ const passage = {
   verses: [{ key: 'JAS.1.19', bookId: 'JAS', chapter: 1, verse: 19, text: 'Be quick to hear.' }],
 };
 const ok = (value) => ({ ok: true, value });
+const notifications = {
+  cancel: jest.fn(async () => undefined),
+};
 
 let renderer;
 
-beforeEach(() => deleteUpcomingCarry.mockReset());
+beforeEach(() => {
+  deleteUpcomingCarry.mockReset();
+  notifications.cancel.mockClear();
+});
 afterEach(async () => {
   await unmountProbe(renderer);
   renderer = undefined;
@@ -47,7 +53,7 @@ describe('Carry detail delete view model', () => {
     const bibleRepository = { getPassage: jest.fn().mockResolvedValue(ok(passage)) };
     let model;
     function Probe() {
-      model = useCarryDetailViewModel(repository, bibleRepository, 'carry-1', true);
+      model = useCarryDetailViewModel(repository, bibleRepository, notifications, 'carry-1', true);
       return null;
     }
 
@@ -84,7 +90,7 @@ describe('Carry detail delete view model', () => {
     deleteUpcomingCarry.mockResolvedValue({ ok: false, code: 'not_upcoming' });
     let model;
     function Probe() {
-      model = useCarryDetailViewModel(repository, bibleRepository, 'carry-1', true);
+      model = useCarryDetailViewModel(repository, bibleRepository, notifications, 'carry-1', true);
       return null;
     }
 
@@ -120,7 +126,13 @@ describe('Carry detail delete view model', () => {
       let carryId = 'carry-1';
       let model;
       function Probe() {
-        model = useCarryDetailViewModel(repository, bibleRepository, carryId, focused);
+        model = useCarryDetailViewModel(
+          repository,
+          bibleRepository,
+          notifications,
+          carryId,
+          focused,
+        );
         return null;
       }
 
@@ -149,7 +161,7 @@ describe('Carry detail delete view model', () => {
       expect(deleteUpcomingCarry).toHaveBeenCalledTimes(1);
 
       await React.act(async () => {
-        resolveDelete({ ok: true });
+        resolveDelete({ ok: true, reminderStatus: 'cancelled' });
         await pendingDelete;
       });
 
@@ -159,4 +171,27 @@ describe('Carry detail delete view model', () => {
       }
     },
   );
+
+  it('deletes the Carry and provides a list warning when reminder cancellation fails', async () => {
+    const repository = {
+      findById: jest.fn().mockResolvedValue(ok(carry())),
+      getCategories: jest.fn().mockResolvedValue(ok([category])),
+    };
+    const bibleRepository = { getPassage: jest.fn().mockResolvedValue(ok(passage)) };
+    deleteUpcomingCarry.mockResolvedValue({ ok: true, reminderStatus: 'cancel_failed' });
+    let model;
+    function Probe() {
+      model = useCarryDetailViewModel(repository, bibleRepository, notifications, 'carry-1', true);
+      return null;
+    }
+
+    renderer = await mountProbe(Probe);
+    await React.act(async () => model.deleteCarry());
+
+    expect(model.deletedCarryId).toBe('carry-1');
+    expect(model.deleteError).toBeNull();
+    expect(model.deleteWarning).toBe(
+      'Carry deleted, but its reminder could not be cancelled. It may still appear.',
+    );
+  });
 });

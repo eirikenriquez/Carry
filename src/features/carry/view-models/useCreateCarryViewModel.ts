@@ -12,6 +12,7 @@ import type { PassageSelection } from '../../../domain/entities/PassageSelection
 import { clearFieldError, sameSelection, validationMessage } from './CarryFormState';
 import type { CarryFormDraft, CarryFormErrors } from './CarryFormState';
 import type { CarryLoadState } from './CarryLoadState';
+import { reminderFeedback } from './reminderFeedback';
 
 export interface CreateCarryViewModelOptions {
   readonly bibleRepository: BibleRepository;
@@ -236,16 +237,7 @@ export function useCreateCarryViewModel({
         now,
       );
       if (!mounted.current) return;
-      const messages = {
-        scheduled: 'Reminder scheduled 15 minutes before your Carry.',
-        too_late: 'Carry saved. It is too close to its time for a 15-minute reminder.',
-        permission_denied:
-          'Carry saved. Reminders are disabled because notification permission is off.',
-        failed: 'Carry saved, but its reminder could not be scheduled.',
-        cleanup_failed:
-          'Carry saved, but a reminder could not be linked or cancelled. It may still appear.',
-      };
-      setReminderMessage(messages[reminder.status]);
+      setReminderMessage(reminderFeedback(reminder.status));
       setSavedCarry(
         reminder.status === 'scheduled'
           ? { ...result.carry, reminderId: reminder.reminderId }

@@ -68,7 +68,9 @@ export class ExpoNotificationService implements NotificationService {
     });
   }
 
+  /** Remove both a queued reminder and any notification already shown for its ID. */
   async cancel(reminderId: string): Promise<void> {
     await Notifications.cancelScheduledNotificationAsync(reminderId);
+    await Notifications.dismissNotificationAsync(reminderId);
   }
 }

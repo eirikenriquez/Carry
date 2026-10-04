@@ -14,6 +14,7 @@ jest.mock('expo-notifications', () => ({
   requestPermissionsAsync: jest.fn(),
   scheduleNotificationAsync: jest.fn(),
   cancelScheduledNotificationAsync: jest.fn(),
+  dismissNotificationAsync: jest.fn(),
   setNotificationHandler: jest.fn(),
 }));
 
@@ -92,6 +93,7 @@ describe('ExpoNotificationService', () => {
 
     await service.cancel('notification-123');
     expect(Notifications.cancelScheduledNotificationAsync).toHaveBeenCalledWith('notification-123');
+    expect(Notifications.dismissNotificationAsync).toHaveBeenCalledWith('notification-123');
   });
 
   it('configures foreground presentation only once', () => {

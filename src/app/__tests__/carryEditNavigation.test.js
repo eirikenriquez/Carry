@@ -6,6 +6,7 @@ let mockActiveScreen = 'EditCarry';
 let mockRoute = { params: { carryId: 'carry-7' } };
 let mockEditFlowProps;
 let mockCreateFlowProps;
+let mockListFlowProps;
 let mockDetailFlowProps;
 let mockVersesProps;
 const mockSelection = { startVerseKey: 'JHN.3.16', endVerseKey: 'JHN.3.16' };
@@ -15,6 +16,7 @@ const mockNavigation = {
   goBack: jest.fn(),
   navigate: jest.fn(),
   replace: jest.fn(),
+  setParams: jest.fn(),
 };
 
 jest.mock('@react-navigation/native', () => {
@@ -45,7 +47,10 @@ jest.mock('../CarryScreens', () => ({
     mockEditFlowProps = props;
     return null;
   },
-  CarryListFlow: () => null,
+  CarryListFlow: (props) => {
+    mockListFlowProps = props;
+    return null;
+  },
   CarryDetailFlow: (props) => {
     mockDetailFlowProps = props;
     return null;
@@ -80,10 +85,12 @@ const { AppNavigator } = require('../AppNavigator');
 it('routes Scripture picks back to the matching edit or create draft', async () => {
   const carryRepository = {};
   const bibleRepository = {};
+  const notifications = {};
   function Probe() {
     return React.createElement(AppNavigator, {
       repository: bibleRepository,
       carryRepository,
+      notifications,
       books: [{ id: 'JHN', name: 'John', order: 43, chapterCount: 21 }],
     });
   }
@@ -104,6 +111,13 @@ it('routes Scripture picks back to the matching edit or create draft', async () 
   const renderer = await mountProbe(Probe);
   try {
     expect(mockEditFlowProps.carryId).toBe('carry-7');
+    expect(mockEditFlowProps.notifications).toBe(notifications);
+    await React.act(async () => mockEditFlowProps.onSaved('Reminder refreshed.'));
+    expect(mockNavigation.popTo).toHaveBeenCalledWith('CarryDetail', {
+      carryId: 'carry-7',
+      reminderMessage: 'Reminder refreshed.',
+    });
+    mockNavigation.popTo.mockClear();
     await React.act(async () => mockEditFlowProps.onChangePassage());
     expect(mockNavigation.push).toHaveBeenNthCalledWith(1, 'Books', {
       selectForCarry: { screen: 'EditCarry', carryId: 'carry-7' },
@@ -140,8 +154,22 @@ it('routes Scripture picks back to the matching edit or create draft', async () 
 
     await showScreen(renderer, 'CarryDetail', { params: { carryId: 'directly-created' } });
     expect(mockDetailFlowProps.carryId).toBe('directly-created');
+    expect(mockDetailFlowProps.notifications).toBe(notifications);
     await React.act(async () => mockDetailFlowProps.onViewCarries());
-    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(3, 'Carries');
+    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(3, 'Carries', {
+      reminderMessage: undefined,
+    });
+
+    const deleteWarning =
+      'Carry deleted, but its reminder could not be cancelled. It may still appear.';
+    await React.act(async () => mockDetailFlowProps.onViewCarries(deleteWarning));
+    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(4, 'Carries', {
+      reminderMessage: deleteWarning,
+    });
+    await showScreen(renderer, 'Carries', { params: { reminderMessage: deleteWarning } });
+    expect(mockListFlowProps.reminderMessage).toBe(deleteWarning);
+    await React.act(async () => mockListFlowProps.onClearReminderMessage());
+    expect(mockNavigation.setParams).toHaveBeenCalledWith({ reminderMessage: undefined });
   } finally {
     await unmountProbe(renderer);
   }

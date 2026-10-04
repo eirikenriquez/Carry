@@ -60,14 +60,15 @@ function makeRepositories(
       return updateResponse ?? { ok: true as const, value: carry };
     },
   );
+  const setReminderId = jest.fn(async () => ({ ok: true as const, value: true }));
   const bibleRepository: BibleRepository = {
     getBooks: async () => ({ ok: true, value: [] }),
     getChapter: async () => ({ ok: true, value: [] }),
     getPassage,
   };
-  const carryRepository = { findById, update } as unknown as CarryRepository;
+  const carryRepository = { findById, update, setReminderId } as unknown as CarryRepository;
 
-  return { bibleRepository, carryRepository, getPassage, findById, update };
+  return { bibleRepository, carryRepository, getPassage, findById, update, setReminderId };
 }
 
 function makeDraft(overrides: Partial<CarryRecordDraft> = {}): CarryRecordDraft {
@@ -86,11 +87,17 @@ function makeContext(
   carryRepository: CarryRepository,
   now: () => Date = () => NOW,
 ) {
+  const notifications = {
+    requestPermission: jest.fn(async () => true),
+    schedule: jest.fn(async () => 'reminder-new'),
+    cancel: jest.fn(async () => undefined),
+  };
   return {
     bibleRepository,
     carryRepository,
     carryId: 'carry-1',
     categoryId: 'category-candidate',
+    notifications,
     now,
   };
 }
@@ -116,7 +123,11 @@ describe('updateCarryRecord', () => {
       context,
     );
 
-    expect(result).toEqual({ ok: true, carry: canonicalResult });
+    expect(result).toEqual({
+      ok: true,
+      carry: { ...canonicalResult, reminderId: 'reminder-new' },
+      reminderStatus: 'scheduled',
+    });
     expect(repositories.getPassage).toHaveBeenCalledWith(SELECTION);
     expect(repositories.findById).toHaveBeenCalledTimes(2);
     expect(repositories.update).toHaveBeenCalledWith(
@@ -133,6 +144,7 @@ describe('updateCarryRecord', () => {
       },
       context.now,
     );
+    expect(repositories.setReminderId).toHaveBeenCalledWith('carry-1', null);
   });
 
   it('returns aggregated draft validation errors without Bible reads or writes', async () => {
