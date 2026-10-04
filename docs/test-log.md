@@ -19,6 +19,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Carry deletion | 95 / 21 | Upcoming-only deletion, transaction-lock clock check, missing IDs, confirmation, double-tap locking and stale callbacks |
 | Local reminders | 107 / 24 | Permission/cutoff handling, notification linkage/compensation, saved-Carry preservation, launch/live tap routing and deduplication |
 | Reminder synchronization | 116 / 26 | Repeated refresh ordering, cancellation/link failures, deletion warnings, save locking and feedback routing |
+| Carry status refresh | 119 / 27 | Clock after delayed loading, resume across a schedule, focus refresh and listener cleanup |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -248,6 +249,23 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   empty personal tables. Backups retained outside Git; radios/non-root adb restored.
   Native cancellation acceptance is complete; formal ten-trial evaluation remains separate.
 
+## Carry status refresh checkpoint (4 October)
+
+- Code commit `40b330e`; three new lifecycle tests, existing list/detail cases updated
+  for the explicit clock. Main-agent review corrected a test remount that could hide
+  stale time. Format/lint/types, all 119 Jest tests, 21 SQLite checks, Bible integration
+  and four Python checks pass. Existing domain boundary/invalid-date tests are retained.
+- Normal x86_64 release built in 1m 26s with Java 20 and installed without resetting data.
+  No new dependencies, schema or generated native configuration changes.
+- Native acceptance is blocked: after installation the emulator returned black window
+  captures and both activation attempts failed, although Android shell checks responded.
+  No list/detail open/resume or restart result is claimed.
+- Backed up the empty database; seeded four labelled Carry fixtures, one category and
+  one reflection. Before/after-block snapshots matched. Guarded cleanup restored zero
+  personal records; radios, non-root ADB and the temporary drive mapping were restored.
+- Next: with a responsive emulator, verify offline list/detail resume across their
+  scheduled times, future/completed controls, and app/device restart without writes.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -300,5 +318,6 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No automatic scroll, keyword search or cross-chapter lookup was tested.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
-  Reflection UI and automatic status refresh remain untested. Representative reminder
-  acceptance is recorded above; formal ten-trial notification reliability remains untested.
+  Reflection UI is not implemented. Status-refresh native acceptance is blocked as
+  recorded above. Representative reminder acceptance is recorded; formal ten-trial
+  notification reliability remains untested.
