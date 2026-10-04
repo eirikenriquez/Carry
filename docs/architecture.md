@@ -154,6 +154,6 @@ SHA-256 checksums:
   schedules/links a replacement. Text-only edits also refresh, allowing cleanup retry
   after an earlier failed time change without adding persisted alarm state.
 - Failed old-reminder cancellation keeps its ID and skips replacement to avoid duplicates.
-  Cancellation removes both pending and already-delivered notifications. Native
-  deletion acceptance remains pending; native edit replacement/reopening checks are
-  recorded in the test log, not a ten-trial timing reliability result.
+  Cancellation removes both pending and already-delivered notifications. Representative
+  native edit/delete and offline reopening checks are recorded in the test log;
+  they are not a ten-trial timing reliability result.

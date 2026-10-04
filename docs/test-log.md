@@ -233,6 +233,21 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   and fixture cleanup remain pending; radios/non-root adb restored while awaiting approval.
   Backups: Local Temp/carry-reminder-sync-4ea5d248-78ad-4c78-86d3-c895e5ff7833.
 
+### Deletion follow-up
+
+- The fixture became overdue during the approval pause. Only its backed-up schedule
+  was reset to a future time through guarded SQLite test setup; no app rule changed.
+  Saving through Edit cleared its previously delivered tray notification and linked
+  a fresh alarm for 17:15:45 NZDT. This is cancellation evidence, not a timing trial.
+- User-approved Delete returned to the empty list. SQLite held no Carries/reflections;
+  Android held no queued Carry alarm or active Carry notification.
+- Offline force-stop/relaunch (PID 4904 -> 6725) kept the Carry absent. Post-deletion
+  database snapshots matched byte-for-byte. Notification absence was checked before
+  force-stop, so stopping the app did not establish the cancellation result.
+- Guarded cleanup removed only the unused fixture category, restoring the original
+  empty personal tables. Backups retained outside Git; radios/non-root adb restored.
+  Native cancellation acceptance is complete; formal ten-trial evaluation remains separate.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -262,7 +277,9 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   [tap destination](evidence/reminders/opened-offline.png),
   [normal restart](evidence/reminders/restarted-offline.png).
 - Reminder synchronization: [edited detail](evidence/reminder-sync/edited.png),
-  [offline reopening](evidence/reminder-sync/reopened-offline.png).
+  [offline reopening](evidence/reminder-sync/reopened-offline.png),
+  [deleted list](evidence/reminder-sync/deleted.png),
+  [deleted after offline restart](evidence/reminder-sync/deleted-reopened-offline.png).
 
 ## Limits and environment
 
@@ -284,4 +301,4 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
   Reflection UI and automatic status refresh remain untested. Representative reminder
-  acceptance is recorded above; native deletion synchronization acceptance remains pending.
+  acceptance is recorded above; formal ten-trial notification reliability remains untested.
