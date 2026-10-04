@@ -36,6 +36,7 @@ it('prevents leaving while deleting and returns to Carries after success', async
     retry: jest.fn(),
     isDeleting: true,
     deleteError: null,
+    deleteWarning: null,
     deletedCarryId: null,
     deleteCarry,
   };
@@ -46,6 +47,7 @@ it('prevents leaving while deleting and returns to Carries after success', async
     return React.createElement(CarryDetailFlow, {
       repository: {},
       bibleRepository: {},
+      notifications: {},
       carryId: 'carry-7',
       onViewCarries,
       onEdit: jest.fn(),
@@ -59,9 +61,16 @@ it('prevents leaving while deleting and returns to Carries after success', async
   expect(deleteCarry).toHaveBeenCalledTimes(1);
   expect(onViewCarries).not.toHaveBeenCalled();
 
-  mockModel = { ...mockModel, isDeleting: false, deletedCarryId: 'carry-7' };
+  mockModel = {
+    ...mockModel,
+    isDeleting: false,
+    deletedCarryId: 'carry-7',
+    deleteWarning: 'Carry deleted, but its reminder could not be cancelled. It may still appear.',
+  };
   await React.act(async () => renderer.update(React.createElement(Probe)));
 
   expect(mockUsePreventRemove).toHaveBeenLastCalledWith(false, expect.any(Function));
-  expect(onViewCarries).toHaveBeenCalledTimes(1);
+  expect(onViewCarries).toHaveBeenCalledWith(
+    'Carry deleted, but its reminder could not be cancelled. It may still appear.',
+  );
 });

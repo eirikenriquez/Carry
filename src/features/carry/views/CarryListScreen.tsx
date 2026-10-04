@@ -10,6 +10,7 @@ import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
 export interface CarryListScreenProps {
   readonly state: CarryLoadState<readonly CarryListItem[]>;
+  readonly reminderMessage?: string;
   readonly onRetry: () => void;
   readonly onOpenCarry: (id: string) => void;
   readonly onBrowseBible: () => void;
@@ -33,19 +34,38 @@ function EmptyCarryList({ onBrowseBible }: { readonly onBrowseBible: () => void 
   );
 }
 
+function ReminderWarning({ message }: { readonly message?: string }) {
+  return message ? (
+    <Text accessibilityRole="alert" style={styles.reminderWarning}>
+      {message}
+    </Text>
+  ) : null;
+}
+
 /** Render records for reopening; grouped history and editing are separate features. */
 export function CarryListScreen({
   state,
+  reminderMessage,
   onRetry,
   onOpenCarry,
   onBrowseBible,
 }: CarryListScreenProps) {
   if (state.status === 'loading') {
-    return <CarryLoadFeedback resourceLabel="Carries" />;
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+        <ReminderWarning message={reminderMessage} />
+        <CarryLoadFeedback resourceLabel="Carries" />
+      </SafeAreaView>
+    );
   }
 
   if (state.status === 'error') {
-    return <CarryLoadError resourceLabel="Carries" onRetry={onRetry} />;
+    return (
+      <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
+        <ReminderWarning message={reminderMessage} />
+        <CarryLoadError resourceLabel="Carries" onRetry={onRetry} />
+      </SafeAreaView>
+    );
   }
 
   const now = new Date();
@@ -60,11 +80,14 @@ export function CarryListScreen({
           state.data.length === 0 && styles.emptyListContent,
         ]}
         ListHeaderComponent={
-          <View style={styles.listHeader}>
-            <Text accessibilityRole="header" style={styles.screenTitle}>
-              Your Carries
-            </Text>
-            <Text style={styles.intro}>Every saved Carry stays here for you to revisit.</Text>
+          <View>
+            <ReminderWarning message={reminderMessage} />
+            <View style={styles.listHeader}>
+              <Text accessibilityRole="header" style={styles.screenTitle}>
+                Your Carries
+              </Text>
+              <Text style={styles.intro}>Every saved Carry stays here for you to revisit.</Text>
+            </View>
           </View>
         }
         ListEmptyComponent={<EmptyCarryList onBrowseBible={onBrowseBible} />}
@@ -104,6 +127,16 @@ const styles = StyleSheet.create({
   listHeader: { paddingTop: 20, paddingBottom: 12 },
   screenTitle: { color: '#111111', fontSize: 28, fontWeight: '600', lineHeight: 36 },
   intro: { marginTop: 6, color: '#555555', fontSize: 15, lineHeight: 22 },
+  reminderWarning: {
+    marginTop: 14,
+    borderWidth: 1,
+    borderColor: '#a12622',
+    borderRadius: 4,
+    padding: 12,
+    color: '#7d1d19',
+    fontSize: 15,
+    lineHeight: 22,
+  },
   carryCard: {
     minHeight: 96,
     justifyContent: 'center',

@@ -54,6 +54,11 @@ function makeOptions(overrides = {}) {
   return {
     bibleRepository,
     carryRepository,
+    notifications: {
+      requestPermission: jest.fn(async () => true),
+      schedule: jest.fn(async () => 'reminder-1'),
+      cancel: jest.fn(async () => undefined),
+    },
     carryId: 'carry-1',
     createId: jest.fn(() => 'candidate-category-id'),
     now: jest.fn(() => NOW),
@@ -219,6 +224,48 @@ describe('useEditCarryViewModel', () => {
     });
     expect(current().draft.situation).toBe('Before a hard conversation');
     expect(carryRepository.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the saved edit locked while its reminder sync is pending', async () => {
+    let resolveSchedule;
+    const notifications = {
+      requestPermission: jest.fn(async () => true),
+      schedule: jest.fn(
+        () =>
+          new Promise((resolve) => {
+            resolveSchedule = () => resolve('reminder-2');
+          }),
+      ),
+      cancel: jest.fn(async () => undefined),
+    };
+    const carryRepository = {
+      findById: jest.fn(async () => ({ ok: true, value: carry() })),
+      getCategories: jest.fn(async () => ({ ok: true, value: [category] })),
+      update: jest.fn(async (_nextCategory, nextCarry) => ({ ok: true, value: nextCarry })),
+      setReminderId: jest.fn(async () => ({ ok: true, value: true })),
+    };
+    const { current } = await mount(makeOptions({ carryRepository, notifications }));
+
+    let save;
+    await act(async () => {
+      save = current().save();
+    });
+    expect(carryRepository.update).toHaveBeenCalledTimes(1);
+    expect(current().isSaving).toBe(true);
+    await act(async () => {
+      current().onChangeSituation('A duplicate edit');
+      await current().save();
+    });
+    expect(carryRepository.update).toHaveBeenCalledTimes(1);
+    expect(current().draft.situation).toBe('Before a hard conversation');
+
+    await act(async () => {
+      resolveSchedule();
+      await save;
+    });
+    expect(current().isSaving).toBe(false);
+    expect(current().savedCarry.reminderId).toBe('reminder-2');
+    expect(current().reminderMessage).toBe('Reminder scheduled 15 minutes before your Carry.');
   });
 
   it('does not start a preview when an initial load resolves after unmount', async () => {

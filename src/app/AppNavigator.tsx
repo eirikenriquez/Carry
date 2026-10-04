@@ -41,7 +41,7 @@ export type AppRoutes = {
   };
   CreateCarry: { selection: PassageSelection };
   EditCarry: { carryId: string; selection?: PassageSelection };
-  Carries: undefined;
+  Carries: { reminderMessage?: string } | undefined;
   CarryDetail: { carryId: string; reminderMessage?: string };
 };
 
@@ -279,9 +279,15 @@ export function AppNavigator({
               key={route.params.carryId}
               repository={carryRepository}
               bibleRepository={repository}
+              notifications={notifications}
               carryId={route.params.carryId}
               selection={route.params.selection}
-              onSaved={() => navigation.goBack()}
+              onSaved={(reminderMessage) =>
+                navigation.popTo('CarryDetail', {
+                  carryId: route.params.carryId,
+                  reminderMessage: reminderMessage ?? undefined,
+                })
+              }
               onCancel={() => navigation.goBack()}
               onChangePassage={() =>
                 navigation.push('Books', {
@@ -292,9 +298,11 @@ export function AppNavigator({
           )}
         </Stack.Screen>
         <Stack.Screen name="Carries" options={{ title: 'My Carries' }}>
-          {({ navigation }: NativeStackScreenProps<AppRoutes, 'Carries'>) => (
+          {({ navigation, route }: NativeStackScreenProps<AppRoutes, 'Carries'>) => (
             <CarryListFlow
               repository={carryRepository}
+              reminderMessage={route.params?.reminderMessage}
+              onClearReminderMessage={() => navigation.setParams({ reminderMessage: undefined })}
               onOpenCarry={(carryId) => navigation.navigate('CarryDetail', { carryId })}
               onBrowseBible={() => navigation.navigate('Books')}
             />
@@ -305,8 +313,9 @@ export function AppNavigator({
             <CarryDetailFlow
               repository={carryRepository}
               bibleRepository={repository}
+              notifications={notifications}
               carryId={route.params.carryId}
-              onViewCarries={() => navigation.popTo('Carries')}
+              onViewCarries={(reminderMessage) => navigation.popTo('Carries', { reminderMessage })}
               reminderMessage={route.params.reminderMessage}
               onEdit={() => navigation.push('EditCarry', { carryId: route.params.carryId })}
             />

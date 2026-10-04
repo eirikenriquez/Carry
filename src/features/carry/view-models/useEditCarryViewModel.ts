@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../../../application/ports/BibleRepository';
 import type { CarryRepository } from '../../../application/ports/CarryRepository';
+import type { NotificationService } from '../../../application/ports/NotificationService';
 import { updateCarryRecord } from '../../../application/services/updateCarryRecord';
 import type { BiblePassage } from '../../../domain/entities/BiblePassage';
 import type { Carry } from '../../../domain/entities/Carry';
@@ -16,12 +17,14 @@ import {
   type CarryFormErrors,
 } from './CarryFormState';
 import type { CarryLoadState } from './CarryLoadState';
+import { reminderFeedback } from './reminderFeedback';
 
 export type EditCarryLoadState = 'loading' | 'error' | 'not_found' | 'not_upcoming' | 'ready';
 
 export interface EditCarryViewModelOptions {
   readonly bibleRepository: BibleRepository;
   readonly carryRepository: CarryRepository;
+  readonly notifications: NotificationService;
   readonly carryId: string;
   readonly selection?: PassageSelection;
   readonly createId: () => string;
@@ -41,6 +44,7 @@ export interface EditCarryViewModel {
   readonly saveError: string | null;
   readonly isSaving: boolean;
   readonly savedCarry: Carry | null;
+  readonly reminderMessage: string | null;
   readonly onChangeCategory: (value: string) => void;
   readonly onChangeSituation: (value: string) => void;
   readonly onChangeIntention: (value: string) => void;
@@ -52,6 +56,7 @@ export interface EditCarryViewModel {
 export function useEditCarryViewModel({
   bibleRepository,
   carryRepository,
+  notifications,
   carryId,
   selection,
   createId,
@@ -74,6 +79,7 @@ export function useEditCarryViewModel({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedCarry, setSavedCarry] = useState<Carry | null>(null);
+  const [reminderMessage, setReminderMessage] = useState<string | null>(null);
 
   const mounted = useRef(false);
   const saving = useRef(false);
@@ -261,6 +267,7 @@ export function useEditCarryViewModel({
         {
           bibleRepository,
           carryRepository,
+          notifications,
           carryId,
           categoryId,
           now,
@@ -292,7 +299,9 @@ export function useEditCarryViewModel({
         }
       }
 
+      // Keep the saved record locked even when reminder sync reports a failure.
       saved.current = result.carry;
+      setReminderMessage(reminderFeedback(result.reminderStatus));
       setSavedCarry(result.carry);
     } catch {
       if (mounted.current) setSaveError('Something went wrong while saving. Please try again.');
@@ -300,7 +309,7 @@ export function useEditCarryViewModel({
       saving.current = false;
       if (mounted.current) setIsSaving(false);
     }
-  }, [bibleRepository, carryId, carryRepository, categoryId, draft, now]);
+  }, [bibleRepository, carryId, carryRepository, notifications, categoryId, draft, now]);
 
   const passagePreview: CarryLoadState<BiblePassage> =
     previewRecord !== null &&
@@ -323,6 +332,7 @@ export function useEditCarryViewModel({
     saveError,
     isSaving,
     savedCarry,
+    reminderMessage,
     onChangeCategory,
     onChangeSituation,
     onChangeIntention,

@@ -126,11 +126,18 @@ describe('Carry read view models', () => {
     const bibleRepository = {
       getPassage: jest.fn().mockResolvedValueOnce(unavailable).mockResolvedValue(ok(passage)),
     };
+    const notifications = { cancel: jest.fn() };
     let carryId = 'carry-1';
     let focused = true;
     let viewModel;
     function Probe() {
-      viewModel = useCarryDetailViewModel(repository, bibleRepository, carryId, focused);
+      viewModel = useCarryDetailViewModel(
+        repository,
+        bibleRepository,
+        notifications,
+        carryId,
+        focused,
+      );
       return null;
     }
     async function rerender() {

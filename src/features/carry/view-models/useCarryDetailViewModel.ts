@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 
 import type { BibleRepository } from '../../../application/ports/BibleRepository';
 import type { CarryRepository } from '../../../application/ports/CarryRepository';
+import type { NotificationService } from '../../../application/ports/NotificationService';
 import { deleteUpcomingCarry } from '../../../application/services/deleteUpcomingCarry';
 import type { BiblePassage } from '../../../domain/entities/BiblePassage';
 import type { Carry } from '../../../domain/entities/Carry';
@@ -17,15 +18,23 @@ export interface CarryDetail {
 export function useCarryDetailViewModel(
   repository: CarryRepository,
   bibleRepository: BibleRepository,
+  notifications: NotificationService,
   carryId: string,
   isFocused: boolean,
 ) {
   const [state, setState] = useState<CarryLoadState<CarryDetail>>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
-  const [scope, setScope] = useState({ repository, bibleRepository, carryId, isFocused });
+  const [scope, setScope] = useState({
+    repository,
+    bibleRepository,
+    notifications,
+    carryId,
+    isFocused,
+  });
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletedCarryId, setDeletedCarryId] = useState<string | null>(null);
+  const [deleteWarning, setDeleteWarning] = useState<string | null>(null);
   const deleting = useRef(false);
   const operationGeneration = useRef(0);
   const activeScope = useRef<typeof scope | null>(null);
@@ -38,14 +47,16 @@ export function useCarryDetailViewModel(
   if (
     scope.repository !== repository ||
     scope.bibleRepository !== bibleRepository ||
+    scope.notifications !== notifications ||
     scope.carryId !== carryId ||
     scope.isFocused !== isFocused
   ) {
-    setScope({ repository, bibleRepository, carryId, isFocused });
+    setScope({ repository, bibleRepository, notifications, carryId, isFocused });
     setState({ status: 'loading' });
     setIsDeleting(false);
     setDeleteError(null);
     setDeletedCarryId(null);
+    setDeleteWarning(null);
   }
 
   // Invalidate old confirmation callbacks as soon as a different screen scope commits.
@@ -118,7 +129,7 @@ export function useCarryDetailViewModel(
     setDeleteError(null);
 
     try {
-      const result = await deleteUpcomingCarry(carryId, repository);
+      const result = await deleteUpcomingCarry(carryId, repository, notifications);
       if (operationGeneration.current !== generation) return;
 
       if (!result.ok) {
@@ -131,6 +142,11 @@ export function useCarryDetailViewModel(
         return;
       }
 
+      setDeleteWarning(
+        result.reminderStatus === 'cancel_failed'
+          ? 'Carry deleted, but its reminder could not be cancelled. It may still appear.'
+          : null,
+      );
       setDeletedCarryId(carryId);
     } catch {
       if (operationGeneration.current === generation) {
@@ -142,7 +158,7 @@ export function useCarryDetailViewModel(
         setIsDeleting(false);
       }
     }
-  }, [carryId, isFocused, repository, scope, state]);
+  }, [carryId, isFocused, notifications, repository, scope, state]);
 
-  return { state, retry, isDeleting, deleteError, deletedCarryId, deleteCarry };
+  return { state, retry, isDeleting, deleteError, deleteWarning, deletedCarryId, deleteCarry };
 }
