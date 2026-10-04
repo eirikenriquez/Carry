@@ -10,6 +10,7 @@ import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
 export interface CarryListScreenProps {
   readonly state: CarryLoadState<readonly CarryListItem[]>;
+  readonly now: Date;
   readonly reminderMessage?: string;
   readonly onRetry: () => void;
   readonly onOpenCarry: (id: string) => void;
@@ -42,9 +43,10 @@ function ReminderWarning({ message }: { readonly message?: string }) {
   ) : null;
 }
 
-/** Render records for reopening; grouped history and editing are separate features. */
+/** Render saved Carries for reopening; grouped history is separate. */
 export function CarryListScreen({
   state,
+  now,
   reminderMessage,
   onRetry,
   onOpenCarry,
@@ -67,8 +69,6 @@ export function CarryListScreen({
       </SafeAreaView>
     );
   }
-
-  const now = new Date();
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>

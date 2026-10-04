@@ -39,6 +39,7 @@ it('invokes deletion only from the native destructive confirmation', async () =>
   function Probe() {
     return React.createElement(CarryDetailScreen, {
       state,
+      now: new Date('2026-10-04T12:00:00.000Z'),
       onRetry: jest.fn(),
       onViewCarries: jest.fn(),
       onEdit: jest.fn(),
@@ -76,6 +77,7 @@ it('disables detail actions and reports progress while deletion is pending', asy
   function Probe() {
     return React.createElement(CarryDetailScreen, {
       state,
+      now: new Date('2026-10-04T12:00:00.000Z'),
       onRetry: jest.fn(),
       onViewCarries: jest.fn(),
       onEdit: jest.fn(),

@@ -132,7 +132,17 @@ SHA-256 checksums:
 ## Planned, not implemented
 
 - Reflection UI and full lifecycle orchestration.
-- Grouped history and automatic status refresh as time passes.
+- Grouped history.
+
+## Carry status refresh
+
+- List/detail flows share `useCarryStatusClock`: capture time on focus, after a
+  load-state change, and on app resume. Blurred/unmounted screens remove their listener.
+- Screens pass this time to the existing domain rule: future means upcoming,
+  overdue/unreflected means ready to reflect, and reflected means completed.
+- No status column, background job or polling. A screen left continuously open
+  refreshes at the next lifecycle trigger, not with a live countdown.
+- Resume changes the clock only; it does not reload storage or reset pending operations.
 
 ## Local reminders
 

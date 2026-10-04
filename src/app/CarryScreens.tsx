@@ -11,6 +11,7 @@ import { useCreateCarryViewModel } from '../features/carry/view-models/useCreate
 import { useEditCarryViewModel } from '../features/carry/view-models/useEditCarryViewModel';
 import { useCarryListViewModel } from '../features/carry/view-models/useCarryListViewModel';
 import { useCarryDetailViewModel } from '../features/carry/view-models/useCarryDetailViewModel';
+import { useCarryStatusClock } from '../features/carry/view-models/useCarryStatusClock';
 import { CarryFormScreen } from '../features/carry/views/CarryFormScreen';
 import { CarryListScreen } from '../features/carry/views/CarryListScreen';
 import { CarryDetailScreen } from '../features/carry/views/CarryDetailScreen';
@@ -176,12 +177,14 @@ export function CarryListFlow({
 }: CarryListFlowProps) {
   const isFocused = useIsFocused();
   const model = useCarryListViewModel(repository, isFocused);
+  const now = useCarryStatusClock(isFocused, model.state);
   useEffect(() => {
     if (!isFocused && reminderMessage) onClearReminderMessage();
   }, [isFocused, reminderMessage, onClearReminderMessage]);
   return (
     <CarryListScreen
       state={model.state}
+      now={now}
       reminderMessage={reminderMessage}
       onRetry={model.retry}
       onOpenCarry={onOpenCarry}
@@ -210,13 +213,15 @@ export function CarryDetailFlow({
   onViewCarries,
   onEdit,
 }: CarryDetailFlowProps) {
+  const isFocused = useIsFocused();
   const model = useCarryDetailViewModel(
     repository,
     bibleRepository,
     notifications,
     carryId,
-    useIsFocused(),
+    isFocused,
   );
+  const now = useCarryStatusClock(isFocused, model.state);
   usePreventRemove(model.isDeleting, () => undefined);
   useEffect(() => {
     if (model.deletedCarryId !== null) onViewCarries(model.deleteWarning ?? undefined);
@@ -225,6 +230,7 @@ export function CarryDetailFlow({
   return (
     <CarryDetailScreen
       state={model.state}
+      now={now}
       reminderMessage={reminderMessage}
       onRetry={model.retry}
       onViewCarries={onViewCarries}
