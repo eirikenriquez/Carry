@@ -123,34 +123,53 @@ it.each([
     },
     false,
   ],
-])('offers the reflection action only for %s Carries', async (_status, carryChanges, visible) => {
-  const onReflect = jest.fn();
-  const screenState = {
-    ...state,
-    data: { ...state.data, carry: { ...state.data.carry, ...carryChanges } },
-  };
-  function Probe() {
-    return React.createElement(CarryDetailScreen, {
-      state: screenState,
-      now: new Date('2026-10-04T12:00:00.000Z'),
-      onRetry: jest.fn(),
-      onViewCarries: jest.fn(),
-      onEdit: jest.fn(),
-      onReflect,
-      onDelete: jest.fn(),
-      isDeleting: false,
-      deleteError: null,
-    });
-  }
+])(
+  'shows reflection availability and saved values for %s Carries',
+  async (status, carryChanges, visible) => {
+    const onReflect = jest.fn();
+    const screenState = {
+      ...state,
+      data: { ...state.data, carry: { ...state.data.carry, ...carryChanges } },
+    };
+    function Probe() {
+      return React.createElement(CarryDetailScreen, {
+        state: screenState,
+        now: new Date('2026-10-04T12:00:00.000Z'),
+        onRetry: jest.fn(),
+        onViewCarries: jest.fn(),
+        onEdit: jest.fn(),
+        onReflect,
+        onDelete: jest.fn(),
+        isDeleting: false,
+        deleteError: null,
+      });
+    }
 
-  renderer = await mountProbe(Probe);
-  const reflectButtons = renderer.root.findAll(
-    (node) =>
-      typeof node.props.onPress === 'function' &&
-      node.findAllByType(Text).some((text) => text.props.children === 'Reflect on Carry'),
-  );
+    renderer = await mountProbe(Probe);
+    const reflectButtons = renderer.root.findAll(
+      (node) =>
+        typeof node.props.onPress === 'function' &&
+        node.findAllByType(Text).some((text) => text.props.children === 'Reflect on Carry'),
+    );
 
-  expect(reflectButtons).toHaveLength(visible ? 1 : 0);
-  if (visible) await React.act(async () => reflectButtons[0].props.onPress());
-  expect(onReflect).toHaveBeenCalledTimes(visible ? 1 : 0);
-});
+    expect(reflectButtons).toHaveLength(visible ? 1 : 0);
+    if (visible) await React.act(async () => reflectButtons[0].props.onPress());
+    expect(onReflect).toHaveBeenCalledTimes(visible ? 1 : 0);
+
+    if (status === 'completed') {
+      const textValues = renderer.root.findAllByType(Text).map((node) => node.props.children);
+      expect(textValues).toEqual(
+        expect.arrayContaining(['Reflection', '4 / 5', 'I listened.', 'Pause first.']),
+      );
+      for (const label of ['Edit Carry', 'Delete Carry', 'Reflect on Carry']) {
+        expect(
+          renderer.root.findAll(
+            (node) =>
+              typeof node.props.onPress === 'function' &&
+              node.findAllByType(Text).some((text) => text.props.children === label),
+          ),
+        ).toHaveLength(0);
+      }
+    }
+  },
+);

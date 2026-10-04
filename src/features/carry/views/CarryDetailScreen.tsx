@@ -29,7 +29,7 @@ export interface CarryDetailScreenProps {
   readonly deleteError: string | null;
 }
 
-/** Show persisted values and offer changes only while the Carry is upcoming. */
+/** Show Carry values with upcoming edits or a ready-to-reflect action, plus any saved reflection. */
 export function CarryDetailScreen({
   state,
   now,
@@ -148,6 +148,26 @@ export function CarryDetailScreen({
           <Text style={styles.fieldValue}>{carry.ifThenIntention}</Text>
         </View>
 
+        {carry.reflection ? (
+          <View style={styles.reflectionSection}>
+            <Text accessibilityRole="header" style={styles.reflectionHeading}>
+              Reflection
+            </Text>
+            <View style={styles.reflectionField}>
+              <Text style={styles.fieldLabel}>Alignment</Text>
+              <Text style={styles.fieldValue}>{`${carry.reflection.alignmentRating} / 5`}</Text>
+            </View>
+            <View style={styles.reflectionField}>
+              <Text style={styles.fieldLabel}>What happened</Text>
+              <Text style={styles.fieldValue}>{carry.reflection.whatOccurred}</Text>
+            </View>
+            <View style={styles.reflectionField}>
+              <Text style={styles.fieldLabel}>Insight</Text>
+              <Text style={styles.fieldValue}>{carry.reflection.insight}</Text>
+            </View>
+          </View>
+        ) : null}
+
         {status === 'readyToReflect' ? (
           <Pressable
             accessibilityRole="button"
@@ -232,6 +252,9 @@ const styles = StyleSheet.create({
   deletingFeedback: { alignItems: 'center', marginTop: 20 },
   deletingText: { marginTop: 6, color: '#333333', fontSize: 14, lineHeight: 20 },
   field: { marginTop: 22 },
+  reflectionSection: { marginTop: 22 },
+  reflectionHeading: { color: '#111111', fontSize: 17, fontWeight: '600', lineHeight: 25 },
+  reflectionField: { marginTop: 12 },
   fieldLabel: { color: '#555555', fontSize: 14, lineHeight: 20 },
   fieldValue: { marginTop: 4, color: '#111111', fontSize: 17, lineHeight: 25 },
   passageCard: {
