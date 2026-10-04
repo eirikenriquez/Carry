@@ -257,14 +257,24 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   and four Python checks pass. Existing domain boundary/invalid-date tests are retained.
 - Normal x86_64 release built in 1m 26s with Java 20 and installed without resetting data.
   No new dependencies, schema or generated native configuration changes.
-- Native acceptance is blocked: after installation the emulator returned black window
+- The first native attempt paused: after installation the emulator returned black window
   captures and both activation attempts failed, although Android shell checks responded.
-  No list/detail open/resume or restart result is claimed.
+  Native acceptance resumed after the window recovered, as recorded below.
 - Backed up the empty database; seeded four labelled Carry fixtures, one category and
   one reflection. Before/after-block snapshots matched. Guarded cleanup restored zero
   personal records; radios, non-root ADB and the temporary drive mapping were restored.
-- Next: with a responsive emulator, verify offline list/detail resume across their
-  scheduled times, future/completed controls, and app/device restart without writes.
+
+### Native follow-up
+
+- Airplane mode/Wi-Fi off: list crossed its 17:48:59 NZDT schedule and showed Ready
+  to reflect on resume at 17:49:47. Detail crossed 17:50:29 and resumed Ready at
+  17:51:18, with Edit/Delete removed. Both retained process ID 8481.
+- Future and reflected fixtures stayed Upcoming/Completed. Offline force-stop/reopen
+  changed PID to 8637; an emulator reboot also retained all four correct statuses.
+- Database snapshots before testing, after app restart and after device restart had
+  identical SHA-256 hashes; counts stayed four Carries, one category and one reflection.
+- Guarded cleanup removed only fixtures and restored empty tables, radios and non-root
+  ADB. Backups retained. The reflection was seeded: this does not verify reflection entry.
 
 ## Screenshots
 
@@ -298,6 +308,12 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   [offline reopening](evidence/reminder-sync/reopened-offline.png),
   [deleted list](evidence/reminder-sync/deleted.png),
   [deleted after offline restart](evidence/reminder-sync/deleted-reopened-offline.png).
+- Status refresh: [list before](evidence/status-refresh/list-before.png),
+  [list resumed](evidence/status-refresh/list-resumed-offline.png),
+  [detail before](evidence/status-refresh/detail-before.png),
+  [detail resumed](evidence/status-refresh/detail-resumed-offline.png),
+  [app restart](evidence/status-refresh/app-restarted-offline.png),
+  [device restart](evidence/status-refresh/device-restarted-offline.png).
 
 ## Limits and environment
 
@@ -318,6 +334,5 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No automatic scroll, keyword search or cross-chapter lookup was tested.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
-  Reflection UI is not implemented. Status-refresh native acceptance is blocked as
-  recorded above. Representative reminder acceptance is recorded; formal ten-trial
-  notification reliability remains untested.
+  Reflection UI is not implemented. Representative status-refresh and reminder
+  acceptance are recorded; formal ten-trial notification reliability remains untested.
