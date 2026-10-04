@@ -1,6 +1,6 @@
 # Test log
 
-Recorded checkpoints from 2-4 October 2026 (New Zealand time).
+Recorded checkpoints from 2-5 October 2026 (New Zealand time).
 Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 
 ## Automated checkpoints
@@ -20,6 +20,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Local reminders | 107 / 24 | Permission/cutoff handling, notification linkage/compensation, saved-Carry preservation, launch/live tap routing and deduplication |
 | Reminder synchronization | 116 / 26 | Repeated refresh ordering, cancellation/link failures, deletion warnings, save locking and feedback routing |
 | Carry status refresh | 119 / 27 | Clock after delayed loading, resume across a schedule, focus refresh and listener cleanup |
+| Reflection entry | 137 / 30 | Validation, guarded save, draft/retry state, duplicate/stale requests, form feedback and ready-only navigation |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -64,6 +65,10 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
   after the deletion write lock; existing checks cover isolation, category retention
   and rollback. All 95 Jest tests, Bible integration and four Python checks pass.
   Final ViewModel formatting, lint and strict TypeScript checks pass.
+- Reflection entry: 24 grouped Node SQLite checks pass, including three new cases
+  for insert-only reflection writes, rollback/ownership and eligibility after the
+  write lock. All 137 Jest tests/30 suites, Bible integration, four Python checks,
+  format/lint/typecheck and Git whitespace checks pass after the native callback fix.
 
 ## Offline Android acceptance
 
@@ -276,6 +281,26 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Guarded cleanup removed only fixtures and restored empty tables, radios and non-root
   ADB. Backups retained. The reflection was seeded: this does not verify reflection entry.
 
+## Reflection entry acceptance (5 October)
+
+- Normal x86_64 release ran on API 33 without Metro, with Wi-Fi/mobile data off.
+  Three labelled Carries sharing a category were seeded through SQLite; their
+  reflections were not seeded. This checks reflection entry, not the whole creation loop.
+- The form had no default rating. Empty Save showed all three required-field errors;
+  Cancel after a partial draft left all personal records unchanged. Upcoming detail
+  offered no Reflect action.
+- A real form submission saved rating 4, what happened `Listened` and insight `Pause`.
+  Detail/list changed to Completed; saved answers were read-only, without Edit/Delete/Reflect.
+  SQLite verified exactly one reflection and unchanged Carry/category fields.
+- Offline force-stop/reopen and emulator reboot retained every saved value in both
+  the UI and database. Foreign-key and integrity checks passed at each snapshot.
+- Native Back navigation exposed an existing tap event being passed as a reminder
+  message. Fix `8bf91a6` drops the event; the regression failed before the fix and
+  passed afterward, and actual Back navigation was retested successfully.
+- Guarded exact-ID cleanup restored the original empty personal tables. Backups
+  remain outside Git; database ownership/permissions, radios, non-root ADB and the
+  temporary build mapping were restored. No app reset or test startup hook was used.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -314,6 +339,10 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   [detail resumed](evidence/status-refresh/detail-resumed-offline.png),
   [app restart](evidence/status-refresh/app-restarted-offline.png),
   [device restart](evidence/status-refresh/device-restarted-offline.png).
+- Reflection: [validation](evidence/reflection/validation.jpg),
+  [saved answers](evidence/reflection/saved-reflection.jpg),
+  [completed list](evidence/reflection/completed-list.jpg),
+  [device restart](evidence/reflection/reopened-reflection.jpg).
 
 ## Limits and environment
 
@@ -334,5 +363,6 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   No automatic scroll, keyword search or cross-chapter lookup was tested.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
-  Reflection UI is not implemented. Representative status-refresh and reminder
-  acceptance are recorded; formal ten-trial notification reliability remains untested.
+  Reflection duplicate/stale submissions and write failures also use controlled tests.
+  Representative native reflection, status-refresh and reminder acceptance are recorded;
+  formal ten-trial notification reliability remains untested.

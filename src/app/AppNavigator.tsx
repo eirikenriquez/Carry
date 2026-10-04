@@ -25,7 +25,13 @@ import { ReferenceLookupForm } from '../features/bible/views/ReferenceLookupForm
 import { BooksScreen } from '../features/bible/views/BooksScreen';
 import { ChaptersScreen } from '../features/bible/views/ChaptersScreen';
 import { VersesScreen } from '../features/bible/views/VersesScreen';
-import { CarryDetailFlow, CarryListFlow, CreateCarryFlow, EditCarryFlow } from './CarryScreens';
+import {
+  CarryDetailFlow,
+  CarryListFlow,
+  CreateCarryFlow,
+  EditCarryFlow,
+  ReflectCarryFlow,
+} from './CarryScreens';
 import { useReminderNavigation } from './useReminderNavigation';
 
 type PassageTarget = { screen: 'CreateCarry' } | { screen: 'EditCarry'; carryId: string };
@@ -41,6 +47,7 @@ export type AppRoutes = {
   };
   CreateCarry: { selection: PassageSelection };
   EditCarry: { carryId: string; selection?: PassageSelection };
+  ReflectCarry: { carryId: string };
   Carries: { reminderMessage?: string } | undefined;
   CarryDetail: { carryId: string; reminderMessage?: string };
 };
@@ -297,6 +304,17 @@ export function AppNavigator({
             />
           )}
         </Stack.Screen>
+        <Stack.Screen name="ReflectCarry" options={{ title: 'Reflect on Carry' }}>
+          {({ route, navigation }: NativeStackScreenProps<AppRoutes, 'ReflectCarry'>) => (
+            <ReflectCarryFlow
+              key={route.params.carryId}
+              repository={carryRepository}
+              carryId={route.params.carryId}
+              onSaved={() => navigation.popTo('CarryDetail', { carryId: route.params.carryId })}
+              onCancel={() => navigation.goBack()}
+            />
+          )}
+        </Stack.Screen>
         <Stack.Screen name="Carries" options={{ title: 'My Carries' }}>
           {({ navigation, route }: NativeStackScreenProps<AppRoutes, 'Carries'>) => (
             <CarryListFlow
@@ -318,6 +336,7 @@ export function AppNavigator({
               onViewCarries={(reminderMessage) => navigation.popTo('Carries', { reminderMessage })}
               reminderMessage={route.params.reminderMessage}
               onEdit={() => navigation.push('EditCarry', { carryId: route.params.carryId })}
+              onReflect={() => navigation.push('ReflectCarry', { carryId: route.params.carryId })}
             />
           )}
         </Stack.Screen>

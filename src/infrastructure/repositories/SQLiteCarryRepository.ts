@@ -125,6 +125,24 @@ function isValidCarryRecord(carry: Carry): boolean {
   );
 }
 
+/** Validate an inserted reflection without normalizing or replacing its timestamp. */
+function isValidReflectionRecord(reflection: Reflection): boolean {
+  return Boolean(
+    reflection &&
+    typeof reflection.id === 'string' &&
+    reflection.id.trim() &&
+    Number.isInteger(reflection.alignmentRating) &&
+    reflection.alignmentRating >= 1 &&
+    reflection.alignmentRating <= 5 &&
+    typeof reflection.whatOccurred === 'string' &&
+    reflection.whatOccurred.trim() &&
+    typeof reflection.insight === 'string' &&
+    reflection.insight.trim() &&
+    reflection.createdAt instanceof Date &&
+    Number.isFinite(reflection.createdAt.getTime()),
+  );
+}
+
 export class SQLiteCarryRepository implements CarryRepository {
   /**
    * Give each operation its own initialized connection and always close it afterward.
@@ -427,6 +445,63 @@ export class SQLiteCarryRepository implements CarryRepository {
           `${carryQuery} WHERE c.id = ?`,
           carry.id,
         );
+        if (!row) return { ok: false, code: 'unavailable' };
+        return { ok: true, value: readCarry(row) };
+      }),
+    );
+  }
+
+  /** Insert one reflection after checking the locked Carry's current state. */
+  async recordReflection(
+    carryId: string,
+    reflection: Reflection,
+    now: () => Date,
+  ): Promise<CarryRepositoryResult<Carry | null>> {
+    if (
+      typeof carryId !== 'string' ||
+      !carryId.trim() ||
+      !isValidReflectionRecord(reflection) ||
+      typeof now !== 'function'
+    ) {
+      return { ok: false, code: 'invalid_record' };
+    }
+
+    return this.withDatabase((database) =>
+      this.withTransaction(database, async () => {
+        const existing = await database.getFirstAsync<CarryRow>(
+          `${carryQuery} WHERE c.id = ?`,
+          carryId,
+        );
+        if (!existing) return { ok: true, value: null };
+
+        const carry = readCarry(existing);
+        if (carry.reflection) return { ok: false, code: 'already_reflected' };
+
+        const checkedAt = now();
+        if (getCarryStatus(carry, checkedAt) !== 'readyToReflect') {
+          return { ok: false, code: 'not_ready' };
+        }
+        if (reflection.createdAt.getTime() < carry.scheduledAt.getTime()) {
+          return { ok: false, code: 'invalid_record' };
+        }
+
+        const idOwner = await database.getFirstAsync<{ carryId: string }>(
+          'SELECT carry_id AS carryId FROM reflections WHERE id = ?',
+          reflection.id,
+        );
+        if (idOwner) return { ok: false, code: 'invalid_record' };
+
+        await database.runAsync(
+          `INSERT INTO reflections (id, carry_id, alignment_rating,
+          what_occurred, insight, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
+          reflection.id,
+          carryId,
+          reflection.alignmentRating,
+          reflection.whatOccurred,
+          reflection.insight,
+          reflection.createdAt.toISOString(),
+        );
+        const row = await database.getFirstAsync<CarryRow>(`${carryQuery} WHERE c.id = ?`, carryId);
         if (!row) return { ok: false, code: 'unavailable' };
         return { ok: true, value: readCarry(row) };
       }),

@@ -72,7 +72,8 @@ SHA-256 checksums:
 
 ## Personal storage
 
-- `CarryRepository` defines atomic creation, category reuse, save/read/delete and latest-reflection retrieval.
+- `CarryRepository` defines atomic creation, category reuse, save/read/delete,
+  insert-only reflection recording and latest-reflection retrieval.
 - The initial version-1 schema has categories, Carries, and reflections. Normalized
   category names are unique; each Carry owns at most one reflection, deleted with it.
 - Dates use UTC ISO text; reminders are optional, and status is not stored.
@@ -129,10 +130,21 @@ SHA-256 checksums:
   service cancels its actual reminder ID. Shared categories remain reusable.
   Cancellation failure does not undo deletion; a warning appears on the refreshed list.
 
+## Reflection flow
+
+- Ready detail opens a reflection form by Carry ID. Its ViewModel keeps the draft
+  local, requires an explicit 1-5 rating and both answers, and preserves failed saves.
+- `saveCarryReflection` reuses the existing `addReflection` domain rule. The narrow
+  repository operation rechecks the stored Carry under its write lock and inserts
+  only the reflection: it cannot recreate a missing Carry or overwrite a saved reflection.
+- An immediate save lock blocks repeated submissions and leaving during a write;
+  stale results cannot navigate after the screen's dependencies change.
+- Success returns to refreshed, read-only detail. Reflection presence derives
+  Completed status; no schema, status column or notification change is needed.
+
 ## Planned, not implemented
 
-- Reflection UI and full lifecycle orchestration.
-- Grouped history.
+- Grouped history and latest-reflection presentation by category.
 
 ## Carry status refresh
 

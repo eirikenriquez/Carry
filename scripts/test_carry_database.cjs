@@ -112,13 +112,13 @@ function carryFixture(id = 'carry-1') {
   };
 }
 
-function reflectionFixture(id = 'reflection-2') {
+function reflectionFixture(id = 'reflection-2', createdAt = '2026-10-04T01:00:00.000Z') {
   return {
     id,
     alignmentRating: 4,
     whatOccurred: 'I listened first.',
     insight: 'Pausing helped.',
-    createdAt: new Date('2026-10-04T01:00:00.000Z'),
+    createdAt: new Date(createdAt),
   };
 }
 
@@ -646,6 +646,195 @@ test('saves, updates, and deletes complete Carries while preserving reusable cat
   assert.equal(database.prepare('SELECT count(*) AS count FROM reflections').get().count, 0);
   assert.equal((await repository.getCategories()).value.length, 2);
   assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
+});
+
+test('records one reflection while preserving the Carry and its reminder metadata', async (t) => {
+  const { repository, database } = createRepository(t);
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  await repository.getOrCreateCategory({ id: 'family', name: 'Family' });
+  const original = { ...carryFixture(), reminderId: 'notification-1' };
+  const other = { ...carryFixture('carry-2'), categoryId: 'family' };
+  insertCarry(database, original);
+  insertCarry(database, other);
+  const reflection = reflectionFixture('reflection-recorded', '2026-10-03T21:00:00.000Z');
+
+  assert.deepEqual(
+    await repository.recordReflection(
+      original.id,
+      reflection,
+      () => new Date(original.scheduledAt),
+    ),
+    { ok: true, value: { ...original, reflection } },
+  );
+  assert.deepEqual(await repository.findById(original.id), {
+    ok: true,
+    value: { ...original, reflection },
+  });
+  assert.deepEqual(await repository.findById(other.id), { ok: true, value: other });
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [
+      { id: 'family', name: 'Family' },
+      { id: 'work', name: 'Work' },
+    ],
+  });
+  assert.equal(database.prepare('SELECT count(*) AS count FROM reflections').get().count, 1);
+  assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
+});
+
+test('rejects premature, duplicate, and missing reflection writes and rolls back failures', async (t) => {
+  const { repository, database } = createRepository(t);
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const upcoming = {
+    ...carryFixture('carry-upcoming'),
+    scheduledAt: new Date('2026-10-04T21:00:00.000Z'),
+  };
+  const completed = {
+    ...carryFixture('carry-completed'),
+    reflection: reflectionFixture('reflection-existing'),
+  };
+  const rollback = carryFixture('carry-rollback');
+  insertCarry(database, upcoming);
+  insertCarry(database, completed);
+  insertCarry(database, rollback);
+  database
+    .prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)')
+    .run(
+      completed.reflection.id,
+      completed.id,
+      completed.reflection.alignmentRating,
+      completed.reflection.whatOccurred,
+      completed.reflection.insight,
+      completed.reflection.createdAt.toISOString(),
+    );
+
+  const validReflection = reflectionFixture('reflection-premature', '2026-10-04T21:00:00.000Z');
+  assert.deepEqual(
+    await repository.recordReflection(
+      upcoming.id,
+      validReflection,
+      () => new Date('2026-10-04T20:59:59.999Z'),
+    ),
+    { ok: false, code: 'not_ready' },
+  );
+  assert.deepEqual(
+    await repository.recordReflection(
+      completed.id,
+      reflectionFixture('reflection-replacement'),
+      () => new Date('2026-10-05T00:00:00.000Z'),
+    ),
+    { ok: false, code: 'already_reflected' },
+  );
+  assert.deepEqual(
+    await repository.recordReflection(
+      'missing',
+      reflectionFixture('reflection-missing'),
+      () => new Date('2026-10-05T00:00:00.000Z'),
+    ),
+    { ok: true, value: null },
+  );
+
+  database.exec(`CREATE TRIGGER fail_reflection BEFORE INSERT ON reflections
+    WHEN NEW.carry_id = 'carry-rollback'
+    BEGIN SELECT RAISE(ABORT, 'Simulated reflection failure'); END;`);
+  assert.deepEqual(
+    await repository.recordReflection(
+      rollback.id,
+      reflectionFixture('reflection-rollback'),
+      () => new Date('2026-10-05T00:00:00.000Z'),
+    ),
+    { ok: false, code: 'unavailable' },
+  );
+  assert.deepEqual(await repository.findById(upcoming.id), { ok: true, value: upcoming });
+  assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
+  assert.deepEqual(await repository.findById(rollback.id), { ok: true, value: rollback });
+  assert.deepEqual(await repository.findById('missing'), { ok: true, value: null });
+  assert.equal(database.prepare('SELECT count(*) AS count FROM reflections').get().count, 1);
+  assert.deepEqual(await repository.getCategories(), {
+    ok: true,
+    value: [{ id: 'work', name: 'Work' }],
+  });
+});
+
+test('checks eligibility after acquiring the lock and rejects stale schedules and reflection IDs', async (t) => {
+  let beginCount = 0;
+  let transactionNow = new Date('2026-10-03T20:59:59.999Z');
+  let updateClockOnBegin = true;
+  const scheduledAt = new Date('2026-10-03T21:00:00.000Z');
+  const { repository, database } = createRepository(t, () => {
+    beginCount += 1;
+    if (beginCount === 2 && updateClockOnBegin) transactionNow = new Date(scheduledAt);
+  });
+  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
+  const current = carryFixture('carry-current');
+  const stale = {
+    ...carryFixture('carry-stale'),
+    scheduledAt: new Date('2026-10-05T21:00:00.000Z'),
+  };
+  const owner = {
+    ...carryFixture('carry-owner'),
+    reflection: reflectionFixture('reflection-owned'),
+  };
+  const collisionTarget = carryFixture('carry-collision-target');
+  for (const carry of [current, stale, owner, collisionTarget]) insertCarry(database, carry);
+  database
+    .prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)')
+    .run(
+      owner.reflection.id,
+      owner.id,
+      owner.reflection.alignmentRating,
+      owner.reflection.whatOccurred,
+      owner.reflection.insight,
+      owner.reflection.createdAt.toISOString(),
+    );
+
+  const afterLock = () => {
+    assert.equal(beginCount, 2);
+    return new Date(transactionNow);
+  };
+  beginCount = 0;
+  assert.deepEqual(
+    await repository.recordReflection(
+      current.id,
+      reflectionFixture('reflection-commit-time', scheduledAt.toISOString()),
+      afterLock,
+    ),
+    {
+      ok: true,
+      value: {
+        ...current,
+        reflection: reflectionFixture('reflection-commit-time', scheduledAt.toISOString()),
+      },
+    },
+  );
+
+  beginCount = 0;
+  updateClockOnBegin = false;
+  transactionNow = new Date('2026-10-04T12:00:00.000Z');
+  assert.deepEqual(
+    await repository.recordReflection(
+      stale.id,
+      reflectionFixture('reflection-stale-draft', '2026-10-04T12:00:00.000Z'),
+      afterLock,
+    ),
+    { ok: false, code: 'not_ready' },
+  );
+
+  beginCount = 0;
+  assert.deepEqual(
+    await repository.recordReflection(
+      collisionTarget.id,
+      reflectionFixture(owner.reflection.id, collisionTarget.scheduledAt.toISOString()),
+      afterLock,
+    ),
+    { ok: false, code: 'invalid_record' },
+  );
+  assert.deepEqual(await repository.findById(stale.id), { ok: true, value: stale });
+  assert.deepEqual(await repository.findById(owner.id), { ok: true, value: owner });
+  assert.deepEqual(await repository.findById(collisionTarget.id), {
+    ok: true,
+    value: collisionTarget,
+  });
 });
 
 test('links a reminder by updating only an existing Carry reminder_id', async (t) => {
