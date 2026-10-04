@@ -444,9 +444,9 @@ test('deletes only an upcoming Carry using status read under the write lock', as
   });
   assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
 
-  assert.deepEqual(await deleteWithLock(original.id), { ok: true, value: undefined });
-  assert.deepEqual(await deleteWithLock(original.id), { ok: true, value: undefined });
-  assert.deepEqual(await deleteWithLock('missing'), { ok: true, value: undefined });
+  assert.deepEqual(await deleteWithLock(original.id), { ok: true, value: original });
+  assert.deepEqual(await deleteWithLock(original.id), { ok: true, value: null });
+  assert.deepEqual(await deleteWithLock('missing'), { ok: true, value: null });
   assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
   assert.deepEqual(await repository.findById(other.id), { ok: true, value: other });
   assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
@@ -639,8 +639,8 @@ test('saves, updates, and deletes complete Carries while preserving reusable cat
     ok: true,
     value: reflected.reflection,
   });
-  assert.deepEqual(await repository.delete(original.id), { ok: true, value: undefined });
-  assert.deepEqual(await repository.delete(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await repository.delete(original.id), { ok: true, value: reflected });
+  assert.deepEqual(await repository.delete(original.id), { ok: true, value: null });
   assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
   assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
   assert.equal(database.prepare('SELECT count(*) AS count FROM reflections').get().count, 0);
@@ -661,6 +661,15 @@ test('links a reminder by updating only an existing Carry reminder_id', async (t
   assert.deepEqual(await repository.findById(original.id), {
     ok: true,
     value: { ...original, reminderId: 'notification-1' },
+  });
+  assert.deepEqual(await repository.setReminderId(original.id, null), {
+    ok: true,
+    value: true,
+  });
+  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
+  assert.deepEqual(await repository.setReminderId(original.id, 'notification-1'), {
+    ok: true,
+    value: true,
   });
   assert.deepEqual(await repository.setReminderId('missing', 'notification-2'), {
     ok: true,
@@ -739,7 +748,7 @@ test('rolls back partial save/delete failures and succeeds after the failure is 
   assert.deepEqual(await repository.delete(original.id), { ok: false, code: 'unavailable' });
   assert.deepEqual(await repository.findById(original.id), { ok: true, value: changed });
   database.exec('DROP TRIGGER fail_delete');
-  assert.deepEqual(await repository.delete(original.id), { ok: true, value: undefined });
+  assert.deepEqual(await repository.delete(original.id), { ok: true, value: changed });
   assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
 });
 

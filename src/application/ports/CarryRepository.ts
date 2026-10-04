@@ -39,8 +39,8 @@ export interface CarryRepository {
    */
   save(carry: Carry): Promise<CarryRepositoryResult<Carry>>;
 
-  /** Attach a newly scheduled notification without replacing other stored Carry fields. */
-  setReminderId(id: string, reminderId: string): Promise<CarryRepositoryResult<boolean>>;
+  /** Update or clear the notification link without recreating a missing Carry. */
+  setReminderId(id: string, reminderId: string | null): Promise<CarryRepositoryResult<boolean>>;
 
   /**
    * Return null when the requested Carry does not exist.
@@ -50,10 +50,10 @@ export interface CarryRepository {
   findAll(): Promise<CarryRepositoryResult<readonly Carry[]>>;
 
   /**
-   * Delete a Carry and its reflection; a missing ID is already deleted.
+   * Delete a Carry and its reflection; return its stored snapshot or null when missing.
    * Supplying a clock restricts deletion to a currently upcoming Carry.
    */
-  delete(id: string, now?: () => Date): Promise<CarryRepositoryResult<void>>;
+  delete(id: string, now?: () => Date): Promise<CarryRepositoryResult<Carry | null>>;
 
   /**
    * Find the newest reflection by creation time, breaking ties by reflection ID.
