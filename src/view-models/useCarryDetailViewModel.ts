@@ -6,7 +6,7 @@ import type { NotificationService } from '../services/NotificationService';
 import { deleteUpcomingCarry } from '../services/deleteUpcomingCarry';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { Carry } from '../models/Carry';
-import type { CarryLoadState } from './CarryLoadState';
+import type { LoadState } from './LoadState';
 
 export interface CarryDetail {
   readonly carry: Carry;
@@ -22,7 +22,7 @@ export function useCarryDetailViewModel(
   carryId: string,
   isFocused: boolean,
 ) {
-  const [state, setState] = useState<CarryLoadState<CarryDetail>>({ status: 'loading' });
+  const [state, setState] = useState<LoadState<CarryDetail>>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [scope, setScope] = useState({
     repository,

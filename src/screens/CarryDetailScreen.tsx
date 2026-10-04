@@ -11,13 +11,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCarryStatus } from '../models/getCarryStatus';
 import { CarryLoadError, CarryLoadFeedback } from '../components/CarryLoadFeedback';
-import type { CarryLoadState } from '../view-models/CarryLoadState';
+import type { LoadState } from '../view-models/LoadState';
 
 import type { CarryDetail } from '../view-models/useCarryDetailViewModel';
 import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
 export interface CarryDetailScreenProps {
-  readonly state: CarryLoadState<CarryDetail>;
+  readonly state: LoadState<CarryDetail>;
   readonly now: Date;
   readonly reminderMessage?: string;
   readonly onRetry: () => void;

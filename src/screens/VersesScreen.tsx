@@ -4,15 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { BibleVerse } from '../models/BibleVerse';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { PassageSelection } from '../models/PassageSelection';
-import type { BibleLoadState } from '../view-models/BibleLoadState';
+import type { LoadState } from '../view-models/LoadState';
 import { BibleLoadFeedback } from '../components/BibleLoadFeedback';
 import { PassagePreview } from '../components/PassagePreview';
 
 interface VersesScreenProps {
-  readonly state: BibleLoadState<readonly BibleVerse[]>;
+  readonly state: LoadState<readonly BibleVerse[]>;
   readonly onRetry: () => void;
   readonly selection: PassageSelection | null;
-  readonly preview: BibleLoadState<BiblePassage> | null;
+  readonly preview: LoadState<BiblePassage> | null;
   readonly onSelectVerse: (verse: BibleVerse) => void;
   readonly onClearSelection: () => void;
   readonly onRetryPreview: () => void;

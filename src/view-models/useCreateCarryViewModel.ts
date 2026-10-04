@@ -11,7 +11,7 @@ import type { Category } from '../models/Category';
 import type { PassageSelection } from '../models/PassageSelection';
 import { clearFieldError, sameSelection, validationMessage } from './CarryFormState';
 import type { CarryFormDraft, CarryFormErrors } from './CarryFormState';
-import type { CarryLoadState } from './CarryLoadState';
+import type { LoadState } from './LoadState';
 import { reminderFeedback } from './reminderFeedback';
 
 export interface CreateCarryViewModelOptions {
@@ -28,7 +28,7 @@ export interface CreateCarryViewModel {
   readonly categories: readonly Category[];
   readonly categoryLoadFailed: boolean;
   readonly onRetryCategories: () => void;
-  readonly passagePreview: CarryLoadState<BiblePassage>;
+  readonly passagePreview: LoadState<BiblePassage>;
   readonly onRetryPassage: () => void;
   readonly errors: CarryFormErrors;
   readonly saveError: string | null;
@@ -68,7 +68,7 @@ export function useCreateCarryViewModel({
     readonly startVerseKey: string;
     readonly endVerseKey: string;
     readonly attempt: number;
-    readonly state: CarryLoadState<BiblePassage>;
+    readonly state: LoadState<BiblePassage>;
   } | null>(null);
   const [errors, setErrors] = useState<CarryFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -251,7 +251,7 @@ export function useCreateCarryViewModel({
     }
   }, [bibleRepository, carryRepository, notifications, draft, identity, now]);
 
-  const passagePreview: CarryLoadState<BiblePassage> =
+  const passagePreview: LoadState<BiblePassage> =
     previewRecord !== null &&
     previewRecord.startVerseKey === draft.passage.startVerseKey &&
     previewRecord.endVerseKey === draft.passage.endVerseKey &&

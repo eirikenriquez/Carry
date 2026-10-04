@@ -4,11 +4,11 @@ import type { BibleRepository } from '../repositories/BibleRepository';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { BibleVerse } from '../models/BibleVerse';
 import type { PassageSelection } from '../models/PassageSelection';
-import type { BibleLoadState } from './BibleLoadState';
+import type { LoadState } from './LoadState';
 
 type PassageSelectionViewModel = {
   readonly selection: PassageSelection | null;
-  readonly preview: BibleLoadState<BiblePassage> | null;
+  readonly preview: LoadState<BiblePassage> | null;
   readonly selectVerse: (verse: BibleVerse) => void;
   readonly clearSelection: () => void;
   readonly retryPreview: () => void;
@@ -35,10 +35,10 @@ type SelectionState = {
 type PreviewRecord = {
   readonly selectionRecord: SelectionRecord;
   readonly attempt: number;
-  readonly state: BibleLoadState<BiblePassage>;
+  readonly state: LoadState<BiblePassage>;
 };
 
-const loadingState: BibleLoadState<BiblePassage> = { status: 'loading' };
+const loadingState: LoadState<BiblePassage> = { status: 'loading' };
 
 /**
  * Manage same-chapter tap selection and its resolved passage preview.
@@ -72,7 +72,7 @@ export function usePassageSelectionViewModel(
   const activeSelectionRecord = sameScope ? selectionState.record : null;
   const selection = activeSelectionRecord?.selection ?? null;
   // Show results only for the current selection and retry attempt.
-  let preview: BibleLoadState<BiblePassage> | null = null;
+  let preview: LoadState<BiblePassage> | null = null;
   if (activeSelectionRecord !== null) {
     preview = loadingState;
     if (

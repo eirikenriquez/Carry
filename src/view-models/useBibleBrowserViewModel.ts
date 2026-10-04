@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository, BibleRepositoryResult } from '../repositories/BibleRepository';
 import type { BibleBook } from '../models/BibleBook';
-import type { BibleLoadState } from './BibleLoadState';
+import type { LoadState } from './LoadState';
 
 type BibleBrowserData = {
   readonly repository: BibleRepository;
@@ -12,7 +12,7 @@ type BibleBrowserData = {
 type LoadBible = () => Promise<BibleRepositoryResult<BibleRepository>>;
 
 type BibleBrowserViewModel = {
-  readonly state: BibleLoadState<BibleBrowserData>;
+  readonly state: LoadState<BibleBrowserData>;
   readonly retry: () => void;
 };
 
@@ -20,7 +20,7 @@ type BibleBrowserViewModel = {
  * Load the book catalogue and reuse the opened repository when retrying.
  */
 export function useBibleBrowserViewModel(loadBible: LoadBible): BibleBrowserViewModel {
-  const [state, setState] = useState<BibleLoadState<BibleBrowserData>>({ status: 'loading' });
+  const [state, setState] = useState<LoadState<BibleBrowserData>>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const repositoryRef = useRef<BibleRepository | null>(null);
   const openingRef = useRef<Promise<BibleRepositoryResult<BibleRepository>> | null>(null);

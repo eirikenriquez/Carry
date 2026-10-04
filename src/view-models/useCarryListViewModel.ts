@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { CarryRepository } from '../repositories/CarryRepository';
 import type { Carry } from '../models/Carry';
-import type { CarryLoadState } from './CarryLoadState';
+import type { LoadState } from './LoadState';
 
 export interface CarryListItem {
   readonly carry: Carry;
@@ -11,7 +11,7 @@ export interface CarryListItem {
 
 /** Reload saved records when their screen opens, ignoring reads after it loses focus. */
 export function useCarryListViewModel(repository: CarryRepository, isFocused: boolean) {
-  const [state, setState] = useState<CarryLoadState<readonly CarryListItem[]>>({
+  const [state, setState] = useState<LoadState<readonly CarryListItem[]>>({
     status: 'loading',
   });
   const [attempt, setAttempt] = useState(0);

@@ -1,10 +1,10 @@
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { BiblePassage } from '../models/BiblePassage';
-import type { BibleLoadState } from '../view-models/BibleLoadState';
+import type { LoadState } from '../view-models/LoadState';
 
 interface PassagePreviewProps {
-  readonly preview: BibleLoadState<BiblePassage>;
+  readonly preview: LoadState<BiblePassage>;
   readonly onClear: () => void;
   readonly onRetry: () => void;
   readonly onUsePassage: () => void;

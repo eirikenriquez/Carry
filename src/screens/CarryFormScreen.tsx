@@ -15,14 +15,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { Category } from '../models/Category';
 import type { CarryFormDraft, CarryFormErrors, CarryFormMode } from '../view-models/CarryFormState';
-import type { CarryLoadState } from '../view-models/CarryLoadState';
+import type { LoadState } from '../view-models/LoadState';
 
 export interface CarryFormScreenProps {
   readonly draft: CarryFormDraft;
   readonly categories: readonly Category[];
   readonly categoryLoadFailed: boolean;
   readonly onRetryCategories: () => void;
-  readonly passagePreview: CarryLoadState<BiblePassage>;
+  readonly passagePreview: LoadState<BiblePassage>;
   readonly onRetryPassage: () => void;
   readonly errors: CarryFormErrors;
   readonly saveError: string | null;

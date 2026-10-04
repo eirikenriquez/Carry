@@ -2,10 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';
 import type { BibleVerse } from '../models/BibleVerse';
-import type { BibleLoadState } from './BibleLoadState';
+import type { LoadState } from './LoadState';
 
 type BibleChapterViewModel = {
-  readonly state: BibleLoadState<readonly BibleVerse[]>;
+  readonly state: LoadState<readonly BibleVerse[]>;
   readonly retry: () => void;
 };
 
@@ -13,10 +13,10 @@ type ChapterStateRecord = {
   readonly repository: BibleRepository;
   readonly bookId: string;
   readonly chapter: number;
-  readonly state: BibleLoadState<readonly BibleVerse[]>;
+  readonly state: LoadState<readonly BibleVerse[]>;
 };
 
-const loadingState: BibleLoadState<readonly BibleVerse[]> = { status: 'loading' };
+const loadingState: LoadState<readonly BibleVerse[]> = { status: 'loading' };
 
 /**
  * Load the current chapter, expose retry, and ignore outdated responses.
