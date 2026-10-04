@@ -12,10 +12,12 @@ import { useEditCarryViewModel } from '../features/carry/view-models/useEditCarr
 import { useCarryListViewModel } from '../features/carry/view-models/useCarryListViewModel';
 import { useCarryDetailViewModel } from '../features/carry/view-models/useCarryDetailViewModel';
 import { useCarryStatusClock } from '../features/carry/view-models/useCarryStatusClock';
+import { useReflectionViewModel } from '../features/carry/view-models/useReflectionViewModel';
 import { CarryFormScreen } from '../features/carry/views/CarryFormScreen';
 import { CarryListScreen } from '../features/carry/views/CarryListScreen';
 import { CarryDetailScreen } from '../features/carry/views/CarryDetailScreen';
 import { CarryLoadError, CarryLoadFeedback } from '../features/carry/views/CarryLoadFeedback';
+import { ReflectionFormScreen } from '../features/carry/views/ReflectionFormScreen';
 
 const currentTime = () => new Date();
 
@@ -159,6 +161,78 @@ export function EditCarryFlow({
   );
 }
 
+interface ReflectCarryFlowProps {
+  readonly repository: CarryRepository;
+  readonly carryId: string;
+  readonly onSaved: () => void;
+  readonly onCancel: () => void;
+}
+
+/** Load the existing Carry and navigate back only after its reflection is saved. */
+export function ReflectCarryFlow({
+  repository,
+  carryId,
+  onSaved,
+  onCancel,
+}: ReflectCarryFlowProps) {
+  const model = useReflectionViewModel({
+    carryRepository: repository,
+    carryId,
+    createId: randomUUID,
+    now: currentTime,
+  });
+
+  // A guarded storage write cannot be cancelled; keep the form mounted until it settles.
+  usePreventRemove(model.isSaving, () => undefined);
+  useEffect(() => {
+    if (model.savedCarry) onSaved();
+  }, [model.savedCarry, onSaved]);
+
+  if (model.loadState === 'loading') return <CarryLoadFeedback resourceLabel="Carry" />;
+  if (model.loadState === 'error') {
+    return <CarryLoadError resourceLabel="Carry" onRetry={model.retry} />;
+  }
+  if (model.loadState !== 'ready' || model.carry === null) {
+    const message =
+      model.loadState === 'not_found'
+        ? 'This Carry no longer exists.'
+        : model.loadState === 'not_ready'
+          ? 'This Carry is not ready to reflect yet.'
+          : model.loadState === 'already_reflected'
+            ? 'This Carry already has a reflection.'
+            : 'This Carry is unavailable for reflection.';
+
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+        <Text accessibilityRole="alert">{message}</Text>
+        <Pressable
+          accessibilityRole="button"
+          onPress={onCancel}
+          style={{ minHeight: 48, justifyContent: 'center', paddingHorizontal: 16, marginTop: 16 }}
+        >
+          <Text>Back to Carry</Text>
+        </Pressable>
+      </View>
+    );
+  }
+
+  return (
+    <ReflectionFormScreen
+      draft={model.draft}
+      fieldErrors={model.fieldErrors}
+      situation={model.carry.situation}
+      ifThenIntention={model.carry.ifThenIntention}
+      saveError={model.saveError}
+      isSaving={model.isSaving}
+      onChangeRating={model.onChangeRating}
+      onChangeWhatOccurred={model.onChangeWhatOccurred}
+      onChangeInsight={model.onChangeInsight}
+      onSave={() => void model.save()}
+      onCancel={onCancel}
+    />
+  );
+}
+
 interface CarryListFlowProps {
   readonly repository: CarryRepository;
   readonly reminderMessage?: string;
@@ -201,9 +275,10 @@ interface CarryDetailFlowProps {
   readonly reminderMessage?: string;
   readonly onViewCarries: (reminderMessage?: string) => void;
   readonly onEdit: () => void;
+  readonly onReflect: () => void;
 }
 
-/** Resolve saved data again when detail regains focus after an edit. */
+/** Resolve saved data again when detail regains focus after an edit or reflection. */
 export function CarryDetailFlow({
   repository,
   bibleRepository,
@@ -212,6 +287,7 @@ export function CarryDetailFlow({
   reminderMessage,
   onViewCarries,
   onEdit,
+  onReflect,
 }: CarryDetailFlowProps) {
   const isFocused = useIsFocused();
   const model = useCarryDetailViewModel(
@@ -235,6 +311,7 @@ export function CarryDetailFlow({
       onRetry={model.retry}
       onViewCarries={onViewCarries}
       onEdit={onEdit}
+      onReflect={onReflect}
       onDelete={() => void model.deleteCarry()}
       isDeleting={model.isDeleting}
       deleteError={model.deleteError}

@@ -23,6 +23,7 @@ export interface CarryDetailScreenProps {
   readonly onRetry: () => void;
   readonly onViewCarries: () => void;
   readonly onEdit: () => void;
+  readonly onReflect: () => void;
   readonly onDelete: () => void;
   readonly isDeleting: boolean;
   readonly deleteError: string | null;
@@ -36,6 +37,7 @@ export function CarryDetailScreen({
   onRetry,
   onViewCarries,
   onEdit,
+  onReflect,
   onDelete,
   isDeleting,
   deleteError,
@@ -145,6 +147,22 @@ export function CarryDetailScreen({
           <Text style={styles.fieldLabel}>If-then plan</Text>
           <Text style={styles.fieldValue}>{carry.ifThenIntention}</Text>
         </View>
+
+        {status === 'readyToReflect' ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityState={{ disabled: isDeleting }}
+            disabled={isDeleting}
+            onPress={onReflect}
+            style={({ pressed }) => [
+              styles.backButton,
+              isDeleting && styles.disabled,
+              pressed && !isDeleting && styles.pressed,
+            ]}
+          >
+            <Text style={styles.backButtonText}>Reflect on Carry</Text>
+          </Pressable>
+        ) : null}
 
         {status === 'upcoming' ? (
           <Pressable

@@ -8,6 +8,8 @@ let mockEditFlowProps;
 let mockCreateFlowProps;
 let mockListFlowProps;
 let mockDetailFlowProps;
+let mockReflectFlowProps;
+let mockReflectRouteElement;
 let mockVersesProps;
 const mockSelection = { startVerseKey: 'JHN.3.16', endVerseKey: 'JHN.3.16' };
 const mockNavigation = {
@@ -31,10 +33,12 @@ jest.mock('@react-navigation/native-stack', () => {
   return {
     createNativeStackNavigator: () => ({
       Navigator: ({ children }) => React.createElement(React.Fragment, null, children),
-      Screen: ({ name, children }) =>
-        name === mockActiveScreen
-          ? children({ navigation: mockNavigation, route: mockRoute })
-          : null,
+      Screen: ({ name, children }) => {
+        if (name !== mockActiveScreen) return null;
+        const element = children({ navigation: mockNavigation, route: mockRoute });
+        if (name === 'ReflectCarry') mockReflectRouteElement = element;
+        return element;
+      },
     }),
   };
 });
@@ -53,6 +57,10 @@ jest.mock('../CarryScreens', () => ({
   },
   CarryDetailFlow: (props) => {
     mockDetailFlowProps = props;
+    return null;
+  },
+  ReflectCarryFlow: (props) => {
+    mockReflectFlowProps = props;
     return null;
   },
 }));
@@ -82,7 +90,7 @@ jest.mock('../../features/bible/views/ReferenceLookupForm', () => ({
 
 const { AppNavigator } = require('../AppNavigator');
 
-it('routes Scripture picks back to the matching edit or create draft', async () => {
+it('routes Carry forms and Scripture picks back to the matching screen', async () => {
   const carryRepository = {};
   const bibleRepository = {};
   const notifications = {};
@@ -105,6 +113,8 @@ it('routes Scripture picks back to the matching edit or create draft', async () 
   mockEditFlowProps = undefined;
   mockCreateFlowProps = undefined;
   mockDetailFlowProps = undefined;
+  mockReflectFlowProps = undefined;
+  mockReflectRouteElement = undefined;
   mockVersesProps = undefined;
   mockNavigation.push.mockClear();
   mockNavigation.popTo.mockClear();
@@ -166,6 +176,25 @@ it('routes Scripture picks back to the matching edit or create draft', async () 
     expect(mockNavigation.popTo).toHaveBeenNthCalledWith(4, 'Carries', {
       reminderMessage: deleteWarning,
     });
+
+    mockNavigation.push.mockClear();
+    mockNavigation.popTo.mockClear();
+    mockNavigation.goBack.mockClear();
+    await React.act(async () => mockDetailFlowProps.onReflect());
+    expect(mockNavigation.push).toHaveBeenCalledWith('ReflectCarry', {
+      carryId: 'directly-created',
+    });
+    await showScreen(renderer, 'ReflectCarry', { params: { carryId: 'directly-created' } });
+    expect(mockReflectFlowProps.repository).toBe(carryRepository);
+    expect(mockReflectFlowProps.carryId).toBe('directly-created');
+    expect(mockReflectRouteElement.key).toBe('directly-created');
+    await React.act(async () => mockReflectFlowProps.onSaved());
+    expect(mockNavigation.popTo).toHaveBeenCalledWith('CarryDetail', {
+      carryId: 'directly-created',
+    });
+    await React.act(async () => mockReflectFlowProps.onCancel());
+    expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
+
     await showScreen(renderer, 'Carries', { params: { reminderMessage: deleteWarning } });
     expect(mockListFlowProps.reminderMessage).toBe(deleteWarning);
     await React.act(async () => mockListFlowProps.onClearReminderMessage());

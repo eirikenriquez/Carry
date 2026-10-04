@@ -43,6 +43,7 @@ it('invokes deletion only from the native destructive confirmation', async () =>
       onRetry: jest.fn(),
       onViewCarries: jest.fn(),
       onEdit: jest.fn(),
+      onReflect: jest.fn(),
       onDelete,
       isDeleting: false,
       deleteError: null,
@@ -81,6 +82,7 @@ it('disables detail actions and reports progress while deletion is pending', asy
       onRetry: jest.fn(),
       onViewCarries: jest.fn(),
       onEdit: jest.fn(),
+      onReflect: jest.fn(),
       onDelete: jest.fn(),
       isDeleting: true,
       deleteError: null,
@@ -103,4 +105,52 @@ it('disables detail actions and reports progress while deletion is pending', asy
   expect(
     renderer.root.findAllByType(Text).some((node) => node.props.children === 'Deleting Carry…'),
   ).toBe(true);
+});
+
+it.each([
+  ['readyToReflect', { scheduledAt: new Date('2026-10-03T00:00:00.000Z') }, true],
+  ['upcoming', {}, false],
+  [
+    'completed',
+    {
+      reflection: {
+        id: 'reflection-1',
+        alignmentRating: 4,
+        whatOccurred: 'I listened.',
+        insight: 'Pause first.',
+        createdAt: new Date('2026-10-04T12:00:00.000Z'),
+      },
+    },
+    false,
+  ],
+])('offers the reflection action only for %s Carries', async (_status, carryChanges, visible) => {
+  const onReflect = jest.fn();
+  const screenState = {
+    ...state,
+    data: { ...state.data, carry: { ...state.data.carry, ...carryChanges } },
+  };
+  function Probe() {
+    return React.createElement(CarryDetailScreen, {
+      state: screenState,
+      now: new Date('2026-10-04T12:00:00.000Z'),
+      onRetry: jest.fn(),
+      onViewCarries: jest.fn(),
+      onEdit: jest.fn(),
+      onReflect,
+      onDelete: jest.fn(),
+      isDeleting: false,
+      deleteError: null,
+    });
+  }
+
+  renderer = await mountProbe(Probe);
+  const reflectButtons = renderer.root.findAll(
+    (node) =>
+      typeof node.props.onPress === 'function' &&
+      node.findAllByType(Text).some((text) => text.props.children === 'Reflect on Carry'),
+  );
+
+  expect(reflectButtons).toHaveLength(visible ? 1 : 0);
+  if (visible) await React.act(async () => reflectButtons[0].props.onPress());
+  expect(onReflect).toHaveBeenCalledTimes(visible ? 1 : 0);
 });
