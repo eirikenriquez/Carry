@@ -220,7 +220,7 @@ export function CarryDetailScreen({
           accessibilityRole="button"
           accessibilityState={{ disabled: isDeleting }}
           disabled={isDeleting}
-          onPress={onViewCarries}
+          onPress={() => onViewCarries()}
           style={({ pressed }) => [
             styles.backButton,
             isDeleting && styles.disabled,

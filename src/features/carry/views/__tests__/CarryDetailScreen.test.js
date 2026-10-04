@@ -127,6 +127,7 @@ it.each([
   'shows reflection availability and saved values for %s Carries',
   async (status, carryChanges, visible) => {
     const onReflect = jest.fn();
+    const onViewCarries = jest.fn();
     const screenState = {
       ...state,
       data: { ...state.data, carry: { ...state.data.carry, ...carryChanges } },
@@ -136,7 +137,7 @@ it.each([
         state: screenState,
         now: new Date('2026-10-04T12:00:00.000Z'),
         onRetry: jest.fn(),
-        onViewCarries: jest.fn(),
+        onViewCarries,
         onEdit: jest.fn(),
         onReflect,
         onDelete: jest.fn(),
@@ -155,6 +156,16 @@ it.each([
     expect(reflectButtons).toHaveLength(visible ? 1 : 0);
     if (visible) await React.act(async () => reflectButtons[0].props.onPress());
     expect(onReflect).toHaveBeenCalledTimes(visible ? 1 : 0);
+
+    const backButton = renderer.root.findAll(
+      (node) =>
+        typeof node.props.onPress === 'function' &&
+        node.findAllByType(Text).some((text) => text.props.children === 'Back to Carries'),
+    )[0];
+    await React.act(async () =>
+      backButton.props.onPress({ nativeEvent: { pageX: 100, pageY: 400 } }),
+    );
+    expect(onViewCarries).toHaveBeenCalledWith();
 
     if (status === 'completed') {
       const textValues = renderer.root.findAllByType(Text).map((node) => node.props.children);
