@@ -155,4 +155,5 @@ SHA-256 checksums:
   after an earlier failed time change without adding persisted alarm state.
 - Failed old-reminder cancellation keeps its ID and skips replacement to avoid duplicates.
   Cancellation removes both pending and already-delivered notifications. Native
-  edit/delete acceptance remains pending; automated checks are not timing reliability evidence.
+  deletion acceptance remains pending; native edit replacement/reopening checks are
+  recorded in the test log, not a ten-trial timing reliability result.
