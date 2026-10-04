@@ -21,8 +21,12 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Reminder synchronization | 116 / 26 | Repeated refresh ordering, cancellation/link failures, deletion warnings, save locking and feedback routing |
 | Carry status refresh | 119 / 27 | Clock after delayed loading, resume across a schedule, focus refresh and listener cleanup |
 | Reflection entry | 137 / 30 | Validation, guarded save, draft/retry state, duplicate/stale requests, form feedback and ready-only navigation |
+| Folder clarity audit | 137 / 30 | Existing coverage retained after moving files, imports, and test-script paths |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
+- Folder audit: 24 personal SQLite checks and Bible integration passed. Android
+  JavaScript export included the Bible asset; Hermes bytecode compilation was blocked
+  by compiler execution permission. No emulator acceptance was repeated for this refactor.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
   including ordered content, passage endpoints, empty text, and invalid selections.
 - Lookup additionally checked John 3:16, James 1:19-20, 1 John 3:16, Luke 17:36,

@@ -5,8 +5,8 @@ const { DatabaseSync } = require('node:sqlite');
 const {
   personalDatabaseSchema,
   personalDatabaseVersion,
-} = require('../src/infrastructure/repositories/personalDatabaseSchema.ts');
-const { normalizeCategoryName } = require('../src/domain/rules/normalizeCategoryName.ts');
+} = require('../src/repositories/personalDatabaseSchema.ts');
+const { normalizeCategoryName } = require('../src/models/normalizeCategoryName.ts');
 
 /**
  * Create an isolated SQLite database and close it after the test.

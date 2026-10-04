@@ -1,22 +1,24 @@
 # Architecture
 
 Carry uses lightweight MVVM, Repository, and Service boundaries from Milestone 1.
-Views render state; ViewModels handle interaction; infrastructure handles SQLite and notifications.
+Views render state; ViewModels handle interaction; repositories and services isolate SQLite and notifications.
 
 ## Current structure
 
-- `src/app`: wires dependencies and React Navigation.
-- `src/features/bible/views`: screens and reusable Bible components.
-- `src/features/bible/view-models`: loading, selection, lookup, and retry state.
-- `src/features/carry`: Carry forms, list and detail views with their ViewModels.
-- `src/domain`: framework-independent entities, validation, and derived status.
-- `src/application/ports`: repository and notification contracts.
-- `src/application/services`: reference validation and Carry lifecycle coordination.
-- `src/infrastructure/repositories`: database opening and SQLite repositories.
-- `src/infrastructure/notifications`: the Expo local-notification adapter.
+- `index.ts`: registers the root component from `src/app.tsx`.
+- `src/app.tsx`: starts the app and supplies concrete dependencies.
+- `src/navigation`: navigators, screen wiring, and reminder-tap routing.
+- `src/screens`: full-screen UI and display formatting.
+- `src/components`: smaller reusable UI pieces.
+- `src/view-models`: screen state, draft fields, loading, and actions.
+- `src/models`: framework-independent entities, validation, and lifecycle rules.
+- `src/services`: application workflows and the notification contract/Expo adapter.
+- `src/repositories`: repository contracts, SQLite implementations, and database setup.
+- `src/testing`: shared test helpers; tests sit beside the code they check.
 
-Views and ViewModels depend on the repository contract, not SQLite directly.
-The composition layer supplies the concrete implementation.
+The flatter, Ignite-inspired layout groups files by responsibility without changing
+MVVM boundaries. Screens and ViewModels never call SQLite or Expo Notifications
+directly; app wiring supplies implementations through contracts.
 
 ## Domain decisions
 

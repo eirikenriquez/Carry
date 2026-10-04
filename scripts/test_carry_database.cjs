@@ -6,9 +6,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { test } = require('node:test');
 const ts = require('typescript');
 
-const {
-  personalDatabaseSchema,
-} = require('../src/infrastructure/repositories/personalDatabaseSchema.ts');
+const { personalDatabaseSchema } = require('../src/repositories/personalDatabaseSchema.ts');
 
 /**
  * Run the actual opener using a real SQLite connection in place of Expo's native bridge.
@@ -34,9 +32,9 @@ function loadTypeScript(relativePath, dependencies) {
 }
 
 function loadOpener(openConnection) {
-  return loadTypeScript('src/infrastructure/repositories/openPersonalDatabase.ts', {
+  return loadTypeScript('src/repositories/openPersonalDatabase.ts', {
     'expo-sqlite': { openDatabaseAsync: openConnection },
-    './personalDatabaseSchema': require('../src/infrastructure/repositories/personalDatabaseSchema.ts'),
+    './personalDatabaseSchema': require('../src/repositories/personalDatabaseSchema.ts'),
   }).openPersonalDatabase;
 }
 
@@ -87,14 +85,11 @@ function createRepository(t, onTransactionBegin) {
     }
     return connection;
   });
-  const { SQLiteCarryRepository } = loadTypeScript(
-    'src/infrastructure/repositories/SQLiteCarryRepository.ts',
-    {
-      './openPersonalDatabase': { openPersonalDatabase },
-      '../../domain/rules/getCarryStatus': require('../src/domain/rules/getCarryStatus.ts'),
-      '../../domain/rules/normalizeCategoryName': require('../src/domain/rules/normalizeCategoryName.ts'),
-    },
-  );
+  const { SQLiteCarryRepository } = loadTypeScript('src/repositories/SQLiteCarryRepository.ts', {
+    './openPersonalDatabase': { openPersonalDatabase },
+    '../models/getCarryStatus': require('../src/models/getCarryStatus.ts'),
+    '../models/normalizeCategoryName': require('../src/models/normalizeCategoryName.ts'),
+  });
   return { repository: new SQLiteCarryRepository(), database };
 }
 
