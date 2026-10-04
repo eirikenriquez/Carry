@@ -20,6 +20,7 @@ it.each([
   function Probe() {
     return React.createElement(CarryListScreen, {
       state,
+      now: new Date('2026-10-04T12:00:00.000Z'),
       reminderMessage,
       onRetry: jest.fn(),
       onOpenCarry: jest.fn(),

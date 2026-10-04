@@ -18,6 +18,7 @@ import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
 export interface CarryDetailScreenProps {
   readonly state: CarryLoadState<CarryDetail>;
+  readonly now: Date;
   readonly reminderMessage?: string;
   readonly onRetry: () => void;
   readonly onViewCarries: () => void;
@@ -30,6 +31,7 @@ export interface CarryDetailScreenProps {
 /** Show persisted values and offer changes only while the Carry is upcoming. */
 export function CarryDetailScreen({
   state,
+  now,
   reminderMessage,
   onRetry,
   onViewCarries,
@@ -65,7 +67,7 @@ export function CarryDetailScreen({
   }
 
   const { carry, categoryName, passage } = state.data;
-  const status = getCarryStatus(carry, new Date());
+  const status = getCarryStatus(carry, now);
 
   /** Ask for native confirmation; cancellation does not write. */
   function requestDelete(): void {
