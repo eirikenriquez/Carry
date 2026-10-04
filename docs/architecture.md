@@ -115,8 +115,8 @@ SHA-256 checksums:
   categories. It preserves ID, creation date, reminder ID and reflection; missing
   records are not recreated. The supplied clock also checks eligibility after
   SQLite acquires its write lock.
-- Save returns to refreshed detail; cancellation writes nothing. Reminder
-  rescheduling is a separate integration, not a side effect of this update.
+- Save returns to refreshed detail with reminder feedback; cancelling the draft writes nothing.
+  After storing an edit, the application refreshes its reminder as described below.
 
 ## Carry deletion flow
 
@@ -125,12 +125,13 @@ SHA-256 checksums:
   after focus, Carry ID, or repository changes. Leaving is blocked during deletion.
 - `deleteUpcomingCarry` supplies the clock to repository deletion. SQLite checks
   the stored status after acquiring its write lock; overdue/reflected records stay.
-- Missing IDs succeed without changes. Successful deletion returns to the refreshed
-  list; shared categories remain reusable. Reminder cancellation is separate work.
+- Missing IDs succeed without changes. SQLite returns the deleted record so the
+  service cancels its actual reminder ID. Shared categories remain reusable.
+  Cancellation failure does not undo deletion; a warning appears on the refreshed list.
 
 ## Planned, not implemented
 
-- Edit/delete reminder synchronization, reflection UI and full lifecycle orchestration.
+- Reflection UI and full lifecycle orchestration.
 - Grouped history and automatic status refresh as time passes.
 
 ## Local reminders
@@ -149,5 +150,9 @@ SHA-256 checksums:
 - Android uses a reminder channel and exact-alarm manifest permission. Foreground
   presentation is configured at startup, but permission is requested only on Save.
   Delivery still depends on Android access/settings; native timing evaluation is separate.
-- Edit/delete synchronization is the next increment; this branch alone does not
-  complete FR-03 or demonstrate the ten-trial NFR-06 reliability target.
+- Every successful edit cancels the old reminder, clears its stored link, then
+  schedules/links a replacement. Text-only edits also refresh, allowing cleanup retry
+  after an earlier failed time change without adding persisted alarm state.
+- Failed old-reminder cancellation keeps its ID and skips replacement to avoid duplicates.
+  Cancellation removes both pending and already-delivered notifications. Native
+  edit/delete acceptance remains pending; automated checks are not timing reliability evidence.

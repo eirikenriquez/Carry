@@ -18,6 +18,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Carry editing | 83 / 17 | Eligibility/clock rechecks, validation, prefill/retry, draft preservation, save locking and picker routing |
 | Carry deletion | 95 / 21 | Upcoming-only deletion, transaction-lock clock check, missing IDs, confirmation, double-tap locking and stale callbacks |
 | Local reminders | 107 / 24 | Permission/cutoff handling, notification linkage/compensation, saved-Carry preservation, launch/live tap routing and deduplication |
+| Reminder synchronization | 116 / 26 | Repeated refresh ordering, cancellation/link failures, deletion warnings, save locking and feedback routing |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Real SQLite checks covered all 66 books, 1,189 chapters, and 31,103 entries,
@@ -201,6 +202,20 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   were restored. Notification permission remains enabled as chosen by the user.
 - Edit/delete notification synchronization and formal ten-trial evaluation are not included.
 
+## Reminder synchronization checkpoint (4 October)
+
+- 116 Jest tests, 21 SQLite checks, complete Bible integration, four Python checks,
+  format/lint/typecheck and Git whitespace checks pass.
+- Controlled tests cover cancel -> unlink -> schedule ordering, repeated edits,
+  permission/cutoff failures, pending/delivered notification cancellation and deletion warnings.
+- Normal x86_64 release built successfully with CLI Java 20 and the short R: mapping.
+  Installation and native acceptance were not completed: emulator activation timed
+  out twice and its ADB shell did not respond. The pending diagnostic was cancelled;
+  no fixture or personal-data mutation was performed. The build mapping was removed.
+- Next: install the release, verify replacement/no duplicate alarms after edits,
+  confirm test-record deletion cancels its alarm, and inspect offline restart behaviour.
+  No native synchronization or ten-trial reliability claim is made at this checkpoint.
+
 ## Screenshots
 
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
@@ -250,4 +265,4 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Creation duplicate-save races, failure/retry and stale reads use controlled tests.
   Native checks cover representative input, not every timing race or storage failure.
   Reflection UI and automatic status refresh remain untested. Representative reminder
-  acceptance is recorded above; edit/delete synchronization remains pending.
+  acceptance is recorded above; native edit/delete synchronization acceptance remains pending.
