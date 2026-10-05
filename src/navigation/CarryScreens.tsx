@@ -256,7 +256,7 @@ export function ReflectCarryFlow({
   );
 }
 
-/** Refresh the lightweight reopening list each time it receives focus. */
+/** Reload Carries on focus and render the ViewModel's lifecycle sections. */
 export function CarryListFlow({
   repository,
   reminderMessage,
@@ -266,14 +266,13 @@ export function CarryListFlow({
 }: CarryListFlowProps) {
   const isFocused = useIsFocused();
   const model = useCarryListViewModel(repository, isFocused);
-  const now = useCarryStatusClock(isFocused, model.state);
   useEffect(() => {
     if (!isFocused && reminderMessage) onClearReminderMessage();
   }, [isFocused, reminderMessage, onClearReminderMessage]);
   return (
     <CarryListScreen
       state={model.state}
-      now={now}
+      sections={model.sections}
       reminderMessage={reminderMessage}
       onRetry={model.retry}
       onOpenCarry={onOpenCarry}

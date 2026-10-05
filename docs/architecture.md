@@ -120,8 +120,8 @@ SHA-256 checksums:
   It rejects duplicate Carry IDs; the separate `save` operation remains an upsert.
 - Per-draft UUIDs survive retries. An immediate save lock prevents double taps;
   navigation is blocked during saving/scheduling. Cancelling before Save writes nothing.
-- Successful Save replaces the draft with read-only detail. My Carries lists all
-  saved records for reopening; this is not the full grouped FR-06 history feature.
+- Successful Save replaces the draft with read-only detail. My Carries groups
+  saved records by their derived lifecycle status for reopening.
 
 ## Carry editing flow
 
@@ -161,13 +161,26 @@ SHA-256 checksums:
 
 ## Planned, not implemented
 
-- Grouped history and latest-reflection presentation by category.
+- Latest-reflection presentation by category.
+
+## Grouped Carries
+
+- The list ViewModel loads Carries/category names and groups them through the existing
+  `getCarryStatus` rule. Every record appears once; schedule/ID order stays intact
+  within Upcoming, Ready to reflect and Completed sections.
+- `CarryListScreen` renders a `SectionList`; rows open existing detail and its
+  available actions. Empty groups get brief messages; no saved records keeps the
+  Browse Bible prompt. Loading, retry and reminder feedback remain unchanged.
+- Returning to the list reloads saved changes. Focus, load/retry and app resume
+  refresh the grouping clock; there is no continuous polling or persisted status.
+- Grouping stays beside the existing ViewModel; no new storage/service abstraction
+  or database changes are needed. Latest reflection by category is a separate feature.
 
 ## Carry status refresh
 
-- List/detail flows share `useCarryStatusClock`: capture time on focus, after a
+- The list ViewModel and detail flow share `useCarryStatusClock`: capture time on focus, after a
   load-state change, and on app resume. Blurred/unmounted screens remove their listener.
-- Screens pass this time to the existing domain rule: future means upcoming,
+- Status derivation uses this time and the existing domain rule: future means upcoming,
   overdue/unreflected means ready to reflect, and reflected means completed.
 - No status column, background job or polling. A screen left continuously open
   refreshes at the next lifecycle trigger, not with a live countdown.

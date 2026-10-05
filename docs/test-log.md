@@ -1,14 +1,15 @@
 # Test log
 
-Current automated results: 5 October 2026, code checkpoint `66d160e`.
-Native evidence was recorded on 2-5 October using Carry_C_API33 (Android 13/API 33),
-app `com.eirikenriquez.carry`. Refactoring has not had another native acceptance run.
+Current automated results: 6 October 2026, code checkpoint `6eb76e7`.
+Native evidence uses Carry_C_API33 (Android 13/API 33), app `com.eirikenriquez.carry`.
+Earlier feature checks were recorded on 2-5 October; the grouped-list smoke check
+on 6 October is distinguished below. Full refactoring acceptance was not repeated.
 
 ## Current automated results
 
 | Check | Result | Coverage |
 | --- | --- | --- |
-| Jest | 47 cases passed | Core domain, lifecycle, ViewModel and navigation behaviour |
+| Jest | 51 cases passed | Core domain, lifecycle, ViewModel, grouped-list UI and navigation behaviour |
 | Personal SQLite | 9 checks passed | Category reuse, persistence, guarded writes, reflection integrity and rollback |
 | Publisher source | 2 checks passed | Dataset integrity and exact comparison with the pinned publisher export |
 | Bible integration | Passed | Actual bundled database: ordering, passage resolution, empty text and invalid selections |
@@ -87,6 +88,24 @@ Disposable records were backed up and cleaned up without resetting user data.
 - Native Back exposed a tap event being passed as a reminder message. The callback fix
   dropped that event; the regression and native Back recheck passed.
 
+## Grouped-list verification
+
+- Grouping preserves order, assigns each Carry once, covers the scheduled-time boundary
+  and handles empty groups. Screen checks cover headings, empty feedback, detail taps,
+  loading, retry, reminder warnings and the first-Carry Browse Bible prompt.
+- A controlled ViewModel check regroups on app resume without writing/reloading storage.
+  Refocus reloads fixture changes representing creation, editing, deletion and reflection.
+  Existing domain, navigation and real SQLite checks also pass.
+- These are automated checks, not a new native end-to-end or restart result.
+  Native grouped-list acceptance is still pending.
+- The x86_64 release built and installed without clearing app data. API 33 launch,
+  empty-list layout, Browse Bible and cold-restart reopening passed without Metro;
+  no records were created or changed. Radio settings were not changed.
+  Mixed groups, saved-record restart and the full grouped lifecycle still need native checks.
+- Java 25 emitted a prefab native-access warning that blocked configuration. The
+  installed JDK 20 and temporary short-path mapping allowed a successful build;
+  no project configuration, dependencies or global Java settings changed.
+
 ## Refactoring verification
 
 - Folder/layout cleanup preserved executable declarations, hook bodies and initialization.
@@ -139,6 +158,7 @@ Disposable records were backed up and cleaned up without resetting user data.
   [saved answers](evidence/reflection/saved-reflection.jpg),
   [completed list](evidence/reflection/completed-list.jpg),
   [device restart](evidence/reflection/reopened-reflection.jpg).
+- Grouped Carries: [empty list](evidence/grouped-carries/empty-list.jpg).
 
 ## Limits and environment
 
