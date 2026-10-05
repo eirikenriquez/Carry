@@ -42,21 +42,6 @@ describe('deleteUpcomingCarry', () => {
     );
   });
 
-  it('reports a Carry that is no longer upcoming', async () => {
-    const notifications = makeNotifications();
-    const repository = {
-      delete: jest.fn(async () => ({ ok: false as const, code: 'not_upcoming' as const })),
-    } as unknown as CarryRepository;
-
-    await expect(
-      deleteUpcomingCarry('carry-1', repository, notifications.service),
-    ).resolves.toEqual({
-      ok: false,
-      code: 'not_upcoming',
-    });
-    expect(notifications.cancel).not.toHaveBeenCalled();
-  });
-
   it('keeps deletion successful after cancellation failure and skips cancellation when no link exists', async () => {
     const repository = {
       delete: jest
@@ -88,29 +73,5 @@ describe('deleteUpcomingCarry', () => {
       reminderStatus: 'not_needed',
     });
     expect(notifications.cancel).toHaveBeenCalledTimes(1);
-  });
-
-  it('converts repository failures and exceptions to unavailable', async () => {
-    const repository = {
-      delete: jest
-        .fn()
-        .mockResolvedValueOnce({ ok: false, code: 'unavailable' })
-        .mockRejectedValueOnce(new Error('Storage closed')),
-    } as unknown as CarryRepository;
-
-    const notifications = makeNotifications();
-    await expect(
-      deleteUpcomingCarry('carry-1', repository, notifications.service),
-    ).resolves.toEqual({
-      ok: false,
-      code: 'unavailable',
-    });
-    await expect(
-      deleteUpcomingCarry('carry-1', repository, notifications.service),
-    ).resolves.toEqual({
-      ok: false,
-      code: 'unavailable',
-    });
-    expect(notifications.cancel).not.toHaveBeenCalled();
   });
 });

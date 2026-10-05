@@ -122,29 +122,4 @@ describe('scheduleCarryReminder', () => {
     expect(schedulingFailed.setReminderId).not.toHaveBeenCalled();
     expect(schedulingFailed.notifications.cancel).not.toHaveBeenCalled();
   });
-
-  it('cancels a reminder after a failed link and reports failed cleanup', async () => {
-    const writeFailed = makeDependencies();
-    writeFailed.setReminderId.mockRejectedValue(new Error('Storage failed'));
-    expect(
-      await scheduleCarryReminder(
-        carry,
-        writeFailed.repository,
-        writeFailed.notifications,
-        () => NOW,
-      ),
-    ).toEqual({ status: 'failed' });
-    expect(writeFailed.notifications.cancel).toHaveBeenCalledWith('notification-1');
-
-    const cleanupFailed = makeDependencies({ ok: false, code: 'unavailable' });
-    jest.mocked(cleanupFailed.notifications.cancel).mockRejectedValue(new Error('Cancel failed'));
-    expect(
-      await scheduleCarryReminder(
-        carry,
-        cleanupFailed.repository,
-        cleanupFailed.notifications,
-        () => NOW,
-      ),
-    ).toEqual({ status: 'cleanup_failed' });
-  });
 });

@@ -74,39 +74,6 @@ it('invokes deletion only from the native destructive confirmation', async () =>
   expect(onDelete).toHaveBeenCalledTimes(1);
 });
 
-it('disables detail actions and reports progress while deletion is pending', async () => {
-  function Probe() {
-    return React.createElement(CarryDetailScreen, {
-      state,
-      now: new Date('2026-10-04T12:00:00.000Z'),
-      onRetry: jest.fn(),
-      onViewCarries: jest.fn(),
-      onEdit: jest.fn(),
-      onReflect: jest.fn(),
-      onDelete: jest.fn(),
-      isDeleting: true,
-      deleteError: null,
-    });
-  }
-
-  renderer = await mountProbe(Probe);
-  const buttons = (label) =>
-    renderer.root.findAll(
-      (node) =>
-        typeof node.props.onPress === 'function' &&
-        node.findAllByType(Text).some((text) => text.props.children === label),
-    );
-
-  for (const label of ['Edit Carry', 'Deleting…', 'Back to Carries']) {
-    expect(buttons(label)[0].props.disabled).toBe(true);
-    expect(buttons(label)[0].props.accessibilityState.disabled).toBe(true);
-  }
-  expect(buttons('Deleting…')[0].props.accessibilityState.busy).toBe(true);
-  expect(
-    renderer.root.findAllByType(Text).some((node) => node.props.children === 'Deleting Carry…'),
-  ).toBe(true);
-});
-
 it.each([
   ['readyToReflect', { scheduledAt: new Date('2026-10-03T00:00:00.000Z') }, true],
   ['upcoming', {}, false],

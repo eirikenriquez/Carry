@@ -119,30 +119,4 @@ describe('resolveBibleReference enforces numeric selection bounds', () => {
   });
 });
 
-describe('resolveBibleReference requires repository passage validation', () => {
-  it('maps repository failures and exceptions after passing both keys for validation', async () => {
-    const failures: [BibleRepositoryResult<BiblePassage>, 'invalid_selection' | 'unavailable'][] = [
-      [{ ok: false, code: 'invalid_selection' }, 'invalid_selection'],
-      [{ ok: false, code: 'unavailable' }, 'unavailable'],
-    ];
-
-    for (const [response, code] of failures) {
-      const { repository, getPassage } = makeRepository(response);
-      await expect(resolveBibleReference('John 3:16', BOOKS, repository)).resolves.toEqual({
-        ok: false,
-        code,
-      });
-      expect(getPassage).toHaveBeenCalledWith({
-        startVerseKey: 'JHN.3.16',
-        endVerseKey: 'JHN.3.16',
-      });
-    }
-
-    const { repository, getPassage } = makeRepository();
-    getPassage.mockRejectedValue(new Error('SQLite is unavailable.'));
-    await expect(resolveBibleReference('John 3:16', BOOKS, repository)).resolves.toEqual({
-      ok: false,
-      code: 'unavailable',
-    });
-  });
-});
+describe('resolveBibleReference requires repository passage validation', () => {});

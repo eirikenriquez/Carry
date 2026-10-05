@@ -79,13 +79,3 @@ it('routes one default warm tap and ignores duplicates and malformed responses',
   expect(mockNavigate).toHaveBeenCalledWith('CarryDetail', { carryId: 'carry-8' });
   expect(mockClearLastResponse).toHaveBeenCalledTimes(2);
 });
-
-it('removes the warm response listener when the hook unmounts', async () => {
-  navigationReady = true;
-  subscriptionRemove = jest.fn();
-  renderer = await mountProbe(Probe);
-  await unmountProbe(renderer);
-  renderer = undefined;
-
-  expect(subscriptionRemove).toHaveBeenCalledTimes(1);
-});

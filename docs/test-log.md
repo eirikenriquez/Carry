@@ -23,6 +23,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Reflection entry | 137 / 30 | Validation, guarded save, draft/retry state, duplicate/stale requests, form feedback and ready-only navigation |
 | Folder clarity audit | 137 / 30 | Existing coverage retained after moving files, imports, and test-script paths |
 | Shared loading and preview | 137 / 30 | Existing coverage retained for create/edit previews, stale reads, draft preservation and save guards |
+| Focused Jest coverage | 47 / 20 | Core workflows, lifecycle rules, retry/save guards, selection, reminder routing and app resume |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Folder audit: 24 personal SQLite checks and Bible integration passed. Android
@@ -305,6 +306,24 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Guarded exact-ID cleanup restored the original empty personal tables. Backups
   remain outside Git; database ownership/permissions, radios, non-root ADB and the
   temporary build mapping were restored. No app reset or test startup hook was used.
+
+## Test scope review (5 October)
+
+- AI-assisted increments produced overlapping and extensive defensive coverage.
+  The audit reduced Jest from 118 named checks (137 cases) to 40 (47 cases).
+  This is a scope/maintenance decision, not a measured performance improvement.
+- Keep domain rules, create/edit/delete/reflection workflows, failed-draft retry,
+  duplicate-save prevention, Scripture selection, reminder deadlines/permissions,
+  notification taps and deletion confirmation. Broader mocked Bible checks duplicate
+  the retained integration script against the actual asset.
+- Remove repeated validation/error mapping, exhaustive damaged-row/clock cases,
+  and dependency-change/unmount permutations. Production safeguards are unchanged;
+  reduced coverage means these scenarios are no longer all checked automatically.
+- Keep app-resume status coverage instead of a duplicate service deletion restriction;
+  SQLite still checks deletion eligibility. Keep the Back-event regression found
+  during native testing, rather than cutting tests solely to reach a number.
+- All 47 Jest cases, normal Expo lint, TypeScript, format and whitespace checks pass.
+  No new emulator acceptance or notification-reliability result is claimed.
 
 ## Screenshots
 

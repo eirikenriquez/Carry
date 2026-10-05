@@ -82,19 +82,4 @@ describe('createCarry', () => {
       });
     },
   );
-
-  it('rejects an invalid scheduled date', () => {
-    const result = createCarry({ ...makeValidInput(), scheduledAt: new Date('invalid') }, now);
-
-    expect(result).toEqual({
-      ok: false,
-      issues: [{ field: 'scheduledAt', code: 'invalid_date' }],
-    });
-  });
-
-  it('throws when the supplied current time is invalid', () => {
-    expect(() => createCarry(makeValidInput(), new Date('invalid'))).toThrow(
-      'Current time must be a valid date.',
-    );
-  });
 });

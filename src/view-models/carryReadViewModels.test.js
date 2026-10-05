@@ -58,39 +58,6 @@ describe('Carry read view models', () => {
     expect(repository.getCategories).toHaveBeenCalledTimes(2);
   });
 
-  it('reloads on refocus and ignores a result from the previous focus', async () => {
-    let resolveStaleRead;
-    const staleRead = new Promise((resolve) => {
-      resolveStaleRead = resolve;
-    });
-    const currentCarry = carry('current', 'Current record');
-    const repository = {
-      findAll: jest
-        .fn()
-        .mockReturnValueOnce(staleRead)
-        .mockResolvedValueOnce(ok([currentCarry])),
-      getCategories: jest.fn().mockResolvedValue(ok(categories)),
-    };
-    let focused = true;
-    let viewModel;
-    function Probe() {
-      viewModel = useCarryListViewModel(repository, focused);
-      return null;
-    }
-
-    renderer = await mountProbe(Probe);
-    focused = false;
-    await act(async () => renderer.update(React.createElement(Probe)));
-    focused = true;
-    await act(async () => renderer.update(React.createElement(Probe)));
-    expect(repository.findAll).toHaveBeenCalledTimes(2);
-    expect(viewModel.state.data[0].carry).toEqual(currentCarry);
-
-    await act(async () => resolveStaleRead(ok([carry('stale')])));
-
-    expect(viewModel.state.data[0].carry).toEqual(currentCarry);
-  });
-
   it('retries detail failures, resolves stored Scripture, and ignores late id, focus, and unmount reads', async () => {
     let resolveOldIdRead;
     let resolveOldFocusRead;

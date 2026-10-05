@@ -4,7 +4,7 @@ import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
 import { openBundledBible } from './openBundledBible';
 
-// Track file operations in memory so loader recovery does not need device storage.
+// Track bundled copy operations without writing device storage.
 const mockFiles = new Set<string>();
 const destinationUri = 'file:///documents/SQLite/web-2026-09-28.db';
 const temporaryUri = `${destinationUri}.tmp`;
@@ -75,54 +75,5 @@ describe('openBundledBible', () => {
     expect(mockFiles.has(destinationUri)).toBe(true);
     expect(mockFiles.has(temporaryUri)).toBe(false);
     expect(database.execAsync).toHaveBeenCalledWith('PRAGMA query_only = ON');
-  });
-
-  it('reuses an existing local copy without loading an asset', async () => {
-    mockFiles.add(destinationUri);
-
-    expect((await openBundledBible()).ok).toBe(true);
-    expect(Asset.fromModule).not.toHaveBeenCalled();
-  });
-
-  it('returns unavailable if the asset has no local URI', async () => {
-    jest.mocked(Asset.fromModule).mockReturnValue({
-      downloadAsync: jest.fn().mockResolvedValue({ localUri: null }),
-    } as unknown as Asset);
-
-    expect(await openBundledBible()).toEqual({ ok: false, code: 'unavailable' });
-    expect(openDatabaseAsync).not.toHaveBeenCalled();
-  });
-
-  it('cleans up a failed copy so the next attempt can succeed', async () => {
-    jest.spyOn(File.prototype, 'copy').mockImplementationOnce(async (destination) => {
-      mockFiles.add(destination.uri);
-      throw new Error('Storage full');
-    });
-
-    expect(await openBundledBible()).toEqual({ ok: false, code: 'unavailable' });
-    expect(openDatabaseAsync).not.toHaveBeenCalled();
-    expect(mockFiles.has(destinationUri)).toBe(false);
-    expect(mockFiles.has(temporaryUri)).toBe(false);
-
-    // Also exercise an unfinished temporary file left by a terminated process.
-    mockFiles.add(temporaryUri);
-    expect((await openBundledBible()).ok).toBe(true);
-    expect(mockFiles.has(destinationUri)).toBe(true);
-    expect(mockFiles.has(temporaryUri)).toBe(false);
-  });
-
-  it('closes an incompatible database and returns unavailable', async () => {
-    database.getFirstAsync.mockResolvedValue({ value: 'different-dataset' });
-
-    expect(await openBundledBible()).toEqual({ ok: false, code: 'unavailable' });
-    expect(database.closeAsync).toHaveBeenCalledTimes(1);
-    expect(mockFiles.has(destinationUri)).toBe(false);
-    expect(mockFiles.has(temporaryUri)).toBe(false);
-  });
-
-  it('returns unavailable when SQLite cannot be opened', async () => {
-    jest.mocked(openDatabaseAsync).mockRejectedValueOnce(new Error('Unreadable database'));
-
-    expect(await openBundledBible()).toEqual({ ok: false, code: 'unavailable' });
   });
 });

@@ -42,30 +42,11 @@ function Probe() {
   return React.createElement(Text, null, `${now.toISOString()}|${statuses.join(',')}`);
 }
 
-async function rerender() {
-  await React.act(async () => renderer.update(React.createElement(Probe)));
-}
-
 function renderedValue() {
   return renderer.root.findByType(Text).props.children;
 }
 
 describe('useCarryStatusClock', () => {
-  it('uses the time when asynchronous loading finishes after the scheduled time', async () => {
-    focused = true;
-    const dueCarry = carry('2026-10-04T12:05:00.000Z');
-    probeCarries = [dueCarry];
-
-    renderer = await mountProbe(Probe);
-    expect(renderedValue()).toBe('2026-10-04T12:00:00.000Z|upcoming');
-
-    jest.setSystemTime(new Date('2026-10-04T12:06:00.000Z'));
-    loadState = { status: 'ready', data: 'loaded' };
-    await rerender();
-
-    expect(renderedValue()).toBe('2026-10-04T12:06:00.000Z|readyToReflect');
-  });
-
   it('refreshes on resume, ignores background events, and preserves future and completed statuses', async () => {
     focused = true;
     loadState = { status: 'ready', data: 'loaded' };
@@ -95,31 +76,5 @@ describe('useCarryStatusClock', () => {
       for (const listener of listeners) listener('active');
     });
     expect(renderedValue()).toBe('2026-10-04T12:06:00.000Z|readyToReflect,upcoming,completed');
-  });
-
-  it('refreshes when focused and removes its app-state listener on blur and unmount', async () => {
-    focused = false;
-    loadState = { status: 'ready', data: 'loaded' };
-    renderer = await mountProbe(Probe);
-    expect(listeners.size).toBe(0);
-
-    focused = true;
-    await rerender();
-    expect(renderedValue()).toBe('2026-10-04T12:00:00.000Z|');
-    expect(listeners.size).toBe(1);
-
-    focused = false;
-    await rerender();
-    expect(listeners.size).toBe(0);
-
-    jest.setSystemTime(new Date('2026-10-04T12:02:00.000Z'));
-    focused = true;
-    await rerender();
-    expect(renderedValue()).toBe('2026-10-04T12:02:00.000Z|');
-    expect(listeners.size).toBe(1);
-
-    await unmountProbe(renderer);
-    renderer = undefined;
-    expect(listeners.size).toBe(0);
   });
 });
