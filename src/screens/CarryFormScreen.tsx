@@ -16,10 +16,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CarryCategoryField } from '../components/carry-form/CarryCategoryField';
+import { CarryCategoryReflection } from '../components/carry-form/CarryCategoryReflection';
 import { CarryPassageField } from '../components/carry-form/CarryPassageField';
 import { CarryScheduleField } from '../components/carry-form/CarryScheduleField';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { Category } from '../models/Category';
+import type { Reflection } from '../models/Reflection';
 import type { CarryFormDraft, CarryFormErrors, CarryFormMode } from '../view-models/CarryFormState';
 import type { LoadState } from '../view-models/LoadState';
 
@@ -28,6 +30,8 @@ export interface CarryFormScreenProps {
   readonly categories: readonly Category[];
   readonly categoryLoadFailed: boolean;
   readonly onRetryCategories: () => void;
+  readonly categoryReflection?: LoadState<Reflection | null> | null;
+  readonly onRetryReflection?: () => void;
   readonly passagePreview: LoadState<BiblePassage>;
   readonly onRetryPassage: () => void;
   readonly errors: CarryFormErrors;
@@ -48,6 +52,8 @@ export function CarryFormScreen({
   categories,
   categoryLoadFailed,
   onRetryCategories,
+  categoryReflection,
+  onRetryReflection,
   passagePreview,
   onRetryPassage,
   errors,
@@ -85,6 +91,13 @@ export function CarryFormScreen({
             disabled={isSaving}
             error={errors.categoryName}
           />
+          {mode === 'create' && categoryReflection && onRetryReflection ? (
+            <CarryCategoryReflection
+              state={categoryReflection}
+              onRetry={onRetryReflection}
+              disabled={isSaving}
+            />
+          ) : null}
 
           <View style={styles.section}>
             <Text style={styles.label}>What situation do you want to prepare for?</Text>
