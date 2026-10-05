@@ -322,8 +322,17 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - Keep app-resume status coverage instead of a duplicate service deletion restriction;
   SQLite still checks deletion eligibility. Keep the Back-event regression found
   during native testing, rather than cutting tests solely to reach a number.
+- Personal SQLite checks reduced from 24 to 9: retain category reuse, read/update
+  preservation, reopening persistence, deletion eligibility/cascade, reflection
+  protection and rollback. Separate schema checks duplicate the retained round trips;
+  corruption, ID-collision and initialization-failure permutations were deprioritized.
+- Python checks reduced from four to two: integrity/totals and exact publisher-source
+  comparison. Separate sample/empty-verse checks duplicate that full comparison and
+  the unchanged Bible integration script (66 books, 1,189 chapters, 31,103 entries).
 - All 47 Jest cases, normal Expo lint, TypeScript, format and whitespace checks pass.
-  No new emulator acceptance or notification-reliability result is claimed.
+  All nine SQLite checks, two Python checks and Bible integration pass as well.
+  Broad `eslint .` additionally flags pre-existing `__dirname` globals in Node scripts;
+  the normal project lint passes. No new emulator acceptance or reliability claim.
 
 ## Screenshots
 
