@@ -1,3 +1,7 @@
+/**
+ * This hook tracks verse taps within one chapter.
+ * It loads a preview for the selected passage.
+ */
 import { useCallback, useEffect, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';
@@ -40,9 +44,6 @@ type PreviewRecord = {
 
 const loadingState: LoadState<BiblePassage> = { status: 'loading' };
 
-/**
- * Manage same-chapter tap selection and its resolved passage preview.
- */
 export function usePassageSelectionViewModel(
   repository: BibleRepository,
   bookId: string,

@@ -1,3 +1,7 @@
+/**
+ * This hook loads a selected Bible passage for a form.
+ * It exposes the passage load state and a retry action.
+ */
 import { useCallback, useEffect, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';

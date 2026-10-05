@@ -1,9 +1,12 @@
+/**
+ * This hook provides the current time for Carry status displays.
+ * It refreshes when focus, loaded data, or app activity changes.
+ */
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 import type { LoadState } from './LoadState';
 
-/** Refresh derived status time on focus, after loading, and when the app resumes. */
 export function useCarryStatusClock(isFocused: boolean, loadState: LoadState<unknown>): Date {
   const [clock, setClock] = useState(() => ({ isFocused, loadState, now: new Date() }));
 

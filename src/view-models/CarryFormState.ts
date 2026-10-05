@@ -1,3 +1,7 @@
+/**
+ * This module defines shared Carry form data and validation types.
+ * It also provides validation messages and form utility functions.
+ */
 import type { PassageSelection } from '../models/PassageSelection';
 
 export interface CarryFormDraft {

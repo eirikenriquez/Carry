@@ -1,3 +1,7 @@
+/**
+ * This hook loads saved Carries and their category names.
+ * It reloads when the list screen gains focus and exposes retry.
+ */
 import { useCallback, useEffect, useState } from 'react';
 
 import type { CarryRepository } from '../repositories/CarryRepository';

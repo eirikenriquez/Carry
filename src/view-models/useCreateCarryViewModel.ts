@@ -1,3 +1,7 @@
+/**
+ * This hook manages a new Carry form and its supporting reads.
+ * It validates the draft, saves the Carry, and schedules its reminder.
+ */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';

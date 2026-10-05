@@ -1,6 +1,9 @@
+/**
+ * This function maps reminder sync outcomes to user-facing messages.
+ * Create and edit flows use the same wording.
+ */
 import type { ReminderSyncStatus } from '../services/syncCarryReminder';
 
-/** Keep reminder outcomes consistent wherever a Carry is created or edited. */
 export function reminderFeedback(status: ReminderSyncStatus): string {
   switch (status) {
     case 'scheduled':

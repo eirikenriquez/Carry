@@ -1,3 +1,7 @@
+/**
+ * This hook loads an upcoming Carry into an editable form.
+ * It manages validation, passage preview, and saving changes.
+ */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';

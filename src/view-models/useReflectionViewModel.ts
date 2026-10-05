@@ -1,3 +1,7 @@
+/**
+ * This hook manages an existing Carry's reflection draft and loading state.
+ * It validates and saves reflection changes through the Carry repository.
+ */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { CarryRepository } from '../repositories/CarryRepository';

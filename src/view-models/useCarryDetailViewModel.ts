@@ -1,3 +1,7 @@
+/**
+ * This hook loads a Carry, its category name, and its Bible passage.
+ * It also manages guarded deletion and its feedback.
+ */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';

@@ -1,3 +1,7 @@
+/**
+ * This hook opens the Bible repository and loads its book catalogue.
+ * It reuses the repository when loading is retried.
+ */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository, BibleRepositoryResult } from '../repositories/BibleRepository';
@@ -16,9 +20,6 @@ type BibleBrowserViewModel = {
   readonly retry: () => void;
 };
 
-/**
- * Load the book catalogue and reuse the opened repository when retrying.
- */
 export function useBibleBrowserViewModel(loadBible: LoadBible): BibleBrowserViewModel {
   const [state, setState] = useState<LoadState<BibleBrowserData>>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);

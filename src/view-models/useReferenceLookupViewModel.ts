@@ -1,3 +1,7 @@
+/**
+ * This hook manages Bible reference input and lookup feedback.
+ * It returns validated navigation targets from the Bible catalogue.
+ */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';

@@ -1,3 +1,7 @@
+/**
+ * This hook loads verses for the current Bible chapter.
+ * It exposes loading status and a retry action.
+ */
 import { useCallback, useEffect, useState } from 'react';
 
 import type { BibleRepository } from '../repositories/BibleRepository';
