@@ -1,3 +1,7 @@
+/**
+ * This component shows a selected Bible passage preview.
+ * It provides actions to clear, retry, or use the passage.
+ */
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import type { BiblePassage } from '../models/BiblePassage';

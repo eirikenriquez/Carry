@@ -1,8 +1,16 @@
+/**
+ * These components show loading and error feedback for Carry screens.
+ * The error view also offers a retry action.
+ */
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface CarryLoadFeedbackProps {
   readonly resourceLabel: string;
+}
+
+interface CarryLoadErrorProps extends CarryLoadFeedbackProps {
+  readonly onRetry: () => void;
 }
 
 export function CarryLoadFeedback({ resourceLabel }: CarryLoadFeedbackProps) {
@@ -19,10 +27,6 @@ export function CarryLoadFeedback({ resourceLabel }: CarryLoadFeedbackProps) {
       </View>
     </SafeAreaView>
   );
-}
-
-interface CarryLoadErrorProps extends CarryLoadFeedbackProps {
-  readonly onRetry: () => void;
 }
 
 export function CarryLoadError({ resourceLabel, onRetry }: CarryLoadErrorProps) {

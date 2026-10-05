@@ -1,3 +1,7 @@
+/**
+ * This screen lists Bible books and their chapter counts.
+ * It includes reference lookup and lets users choose a book.
+ */
 import type { ReactNode } from 'react';
 import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

@@ -1,3 +1,7 @@
+/**
+ * This component shows Scripture loading or error feedback.
+ * It offers a retry action when loading fails.
+ */
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

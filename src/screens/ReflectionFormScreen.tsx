@@ -1,3 +1,7 @@
+/**
+ * This screen presents the reflection prompts for a Carry.
+ * It collects rating, response, and insight input for saving.
+ */
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -25,16 +29,6 @@ export interface ReflectionFormScreenProps {
   readonly onChangeInsight: (value: string) => void;
   readonly onSave: () => void;
   readonly onCancel: () => void;
-}
-
-function FieldError({ message }: { readonly message?: string }) {
-  if (!message) return null;
-
-  return (
-    <Text accessibilityRole="alert" style={styles.errorText}>
-      {message}
-    </Text>
-  );
 }
 
 /** Present the reflection context and inputs while saving and validation stay in the ViewModel. */
@@ -181,6 +175,16 @@ export function ReflectionFormScreen({
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
+  );
+}
+
+function FieldError({ message }: { readonly message?: string }) {
+  if (!message) return null;
+
+  return (
+    <Text accessibilityRole="alert" style={styles.errorText}>
+      {message}
+    </Text>
   );
 }
 

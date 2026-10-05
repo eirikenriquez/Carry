@@ -1,3 +1,7 @@
+/**
+ * This screen shows a saved Carry, its passage, and any reflection.
+ * It presents actions based on the Carry status.
+ */
 import {
   Alert,
   ActivityIndicator,
@@ -12,7 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { getCarryStatus } from '../models/getCarryStatus';
 import { CarryLoadError, CarryLoadFeedback } from '../components/CarryLoadFeedback';
 import type { LoadState } from '../view-models/LoadState';
-
 import type { CarryDetail } from '../view-models/useCarryDetailViewModel';
 import { formatCarryStatus, formatSchedule } from './carryDisplay';
 

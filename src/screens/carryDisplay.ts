@@ -1,3 +1,7 @@
+/**
+ * This module formats Carry statuses and saved schedules for display.
+ * It shows each schedule using the local date and time formats.
+ */
 import type { CarryStatus } from '../models/CarryStatus';
 
 export function formatCarryStatus(status: CarryStatus): string {

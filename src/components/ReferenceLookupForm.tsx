@@ -1,3 +1,7 @@
+/**
+ * This component accepts a Bible reference.
+ * It shows the query field, submit action, and any error.
+ */
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface ReferenceLookupFormProps {

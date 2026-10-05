@@ -1,3 +1,7 @@
+/**
+ * This screen shows the verses for the selected chapter.
+ * It lets users select a passage range and preview it.
+ */
 import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

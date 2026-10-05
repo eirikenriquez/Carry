@@ -1,3 +1,7 @@
+/**
+ * This screen lists the chapters for a selected Bible book.
+ * It lets users open a chapter.
+ */
 import { FlatList, Pressable, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

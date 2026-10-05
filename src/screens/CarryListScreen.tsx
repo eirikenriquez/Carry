@@ -1,10 +1,13 @@
+/**
+ * This screen lists saved Carries and their statuses.
+ * It opens a selected Carry or guides users to browse Scripture when the list is empty.
+ */
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { getCarryStatus } from '../models/getCarryStatus';
 import { CarryLoadError, CarryLoadFeedback } from '../components/CarryLoadFeedback';
 import type { LoadState } from '../view-models/LoadState';
-
 import type { CarryListItem } from '../view-models/useCarryListViewModel';
 import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
@@ -15,32 +18,6 @@ export interface CarryListScreenProps {
   readonly onRetry: () => void;
   readonly onOpenCarry: (id: string) => void;
   readonly onBrowseBible: () => void;
-}
-
-function EmptyCarryList({ onBrowseBible }: { readonly onBrowseBible: () => void }) {
-  return (
-    <View style={styles.emptyContent}>
-      <Text style={styles.emptyHeading}>No Carries saved yet</Text>
-      <Text style={styles.emptyMessage}>
-        Browse the Bible and choose a passage to create your first Carry.
-      </Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onBrowseBible}
-        style={({ pressed }) => [styles.browseButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.browseButtonText}>Browse Bible</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function ReminderWarning({ message }: { readonly message?: string }) {
-  return message ? (
-    <Text accessibilityRole="alert" style={styles.reminderWarning}>
-      {message}
-    </Text>
-  ) : null;
 }
 
 /** Render saved Carries for reopening; grouped history is separate. */
@@ -118,6 +95,32 @@ export function CarryListScreen({
       />
     </SafeAreaView>
   );
+}
+
+function EmptyCarryList({ onBrowseBible }: { readonly onBrowseBible: () => void }) {
+  return (
+    <View style={styles.emptyContent}>
+      <Text style={styles.emptyHeading}>No Carries saved yet</Text>
+      <Text style={styles.emptyMessage}>
+        Browse the Bible and choose a passage to create your first Carry.
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={onBrowseBible}
+        style={({ pressed }) => [styles.browseButton, pressed && styles.pressed]}
+      >
+        <Text style={styles.browseButtonText}>Browse Bible</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function ReminderWarning({ message }: { readonly message?: string }) {
+  return message ? (
+    <Text accessibilityRole="alert" style={styles.reminderWarning}>
+      {message}
+    </Text>
+  ) : null;
 }
 
 const styles = StyleSheet.create({
