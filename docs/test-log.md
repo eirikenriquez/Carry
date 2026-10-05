@@ -26,6 +26,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Focused Jest coverage | 47 / 20 | Core workflows, lifecycle rules, retry/save guards, selection, reminder routing and app resume |
 | File layout cleanup | 47 / 20 | Existing coverage retained after file overviews and declaration/member reordering |
 | Carry form fields | 47 / 20 | Existing coverage retained after extracting schedule, passage and category UI |
+| Bible wiring and reflection rating | 47 / 20 | Existing coverage retained after moving Bible connectors and extracting rating UI |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Folder audit: 24 personal SQLite checks and Bible integration passed. Android
@@ -355,6 +356,15 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   This used mocked native controls, not emulator acceptance; no test files were added.
 - All 47 Jest cases, TypeScript, normal Expo lint, formatting and whitespace pass.
   Database/data checks and native acceptance were not repeated for this UI-only change.
+
+## Bible wiring and rating checkpoint (5 October)
+
+- Bible wrapper bodies/props, navigator body/routes and stack initialization match
+  the starting checkpoint. AppNavigator: 351 -> 255 lines; reflection form: 266 -> 225.
+- A temporary mocked comparison matched reflection host UI, text, styles,
+  accessibility and callbacks across 144 combinations. No permanent tests added.
+- All 47 Jest cases, TypeScript, normal Expo lint, formatting and whitespace pass.
+  No native acceptance or database/data checks repeated for these layout/UI changes.
 
 ## Screenshots
 

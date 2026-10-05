@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ReflectionRatingField } from '../components/ReflectionRatingField';
 import type { ReflectionDraft, ReflectionFieldErrors } from '../view-models/useReflectionViewModel';
 
 export interface ReflectionFormScreenProps {
@@ -63,38 +64,12 @@ export function ReflectionFormScreen({
             <Text style={styles.contextText}>{ifThenIntention}</Text>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.label}>Alignment (required)</Text>
-            <Text style={styles.scaleExplanation}>
-              How closely did your response follow your plan? 1 = not at all; 5 = closely.
-            </Text>
-            <View style={styles.ratingChoices}>
-              {[1, 2, 3, 4, 5].map((rating) => {
-                const selected = draft.alignmentRating === rating;
-                return (
-                  <Pressable
-                    key={rating}
-                    accessibilityRole="radio"
-                    accessibilityLabel={`Rating ${rating}`}
-                    accessibilityState={{ checked: selected, selected, disabled: isSaving }}
-                    disabled={isSaving}
-                    onPress={() => onChangeRating(rating)}
-                    style={({ pressed }) => [
-                      styles.ratingChoice,
-                      selected && styles.ratingChoiceSelected,
-                      pressed && styles.pressed,
-                      isSaving && styles.disabled,
-                    ]}
-                  >
-                    <Text style={[styles.ratingText, selected && styles.ratingTextSelected]}>
-                      {rating}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-            <FieldError message={fieldErrors.alignmentRating} />
-          </View>
+          <ReflectionRatingField
+            value={draft.alignmentRating}
+            onChange={onChangeRating}
+            disabled={isSaving}
+            error={fieldErrors.alignmentRating}
+          />
 
           <View style={styles.section}>
             <Text style={styles.label}>What happened? (required)</Text>
@@ -205,22 +180,6 @@ const styles = StyleSheet.create({
   planLabel: { marginTop: 12 },
   section: { marginTop: 24 },
   label: { color: '#111111', fontSize: 17, fontWeight: '600', lineHeight: 24 },
-  scaleExplanation: { marginTop: 4, color: '#555555', fontSize: 15, lineHeight: 22 },
-  ratingChoices: { flexDirection: 'row', gap: 8, marginTop: 10 },
-  ratingChoice: {
-    minWidth: 48,
-    minHeight: 48,
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#888888',
-    borderRadius: 4,
-    backgroundColor: '#ffffff',
-  },
-  ratingChoiceSelected: { borderColor: '#111111', backgroundColor: '#111111' },
-  ratingText: { color: '#111111', fontSize: 17, fontWeight: '600', lineHeight: 24 },
-  ratingTextSelected: { color: '#ffffff' },
   input: {
     minHeight: 48,
     marginTop: 8,

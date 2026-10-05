@@ -24,6 +24,9 @@ Bible and Carry screens share the `LoadState` type. Create/edit ViewModels share
 The create/edit form composes category, passage and schedule fields from
 `src/components/carry-form`. Each field owns its UI/styles; draft state, validation
 and saving remain in the ViewModels.
+`BibleScreens` holds the book/reading connectors; `AppNavigator` retains routes
+and navigation callbacks. `ReflectionRatingField` renders the controlled 1-5 rating;
+the reflection ViewModel still owns its value, validation and saving.
 
 ## File layout
 
