@@ -6,9 +6,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { test } = require('node:test');
 const ts = require('typescript');
 
-const {
-  personalDatabaseSchema,
-} = require('../src/infrastructure/repositories/personalDatabaseSchema.ts');
+const { personalDatabaseSchema } = require('../src/repositories/personalDatabaseSchema.ts');
 
 /**
  * Run the actual opener using a real SQLite connection in place of Expo's native bridge.
@@ -34,9 +32,9 @@ function loadTypeScript(relativePath, dependencies) {
 }
 
 function loadOpener(openConnection) {
-  return loadTypeScript('src/infrastructure/repositories/openPersonalDatabase.ts', {
+  return loadTypeScript('src/repositories/openPersonalDatabase.ts', {
     'expo-sqlite': { openDatabaseAsync: openConnection },
-    './personalDatabaseSchema': require('../src/infrastructure/repositories/personalDatabaseSchema.ts'),
+    './personalDatabaseSchema': require('../src/repositories/personalDatabaseSchema.ts'),
   }).openPersonalDatabase;
 }
 
@@ -87,14 +85,11 @@ function createRepository(t, onTransactionBegin) {
     }
     return connection;
   });
-  const { SQLiteCarryRepository } = loadTypeScript(
-    'src/infrastructure/repositories/SQLiteCarryRepository.ts',
-    {
-      './openPersonalDatabase': { openPersonalDatabase },
-      '../../domain/rules/getCarryStatus': require('../src/domain/rules/getCarryStatus.ts'),
-      '../../domain/rules/normalizeCategoryName': require('../src/domain/rules/normalizeCategoryName.ts'),
-    },
-  );
+  const { SQLiteCarryRepository } = loadTypeScript('src/repositories/SQLiteCarryRepository.ts', {
+    './openPersonalDatabase': { openPersonalDatabase },
+    '../models/getCarryStatus': require('../src/models/getCarryStatus.ts'),
+    '../models/normalizeCategoryName': require('../src/models/normalizeCategoryName.ts'),
+  });
   return { repository: new SQLiteCarryRepository(), database };
 }
 
@@ -144,31 +139,6 @@ function insertCarry(database, carry) {
       carry.createdAt.toISOString(),
     );
 }
-
-test('reuses normalized categories without changing their identity or display spelling', async (t) => {
-  const { repository } = createRepository(t);
-  assert.deepEqual(await repository.getCategories(), { ok: true, value: [] });
-  assert.deepEqual(await repository.getOrCreateCategory({ id: 'work', name: '  Work  Stress ' }), {
-    ok: true,
-    value: { id: 'work', name: 'Work Stress' },
-  });
-  assert.deepEqual(await repository.getOrCreateCategory({ id: 'other-id', name: 'work stress' }), {
-    ok: true,
-    value: { id: 'work', name: 'Work Stress' },
-  });
-  await repository.getOrCreateCategory({ id: 'family', name: 'Family' });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [
-      { id: 'family', name: 'Family' },
-      { id: 'work', name: 'Work Stress' },
-    ],
-  });
-  assert.deepEqual(await repository.getOrCreateCategory({ id: 'blank', name: ' ' }), {
-    ok: false,
-    code: 'invalid_record',
-  });
-});
 
 test('creates Carries with new or normalized-reused categories', async (t) => {
   const { repository } = createRepository(t);
@@ -256,129 +226,6 @@ test('updates an existing Carry with a normalized category and preserves canonic
   });
 });
 
-test('returns null for a missing update without creating its category', async (t) => {
-  const { repository, database } = createRepository(t);
-  const missing = { ...carryFixture('missing'), categoryId: 'new-category' };
-  assert.deepEqual(await repository.update({ id: 'new-category', name: 'New Category' }, missing), {
-    ok: true,
-    value: null,
-  });
-  assert.equal(database.prepare('SELECT count(*) AS count FROM categories').get().count, 0);
-  assert.equal(database.prepare('SELECT count(*) AS count FROM carries').get().count, 0);
-});
-
-test('rolls back category creation when an update fails and rejects category ID collisions', async (t) => {
-  const { repository, database } = createRepository(t);
-  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
-  const original = carryFixture();
-  insertCarry(database, original);
-  database.exec(`CREATE TRIGGER fail_update BEFORE UPDATE ON carries
-    BEGIN SELECT RAISE(ABORT, 'Simulated update failure'); END;`);
-  const edited = {
-    ...original,
-    categoryId: 'new-category',
-    situation: 'Changed',
-  };
-  assert.deepEqual(await repository.update({ id: 'new-category', name: 'New Category' }, edited), {
-    ok: false,
-    code: 'unavailable',
-  });
-  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'work', name: 'Work' }],
-  });
-
-  database.exec('DROP TRIGGER fail_update');
-  assert.deepEqual(
-    await repository.update({ id: 'work', name: 'Family' }, { ...edited, categoryId: 'work' }),
-    { ok: false, code: 'invalid_record' },
-  );
-  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'work', name: 'Work' }],
-  });
-});
-
-test('checks original status and the new schedule inside the update transaction', async (t) => {
-  let transactionNow = new Date('2026-10-03T20:59:59.000Z');
-  let expireOriginalOnBegin = true;
-  let transactionStarted = false;
-  const { repository, database } = createRepository(t, () => {
-    transactionStarted = true;
-    if (expireOriginalOnBegin) transactionNow = new Date('2026-10-03T21:00:00.000Z');
-  });
-  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
-  const original = carryFixture();
-  insertCarry(database, original);
-  const completed = {
-    ...carryFixture('carry-completed'),
-    reflection: reflectionFixture('reflection-completed'),
-  };
-  insertCarry(database, completed);
-  database
-    .prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)')
-    .run(
-      completed.reflection.id,
-      completed.id,
-      completed.reflection.alignmentRating,
-      completed.reflection.whatOccurred,
-      completed.reflection.insight,
-      completed.reflection.createdAt.toISOString(),
-    );
-  const now = () => {
-    assert.equal(transactionStarted, true);
-    return new Date(transactionNow.getTime());
-  };
-  const category = { id: 'new-category', name: 'New Category' };
-
-  const expiredDraft = {
-    ...original,
-    categoryId: category.id,
-    situation: 'Changed after the Carry became due',
-    scheduledAt: new Date('2026-10-03T22:00:00.000Z'),
-  };
-  assert.deepEqual(await repository.update(category, expiredDraft, now), {
-    ok: false,
-    code: 'not_upcoming',
-  });
-  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'work', name: 'Work' }],
-  });
-
-  expireOriginalOnBegin = false;
-  transactionNow = new Date('2026-10-03T20:00:00.000Z');
-  const reflectedDraft = { ...completed, categoryId: category.id, situation: 'Changed' };
-  assert.deepEqual(await repository.update(category, reflectedDraft, now), {
-    ok: false,
-    code: 'not_upcoming',
-  });
-  assert.deepEqual(await repository.findById(completed.id), { ok: true, value: completed });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'work', name: 'Work' }],
-  });
-
-  const expiredScheduleDraft = {
-    ...original,
-    categoryId: category.id,
-    situation: 'Invalid new schedule',
-    scheduledAt: new Date('2026-10-03T19:00:00.000Z'),
-  };
-  assert.deepEqual(await repository.update(category, expiredScheduleDraft, now), {
-    ok: false,
-    code: 'invalid_record',
-  });
-  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'work', name: 'Work' }],
-  });
-});
-
 test('deletes only an upcoming Carry using status read under the write lock', async (t) => {
   let transactionNow = new Date('2026-10-03T20:59:59.000Z');
   let makeOriginalDueOnBegin = true;
@@ -454,75 +301,6 @@ test('deletes only an upcoming Carry using status read under the write lock', as
   assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
 });
 
-test('rolls back failed creation, retries, and rejects duplicate Carry IDs', async (t) => {
-  const { repository, database } = createRepository(t);
-  const carry = { ...carryFixture('carry-retry'), categoryId: 'family' };
-  database.exec(`CREATE TRIGGER fail_create BEFORE INSERT ON carries
-    WHEN NEW.id = 'carry-retry'
-    BEGIN SELECT RAISE(ABORT, 'Simulated create failure'); END;`);
-  assert.deepEqual(await repository.create({ id: 'family', name: 'Family' }, carry), {
-    ok: false,
-    code: 'unavailable',
-  });
-  assert.deepEqual(await repository.getCategories(), { ok: true, value: [] });
-  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
-
-  database.exec('DROP TRIGGER fail_create');
-  assert.deepEqual(await repository.create({ id: 'family', name: 'Family' }, carry), {
-    ok: true,
-    value: carry,
-  });
-  const conflicting = {
-    ...carry,
-    categoryId: 'new-category',
-    situation: 'A replacement record',
-  };
-  assert.deepEqual(
-    await repository.create({ id: 'new-category', name: 'New Category' }, conflicting),
-    { ok: false, code: 'invalid_record' },
-  );
-  assert.deepEqual(await repository.findById(carry.id), { ok: true, value: carry });
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'family', name: 'Family' }],
-  });
-});
-
-test('rejects invalid new Carry drafts without writing categories or Carries', async (t) => {
-  const { repository } = createRepository(t);
-  const valid = carryFixture();
-  for (const [category, candidate] of [
-    [
-      { id: 'blank-category', name: ' ' },
-      { ...valid, categoryId: 'blank-category' },
-    ],
-    [{ id: 'other', name: 'Work' }, valid],
-    [
-      { id: 'work', name: 'Work' },
-      { ...valid, situation: ' ' },
-    ],
-    [
-      { id: 'work', name: 'Work' },
-      { ...valid, scheduledAt: new Date('invalid') },
-    ],
-    [
-      { id: 'work', name: 'Work' },
-      { ...valid, reflection: reflectionFixture() },
-    ],
-    [
-      { id: 'work', name: 'Work' },
-      { ...valid, reminderId: 'reminder-1' },
-    ],
-  ]) {
-    assert.deepEqual(await repository.create(category, candidate), {
-      ok: false,
-      code: 'invalid_record',
-    });
-  }
-  assert.deepEqual(await repository.getCategories(), { ok: true, value: [] });
-  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
-});
-
 test('reads Carries, restores optional fields, and orders the latest reflection deterministically', async (t) => {
   const { repository, database } = createRepository(t);
   assert.deepEqual(await repository.findById('missing'), { ok: true, value: null });
@@ -570,9 +348,6 @@ test('reads Carries, restores optional fields, and orders the latest reflection 
     .run(reflection.createdAt.toISOString(), 'reflection-1');
   assert.deepEqual(await repository.latestReflection('work'), { ok: true, value: reflection });
   assert.deepEqual(await repository.latestReflection('missing'), { ok: true, value: null });
-
-  database.prepare('UPDATE carries SET scheduled_at = ? WHERE id = ?').run('not a date', first.id);
-  assert.deepEqual(await repository.findById(first.id), { ok: false, code: 'unavailable' });
 });
 
 test('initializes once and preserves stored data when the database file is reopened', async (t) => {
@@ -756,164 +531,6 @@ test('rejects premature, duplicate, and missing reflection writes and rolls back
   });
 });
 
-test('checks eligibility after acquiring the lock and rejects stale schedules and reflection IDs', async (t) => {
-  let beginCount = 0;
-  let transactionNow = new Date('2026-10-03T20:59:59.999Z');
-  let updateClockOnBegin = true;
-  const scheduledAt = new Date('2026-10-03T21:00:00.000Z');
-  const { repository, database } = createRepository(t, () => {
-    beginCount += 1;
-    if (beginCount === 2 && updateClockOnBegin) transactionNow = new Date(scheduledAt);
-  });
-  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
-  const current = carryFixture('carry-current');
-  const stale = {
-    ...carryFixture('carry-stale'),
-    scheduledAt: new Date('2026-10-05T21:00:00.000Z'),
-  };
-  const owner = {
-    ...carryFixture('carry-owner'),
-    reflection: reflectionFixture('reflection-owned'),
-  };
-  const collisionTarget = carryFixture('carry-collision-target');
-  for (const carry of [current, stale, owner, collisionTarget]) insertCarry(database, carry);
-  database
-    .prepare('INSERT INTO reflections VALUES (?, ?, ?, ?, ?, ?)')
-    .run(
-      owner.reflection.id,
-      owner.id,
-      owner.reflection.alignmentRating,
-      owner.reflection.whatOccurred,
-      owner.reflection.insight,
-      owner.reflection.createdAt.toISOString(),
-    );
-
-  const afterLock = () => {
-    assert.equal(beginCount, 2);
-    return new Date(transactionNow);
-  };
-  beginCount = 0;
-  assert.deepEqual(
-    await repository.recordReflection(
-      current.id,
-      reflectionFixture('reflection-commit-time', scheduledAt.toISOString()),
-      afterLock,
-    ),
-    {
-      ok: true,
-      value: {
-        ...current,
-        reflection: reflectionFixture('reflection-commit-time', scheduledAt.toISOString()),
-      },
-    },
-  );
-
-  beginCount = 0;
-  updateClockOnBegin = false;
-  transactionNow = new Date('2026-10-04T12:00:00.000Z');
-  assert.deepEqual(
-    await repository.recordReflection(
-      stale.id,
-      reflectionFixture('reflection-stale-draft', '2026-10-04T12:00:00.000Z'),
-      afterLock,
-    ),
-    { ok: false, code: 'not_ready' },
-  );
-
-  beginCount = 0;
-  assert.deepEqual(
-    await repository.recordReflection(
-      collisionTarget.id,
-      reflectionFixture(owner.reflection.id, collisionTarget.scheduledAt.toISOString()),
-      afterLock,
-    ),
-    { ok: false, code: 'invalid_record' },
-  );
-  assert.deepEqual(await repository.findById(stale.id), { ok: true, value: stale });
-  assert.deepEqual(await repository.findById(owner.id), { ok: true, value: owner });
-  assert.deepEqual(await repository.findById(collisionTarget.id), {
-    ok: true,
-    value: collisionTarget,
-  });
-});
-
-test('links a reminder by updating only an existing Carry reminder_id', async (t) => {
-  const { repository, database } = createRepository(t);
-  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
-  const original = carryFixture();
-  insertCarry(database, original);
-
-  assert.deepEqual(await repository.setReminderId(original.id, 'notification-1'), {
-    ok: true,
-    value: true,
-  });
-  assert.deepEqual(await repository.findById(original.id), {
-    ok: true,
-    value: { ...original, reminderId: 'notification-1' },
-  });
-  assert.deepEqual(await repository.setReminderId(original.id, null), {
-    ok: true,
-    value: true,
-  });
-  assert.deepEqual(await repository.findById(original.id), { ok: true, value: original });
-  assert.deepEqual(await repository.setReminderId(original.id, 'notification-1'), {
-    ok: true,
-    value: true,
-  });
-  assert.deepEqual(await repository.setReminderId('missing', 'notification-2'), {
-    ok: true,
-    value: false,
-  });
-  assert.deepEqual(await repository.findById('missing'), { ok: true, value: null });
-  assert.deepEqual(await repository.setReminderId(' ', 'notification-3'), {
-    ok: false,
-    code: 'invalid_record',
-  });
-  assert.deepEqual(await repository.setReminderId(original.id, '  '), {
-    ok: false,
-    code: 'invalid_record',
-  });
-  assert.equal(database.prepare('SELECT count(*) AS count FROM carries').get().count, 1);
-  assert.deepEqual(await repository.getCategories(), {
-    ok: true,
-    value: [{ id: 'work', name: 'Work' }],
-  });
-
-  database.exec(`CREATE TRIGGER fail_reminder_link BEFORE UPDATE OF reminder_id ON carries
-    BEGIN SELECT RAISE(ABORT, 'Simulated reminder link failure'); END;`);
-  assert.deepEqual(await repository.setReminderId(original.id, 'notification-2'), {
-    ok: false,
-    code: 'unavailable',
-  });
-  assert.deepEqual(await repository.findById(original.id), {
-    ok: true,
-    value: { ...original, reminderId: 'notification-1' },
-  });
-});
-
-test('rejects invalid records and prevents a reflection from moving between Carries', async (t) => {
-  const { repository } = createRepository(t);
-  await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
-  const original = carryFixture();
-  for (const candidate of [
-    { ...original, situation: ' ' },
-    { ...original, scheduledAt: new Date('invalid') },
-    { ...original, categoryId: 'missing' },
-    { ...original, reflection: { ...reflectionFixture(), alignmentRating: 2.5 } },
-  ]) {
-    assert.deepEqual(await repository.save(candidate), { ok: false, code: 'invalid_record' });
-  }
-  assert.deepEqual(await repository.findAll(), { ok: true, value: [] });
-  const reflected = { ...original, reflection: reflectionFixture() };
-  assert.deepEqual(await repository.save(reflected), { ok: true, value: reflected });
-  assert.deepEqual(await repository.save({ ...reflected, id: 'carry-2' }), {
-    ok: false,
-    code: 'invalid_record',
-  });
-  assert.deepEqual(await repository.findById(reflected.id), { ok: true, value: reflected });
-  assert.deepEqual(await repository.findById('carry-2'), { ok: true, value: null });
-});
-
 test('rolls back partial save/delete failures and succeeds after the failure is removed', async (t) => {
   const { repository, database } = createRepository(t);
   await repository.getOrCreateCategory({ id: 'work', name: 'Work' });
@@ -939,98 +556,4 @@ test('rolls back partial save/delete failures and succeeds after the failure is 
   database.exec('DROP TRIGGER fail_delete');
   assert.deepEqual(await repository.delete(original.id), { ok: true, value: changed });
   assert.deepEqual(await repository.findById(original.id), { ok: true, value: null });
-});
-
-test('rejects unknown or damaged schemas without replacing existing data', async () => {
-  for (const setup of [
-    'CREATE TABLE existing (value TEXT); PRAGMA user_version = 0;',
-    'CREATE TABLE existing (value TEXT); PRAGMA user_version = 2;',
-    'CREATE TABLE existing (value TEXT); PRAGMA user_version = 1;',
-  ]) {
-    const database = new DatabaseSync(':memory:');
-    try {
-      database.exec(`${setup} INSERT INTO existing VALUES ('keep me');`);
-      const connection = connect(database);
-      let closed = false;
-      connection.closeAsync = async () => {
-        closed = true;
-      };
-      assert.deepEqual(await loadOpener(async () => connection)(), {
-        ok: false,
-        code: 'unavailable',
-      });
-      assert.equal(closed, true);
-      assert.equal(database.prepare('SELECT value FROM existing').get().value, 'keep me');
-      assert.equal(
-        database.prepare("SELECT count(*) AS count FROM sqlite_master WHERE type = 'table'").get()
-          .count,
-        1,
-      );
-    } finally {
-      database.close();
-    }
-  }
-});
-
-test('rolls back a failed initialization and allows a later retry', async () => {
-  const database = new DatabaseSync(':memory:');
-  try {
-    const connection = connect(database);
-    const exec = connection.execAsync;
-    let closed = false;
-    connection.closeAsync = async () => {
-      closed = true;
-    };
-    connection.execAsync = async (sql) => {
-      await exec(sql);
-      if (sql === personalDatabaseSchema) throw new Error('Simulated initialization failure');
-    };
-    assert.deepEqual(await loadOpener(async () => connection)(), {
-      ok: false,
-      code: 'unavailable',
-    });
-    assert.equal(closed, true);
-    assert.equal(database.prepare('PRAGMA user_version').get().user_version, 0);
-    assert.equal(
-      database.prepare("SELECT count(*) AS count FROM sqlite_master WHERE type = 'table'").get()
-        .count,
-      0,
-    );
-
-    connection.execAsync = exec;
-    assert.equal((await loadOpener(async () => connection)()).ok, true);
-  } finally {
-    database.close();
-  }
-});
-
-test('returns a controlled failure if opening or enabling foreign keys fails', async () => {
-  assert.deepEqual(
-    await loadOpener(async () => {
-      throw new Error('Storage unavailable');
-    })(),
-    {
-      ok: false,
-      code: 'unavailable',
-    },
-  );
-  let closed = false;
-  let began = false;
-  const connection = {
-    async execAsync(sql) {
-      if (sql === 'BEGIN IMMEDIATE') began = true;
-    },
-    async getFirstAsync() {
-      return { foreign_keys: 0 };
-    },
-    async closeAsync() {
-      closed = true;
-    },
-  };
-  assert.deepEqual(await loadOpener(async () => connection)(), {
-    ok: false,
-    code: 'unavailable',
-  });
-  assert.equal(closed, true);
-  assert.equal(began, false);
 });

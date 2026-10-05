@@ -1,5 +1,9 @@
+/**
+ * Registers Carry as the root component for Expo.
+ * This is the app entry point.
+ */
 import { registerRootComponent } from 'expo';
 
-import App from './App';
+import { CarryApp } from './src/app';
 
-registerRootComponent(App);
+registerRootComponent(CarryApp);

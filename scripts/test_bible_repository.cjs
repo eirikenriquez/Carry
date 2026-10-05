@@ -23,12 +23,8 @@ function loadTypeScript(relativePath) {
   return loaded.exports;
 }
 
-const { SQLiteBibleRepository } = loadTypeScript(
-  'src/infrastructure/repositories/SQLiteBibleRepository.ts',
-);
-const { resolveBibleReference } = loadTypeScript(
-  'src/application/services/resolveBibleReference.ts',
-);
+const { SQLiteBibleRepository } = loadTypeScript('src/repositories/SQLiteBibleRepository.ts');
+const { resolveBibleReference } = loadTypeScript('src/services/resolveBibleReference.ts');
 
 /**
  * Adapt Node's SQLite connection to the repository's asynchronous database contract.

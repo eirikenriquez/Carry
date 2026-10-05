@@ -1,8 +1,8 @@
 // Temporarily call from App's startup effect for native acceptance, then remove the hook.
-import type { CarryRepositoryResult } from '../src/application/ports/CarryRepository';
-import type { Carry } from '../src/domain/entities/Carry';
-import { openPersonalDatabase } from '../src/infrastructure/repositories/openPersonalDatabase';
-import { SQLiteCarryRepository } from '../src/infrastructure/repositories/SQLiteCarryRepository';
+import type { CarryRepositoryResult } from '../src/repositories/CarryRepository';
+import type { Carry } from '../src/models/Carry';
+import { openPersonalDatabase } from '../src/repositories/openPersonalDatabase';
+import { SQLiteCarryRepository } from '../src/repositories/SQLiteCarryRepository';
 
 const category = { id: 'native-check-category', name: 'Native storage check' };
 const upcoming: Carry = {
