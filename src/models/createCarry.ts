@@ -1,3 +1,7 @@
+/**
+ * Defines the input and result types for creating a Carry.
+ * It validates required values and a future schedule before returning a normalized record.
+ */
 import type { Carry } from './Carry';
 import type { PassageSelection } from './PassageSelection';
 
@@ -30,9 +34,6 @@ export type CreateCarryResult =
   | { readonly ok: true; readonly carry: Carry }
   | { readonly ok: false; readonly issues: readonly CreateCarryValidationIssue[] };
 
-/**
- * Validate and normalise input before creating a Carry scheduled in the future.
- */
 export function createCarry(input: CreateCarryInput, now: Date): CreateCarryResult {
   const currentTimestamp = now.getTime();
   if (Number.isNaN(currentTimestamp)) {

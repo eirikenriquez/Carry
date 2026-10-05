@@ -1,3 +1,7 @@
+/**
+ * Adds a reflection to an existing Carry.
+ * Validates the answers and rating before returning the updated Carry.
+ */
 import type { Carry } from './Carry';
 import type { AlignmentRating } from './Reflection';
 
@@ -23,17 +27,6 @@ export type AddReflectionResult =
   | { readonly ok: true; readonly carry: Carry }
   | { readonly ok: false; readonly issues: readonly AddReflectionValidationIssue[] };
 
-function toAlignmentRating(value: number): AlignmentRating | undefined {
-  if (Number.isInteger(value) && value >= 1 && value <= 5) {
-    return value as AlignmentRating;
-  }
-
-  return undefined;
-}
-
-/**
- * Add one reflection at or after the scheduled time without modifying the original Carry.
- */
 export function addReflection(
   carry: Carry,
   input: AddReflectionInput,
@@ -87,4 +80,12 @@ export function addReflection(
       },
     },
   };
+}
+
+function toAlignmentRating(value: number): AlignmentRating | undefined {
+  if (Number.isInteger(value) && value >= 1 && value <= 5) {
+    return value as AlignmentRating;
+  }
+
+  return undefined;
 }

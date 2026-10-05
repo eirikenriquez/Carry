@@ -1,3 +1,7 @@
+/**
+ * Defines the saved Carry domain record.
+ * It groups the planned situation, passage, schedule, and optional reminder and reflection data.
+ */
 import type { PassageSelection } from './PassageSelection';
 import type { Reflection } from './Reflection';
 

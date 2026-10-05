@@ -1,9 +1,10 @@
+/**
+ * Defines Carry status derivation from schedule and reflection data.
+ * It reports whether a Carry is upcoming, ready to reflect, or completed.
+ */
 import type { Carry } from './Carry';
 import type { CarryStatus } from './CarryStatus';
 
-/**
- * Derive status from the scheduled time and whether a reflection exists.
- */
 export function getCarryStatus(carry: Carry, now: Date): CarryStatus {
   const currentTimestamp = now.getTime();
   const scheduledTimestamp = carry.scheduledAt.getTime();
