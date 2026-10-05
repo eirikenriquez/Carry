@@ -1,3 +1,7 @@
+/**
+ * Deletes an upcoming Carry and reports the outcome of canceling its linked reminder.
+ * It relies on the repository to enforce the record's current lifecycle state.
+ */
 import type { CarryRepository } from '../repositories/CarryRepository';
 import type { NotificationService } from './NotificationService';
 
@@ -8,7 +12,6 @@ export type DeleteUpcomingCarryResult =
     }
   | { readonly ok: false; readonly code: 'not_upcoming' | 'unavailable' };
 
-/** Delete a Carry only while its stored state is still upcoming. */
 export async function deleteUpcomingCarry(
   carryId: string,
   repository: CarryRepository,

@@ -1,3 +1,7 @@
+/**
+ * Defines reference lookup types and resolves full-name Bible references.
+ * It validates the selected verse keys through the Bible repository.
+ */
 import type { BibleRepository } from '../repositories/BibleRepository';
 import type { BibleBook } from '../models/BibleBook';
 import type { PassageSelection } from '../models/PassageSelection';
@@ -16,21 +20,6 @@ type ReferenceLookupResult =
 
 const REFERENCE_PATTERN = /^(.*?)\s+(\d+)\s*:\s*(\d+)(?:\s*[-–]\s*(\d+))?$/u;
 
-function normalizeBookName(name: string): string {
-  return name.trim().replace(/\s+/g, ' ').toLowerCase();
-}
-
-function isPositiveSafeInteger(value: number): boolean {
-  return Number.isSafeInteger(value) && value > 0;
-}
-
-function failure(code: ReferenceErrorCode): ReferenceLookupResult {
-  return { ok: false, code };
-}
-
-/**
- * Parse a full-name reference and validate its verse keys through the repository.
- */
 export async function resolveBibleReference(
   input: string,
   books: readonly BibleBook[],
@@ -85,4 +74,16 @@ export async function resolveBibleReference(
   } catch {
     return failure('unavailable');
   }
+}
+
+function normalizeBookName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function isPositiveSafeInteger(value: number): boolean {
+  return Number.isSafeInteger(value) && value > 0;
+}
+
+function failure(code: ReferenceErrorCode): ReferenceLookupResult {
+  return { ok: false, code };
 }

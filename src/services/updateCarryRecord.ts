@@ -1,3 +1,7 @@
+/**
+ * Updates an upcoming Carry after validating its draft and Bible passage.
+ * It preserves stored lifecycle metadata and synchronizes the reminder after the write.
+ */
 import type { Carry } from '../models/Carry';
 import { getCarryStatus } from '../models/getCarryStatus';
 import type { BibleRepository } from '../repositories/BibleRepository';
@@ -30,7 +34,6 @@ export type UpdateCarryRecordResult =
   | { readonly ok: false; readonly code: 'not_upcoming' }
   | { readonly ok: false; readonly code: 'unavailable'; readonly source: 'bible' | 'storage' };
 
-/** Update an upcoming Carry after validating its draft and Bible passage. */
 export async function updateCarryRecord(
   draft: CarryRecordDraft,
   context: UpdateCarryRecordContext,

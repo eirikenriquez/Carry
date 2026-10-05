@@ -1,3 +1,7 @@
+/**
+ * Refreshes a saved Carry's reminder after an edit.
+ * It keeps storage authoritative while reporting cancellation, unlinking, and scheduling outcomes.
+ */
 import type { Carry } from '../models/Carry';
 import type { CarryRepository } from '../repositories/CarryRepository';
 import type { NotificationService } from './NotificationService';
@@ -11,7 +15,6 @@ export interface SyncCarryReminderResult {
   readonly status: ReminderSyncStatus;
 }
 
-/** Refresh a saved Carry's reminder after an edit, keeping storage authoritative. */
 export async function syncCarryReminder(
   updated: Carry,
   repository: CarryRepository,

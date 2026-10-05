@@ -1,3 +1,7 @@
+/**
+ * Creates a Carry record after validating its form draft and Bible passage.
+ * It checks both repositories before saving the category and Carry together.
+ */
 import type { Carry } from '../models/Carry';
 import type { BibleRepository } from '../repositories/BibleRepository';
 import type { CarryRepository, CarryRepositoryResult } from '../repositories/CarryRepository';
@@ -27,7 +31,6 @@ export type CreateCarryRecordResult =
     }
   | { readonly ok: false; readonly code: 'unavailable'; readonly source: 'bible' | 'storage' };
 
-/** Validate a draft and both repositories before creating a category and Carry together. */
 export async function createCarryRecord(
   draft: CreateCarryDraft,
   context: CreateCarryRecordContext,

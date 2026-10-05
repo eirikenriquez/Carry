@@ -1,3 +1,7 @@
+/**
+ * Schedules a reminder for a saved Carry and records its notification ID.
+ * It cancels the notification if storage cannot link that ID.
+ */
 import type { Carry } from '../models/Carry';
 import type { CarryRepository } from '../repositories/CarryRepository';
 import type { NotificationService } from './NotificationService';
@@ -8,7 +12,6 @@ export type ScheduleCarryReminderResult =
       readonly status: 'too_late' | 'permission_denied' | 'failed' | 'cleanup_failed';
     };
 
-/** Schedule a saved Carry's reminder and compensate if its ID cannot be persisted. */
 export async function scheduleCarryReminder(
   carry: Carry,
   repository: CarryRepository,

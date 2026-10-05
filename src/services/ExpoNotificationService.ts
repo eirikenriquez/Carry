@@ -1,3 +1,7 @@
+/**
+ * Provides the Expo implementation of the app's notification service.
+ * It configures foreground presentation and Android reminders, including permission requests and cancellation.
+ */
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
@@ -6,18 +10,6 @@ import type { NotificationService } from './NotificationService';
 const REMINDER_CHANNEL_ID = 'carry-reminders';
 let presentationConfigured = false;
 
-async function ensureAndroidChannel(): Promise<void> {
-  if (Platform.OS !== 'android') {
-    return;
-  }
-
-  await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
-    name: 'Carry reminders',
-    importance: Notifications.AndroidImportance.DEFAULT,
-  });
-}
-
-/** Install the foreground presentation policy once during app startup. */
 export function configureNotificationPresentation(): void {
   if (presentationConfigured) {
     return;
@@ -73,4 +65,15 @@ export class ExpoNotificationService implements NotificationService {
     await Notifications.cancelScheduledNotificationAsync(reminderId);
     await Notifications.dismissNotificationAsync(reminderId);
   }
+}
+
+async function ensureAndroidChannel(): Promise<void> {
+  if (Platform.OS !== 'android') {
+    return;
+  }
+
+  await Notifications.setNotificationChannelAsync(REMINDER_CHANNEL_ID, {
+    name: 'Carry reminders',
+    importance: Notifications.AndroidImportance.DEFAULT,
+  });
 }

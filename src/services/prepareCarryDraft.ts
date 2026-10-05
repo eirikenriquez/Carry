@@ -1,3 +1,7 @@
+/**
+ * Defines draft and result types for preparing a Carry record.
+ * It normalizes a form draft and maps domain validation to the shared form fields.
+ */
 import type { Carry } from '../models/Carry';
 import type { Category } from '../models/Category';
 import type { PassageSelection } from '../models/PassageSelection';
@@ -20,7 +24,6 @@ export type PreparedCarryDraftResult =
   | { readonly ok: true; readonly category: Category; readonly carry: Carry }
   | { readonly ok: false; readonly issues: readonly CarryRecordValidationIssue[] };
 
-/** Normalize a form draft and map domain validation into the shared form fields. */
 export function prepareCarryDraft(
   draft: CarryRecordDraft,
   identity: { readonly carryId: string; readonly categoryId: string },

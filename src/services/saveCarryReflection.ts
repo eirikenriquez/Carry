@@ -1,3 +1,7 @@
+/**
+ * Saves a reflection after checking the stored Carry's lifecycle state.
+ * It validates the draft and asks the repository to record one reflection.
+ */
 import type { Carry } from '../models/Carry';
 import {
   addReflection,
@@ -27,7 +31,6 @@ export type SaveCarryReflectionResult =
       readonly code: 'not_found' | 'not_ready' | 'already_reflected' | 'unavailable';
     };
 
-/** Validate against the stored Carry before asking the repository to commit one reflection. */
 export async function saveCarryReflection(
   draft: SaveCarryReflectionDraft,
   context: SaveCarryReflectionContext,
