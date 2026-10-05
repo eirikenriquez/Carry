@@ -1,3 +1,7 @@
+/**
+ * Connects Carry screens to their ViewModels and navigation callbacks.
+ * Wires form drafts, saving and screen transitions together.
+ */
 import { useEffect } from 'react';
 import { useIsFocused, usePreventRemove } from '@react-navigation/native';
 import { randomUUID } from 'expo-crypto';
@@ -19,8 +23,6 @@ import { CarryDetailScreen } from '../screens/CarryDetailScreen';
 import { CarryLoadError, CarryLoadFeedback } from '../components/CarryLoadFeedback';
 import { ReflectionFormScreen } from '../screens/ReflectionFormScreen';
 
-const currentTime = () => new Date();
-
 interface CreateCarryFlowProps {
   readonly repository: CarryRepository;
   readonly bibleRepository: BibleRepository;
@@ -30,6 +32,45 @@ interface CreateCarryFlowProps {
   readonly onCancel: () => void;
   readonly onChangePassage: () => void;
 }
+
+interface EditCarryFlowProps {
+  readonly repository: CarryRepository;
+  readonly bibleRepository: BibleRepository;
+  readonly notifications: NotificationService;
+  readonly carryId: string;
+  readonly selection?: PassageSelection;
+  readonly onSaved: (reminderMessage: string | null) => void;
+  readonly onCancel: () => void;
+  readonly onChangePassage: () => void;
+}
+
+interface ReflectCarryFlowProps {
+  readonly repository: CarryRepository;
+  readonly carryId: string;
+  readonly onSaved: () => void;
+  readonly onCancel: () => void;
+}
+
+interface CarryListFlowProps {
+  readonly repository: CarryRepository;
+  readonly reminderMessage?: string;
+  readonly onClearReminderMessage: () => void;
+  readonly onOpenCarry: (carryId: string) => void;
+  readonly onBrowseBible: () => void;
+}
+
+interface CarryDetailFlowProps {
+  readonly repository: CarryRepository;
+  readonly bibleRepository: BibleRepository;
+  readonly notifications: NotificationService;
+  readonly carryId: string;
+  readonly reminderMessage?: string;
+  readonly onViewCarries: (reminderMessage?: string) => void;
+  readonly onEdit: () => void;
+  readonly onReflect: () => void;
+}
+
+const currentTime = () => new Date();
 
 /** Keep the draft mounted under passage picking and navigate only after a confirmed save. */
 export function CreateCarryFlow({
@@ -76,17 +117,6 @@ export function CreateCarryFlow({
       onCancel={onCancel}
     />
   );
-}
-
-interface EditCarryFlowProps {
-  readonly repository: CarryRepository;
-  readonly bibleRepository: BibleRepository;
-  readonly notifications: NotificationService;
-  readonly carryId: string;
-  readonly selection?: PassageSelection;
-  readonly onSaved: (reminderMessage: string | null) => void;
-  readonly onCancel: () => void;
-  readonly onChangePassage: () => void;
 }
 
 /** Prefill a separate edit draft and keep it mounted underneath Scripture picking. */
@@ -161,13 +191,6 @@ export function EditCarryFlow({
   );
 }
 
-interface ReflectCarryFlowProps {
-  readonly repository: CarryRepository;
-  readonly carryId: string;
-  readonly onSaved: () => void;
-  readonly onCancel: () => void;
-}
-
 /** Load the existing Carry and navigate back only after its reflection is saved. */
 export function ReflectCarryFlow({
   repository,
@@ -233,14 +256,6 @@ export function ReflectCarryFlow({
   );
 }
 
-interface CarryListFlowProps {
-  readonly repository: CarryRepository;
-  readonly reminderMessage?: string;
-  readonly onClearReminderMessage: () => void;
-  readonly onOpenCarry: (carryId: string) => void;
-  readonly onBrowseBible: () => void;
-}
-
 /** Refresh the lightweight reopening list each time it receives focus. */
 export function CarryListFlow({
   repository,
@@ -265,17 +280,6 @@ export function CarryListFlow({
       onBrowseBible={onBrowseBible}
     />
   );
-}
-
-interface CarryDetailFlowProps {
-  readonly repository: CarryRepository;
-  readonly bibleRepository: BibleRepository;
-  readonly notifications: NotificationService;
-  readonly carryId: string;
-  readonly reminderMessage?: string;
-  readonly onViewCarries: (reminderMessage?: string) => void;
-  readonly onEdit: () => void;
-  readonly onReflect: () => void;
 }
 
 /** Resolve saved data again when detail regains focus after an edit or reflection. */

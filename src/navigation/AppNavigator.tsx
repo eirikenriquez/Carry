@@ -1,3 +1,7 @@
+/**
+ * Connects the Bible and Carry screens to stack navigation.
+ * Passes IDs and passage selections between screens and handles reminder taps.
+ */
 import { useCallback, useState } from 'react';
 import {
   DefaultTheme,
@@ -52,12 +56,6 @@ export type AppRoutes = {
   CarryDetail: { carryId: string; reminderMessage?: string };
 };
 
-const Stack = createNativeStackNavigator<AppRoutes>();
-const theme = {
-  ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, background: '#ffffff' },
-};
-
 interface AppNavigatorProps {
   readonly repository: BibleRepository;
   readonly carryRepository: CarryRepository;
@@ -73,36 +71,6 @@ interface ChapterReadingProps {
   readonly onUsePassage: (selection: PassageSelection) => void;
 }
 
-/**
- * Connect chapter loading and passage selection to the reading screen.
- */
-function ChapterReading({
-  repository,
-  bookId,
-  chapter,
-  initialSelection,
-  onUsePassage,
-}: ChapterReadingProps) {
-  const { state, retry } = useBibleChapterViewModel(repository, bookId, chapter);
-  const passage = usePassageSelectionViewModel(repository, bookId, chapter, initialSelection);
-  return (
-    <VersesScreen
-      state={state}
-      onRetry={retry}
-      selection={passage.selection}
-      preview={passage.preview}
-      onSelectVerse={passage.selectVerse}
-      onClearSelection={passage.clearSelection}
-      onRetryPreview={passage.retryPreview}
-      onUsePassage={() => {
-        if (passage.selection && passage.preview?.status === 'ready') {
-          onUsePassage(passage.selection);
-        }
-      }}
-    />
-  );
-}
-
 interface BookBrowsingProps {
   readonly repository: BibleRepository;
   readonly books: readonly BibleBook[];
@@ -110,48 +78,12 @@ interface BookBrowsingProps {
   readonly onOpenReference: (target: ReferenceTarget) => void;
 }
 
-/**
- * Connect reference lookup and book browsing to navigation callbacks.
- */
-function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: BookBrowsingProps) {
-  const navigation = useNavigation();
-  const lookup = useReferenceLookupViewModel(repository, books);
-  const { cancelLookup } = lookup;
+const Stack = createNativeStackNavigator<AppRoutes>();
 
-  // Stack screens stay mounted when covered; cancel lookups when Books loses focus.
-  useFocusEffect(
-    useCallback(() => {
-      return cancelLookup;
-    }, [cancelLookup]),
-  );
-
-  async function openReference(): Promise<void> {
-    const target = await lookup.lookup();
-    if (!target || !navigation.isFocused()) return;
-    Keyboard.dismiss();
-    onOpenReference(target);
-  }
-
-  return (
-    <BooksScreen
-      books={books}
-      onSelectBook={(book) => {
-        lookup.cancelLookup();
-        Keyboard.dismiss();
-        onSelectBook(book);
-      }}
-      referenceLookup={
-        <ReferenceLookupForm
-          query={lookup.query}
-          error={lookup.error}
-          isLoading={lookup.isLoading}
-          onChangeQuery={lookup.changeQuery}
-          onSubmit={() => void openReference()}
-        />
-      }
-    />
-  );
-}
+const theme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: '#ffffff' },
+};
 
 /**
  * Wire Bible selection and personal Carry screens without passing stored text through routes.
@@ -342,5 +274,78 @@ export function AppNavigator({
         </Stack.Screen>
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+/**
+ * Connect chapter loading and passage selection to the reading screen.
+ */
+function ChapterReading({
+  repository,
+  bookId,
+  chapter,
+  initialSelection,
+  onUsePassage,
+}: ChapterReadingProps) {
+  const { state, retry } = useBibleChapterViewModel(repository, bookId, chapter);
+  const passage = usePassageSelectionViewModel(repository, bookId, chapter, initialSelection);
+  return (
+    <VersesScreen
+      state={state}
+      onRetry={retry}
+      selection={passage.selection}
+      preview={passage.preview}
+      onSelectVerse={passage.selectVerse}
+      onClearSelection={passage.clearSelection}
+      onRetryPreview={passage.retryPreview}
+      onUsePassage={() => {
+        if (passage.selection && passage.preview?.status === 'ready') {
+          onUsePassage(passage.selection);
+        }
+      }}
+    />
+  );
+}
+
+/**
+ * Connect reference lookup and book browsing to navigation callbacks.
+ */
+function BookBrowsing({ repository, books, onSelectBook, onOpenReference }: BookBrowsingProps) {
+  const navigation = useNavigation();
+  const lookup = useReferenceLookupViewModel(repository, books);
+  const { cancelLookup } = lookup;
+
+  // Stack screens stay mounted when covered; cancel lookups when Books loses focus.
+  useFocusEffect(
+    useCallback(() => {
+      return cancelLookup;
+    }, [cancelLookup]),
+  );
+
+  async function openReference(): Promise<void> {
+    const target = await lookup.lookup();
+    if (!target || !navigation.isFocused()) return;
+    Keyboard.dismiss();
+    onOpenReference(target);
+  }
+
+  return (
+    <BooksScreen
+      books={books}
+      onSelectBook={(book) => {
+        lookup.cancelLookup();
+        Keyboard.dismiss();
+        onSelectBook(book);
+      }}
+      referenceLookup={
+        <ReferenceLookupForm
+          query={lookup.query}
+          error={lookup.error}
+          isLoading={lookup.isLoading}
+          onChangeQuery={lookup.changeQuery}
+          onSubmit={() => void openReference()}
+        />
+      }
+    />
   );
 }

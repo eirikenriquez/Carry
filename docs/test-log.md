@@ -24,6 +24,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Folder clarity audit | 137 / 30 | Existing coverage retained after moving files, imports, and test-script paths |
 | Shared loading and preview | 137 / 30 | Existing coverage retained for create/edit previews, stale reads, draft preservation and save guards |
 | Focused Jest coverage | 47 / 20 | Core workflows, lifecycle rules, retry/save guards, selection, reminder routing and app resume |
+| File layout cleanup | 47 / 20 | Existing coverage retained after file overviews and declaration/member reordering |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Folder audit: 24 personal SQLite checks and Bible integration passed. Android
@@ -333,6 +334,16 @@ rebuild the normal app afterward; do not leave test startup code enabled.
   All nine SQLite checks, two Python checks and Bible integration pass as well.
   Broad `eslint .` additionally flags pre-existing `__dirname` globals in Node scripts;
   the normal project lint passes. No new emulator acceptance or reliability claim.
+
+## File layout checkpoint (5 October)
+
+- Two-sentence overviews and consistent declaration layouts across 60 source files,
+  including `index.ts`. No added files, APIs, dependencies or tests.
+- Compared all declarations and class method bodies with the starting checkpoint;
+  runtime imports, module initializers, hook bodies and SQL strings are unchanged.
+- 47 Jest cases, nine SQLite checks, two Python checks, complete Bible integration,
+  TypeScript, normal Expo lint, formatting and whitespace checks pass.
+- This is readability work only; no native acceptance was repeated.
 
 ## Screenshots
 

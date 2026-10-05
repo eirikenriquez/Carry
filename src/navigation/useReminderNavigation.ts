@@ -1,3 +1,7 @@
+/**
+ * Handles notification taps that should open a Carry.
+ * Waits until navigation is ready before opening the detail screen.
+ */
 import { useEffect, useRef, useState } from 'react';
 import type { NavigationContainerRefWithCurrent } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
@@ -9,26 +13,6 @@ interface PendingReminderRoute {
   readonly responseId: string;
 }
 
-/** Accept only the normal notification tap and its Carry ID payload. */
-function getCarryId(response: Notifications.NotificationResponse): string | null {
-  if (response?.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) {
-    return null;
-  }
-
-  const carryId = response.notification?.request?.content?.data?.carryId;
-  return typeof carryId === 'string' && carryId.trim().length > 0 ? carryId : null;
-}
-
-/** Clear native launch state without letting platform errors interrupt navigation. */
-function clearLastResponseSafely(): void {
-  try {
-    Notifications.clearLastNotificationResponse();
-  } catch {
-    // A notification routing failure must not interrupt app startup.
-  }
-}
-
-/** Queue notification taps until the root navigator can open the requested Carry. */
 export function useReminderNavigation(
   navigationRef: NavigationContainerRefWithCurrent<AppRoutes>,
   navigationReady: boolean,
@@ -89,4 +73,23 @@ export function useReminderNavigation(
     navigationRef.navigate('CarryDetail', { carryId: pendingRoute.carryId });
     clearLastResponseSafely();
   }, [navigationReady, navigationRef, pendingRoute]);
+}
+
+/** Accept only the normal notification tap and its Carry ID payload. */
+function getCarryId(response: Notifications.NotificationResponse): string | null {
+  if (response?.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) {
+    return null;
+  }
+
+  const carryId = response.notification?.request?.content?.data?.carryId;
+  return typeof carryId === 'string' && carryId.trim().length > 0 ? carryId : null;
+}
+
+/** Clear native launch state without letting platform errors interrupt navigation. */
+function clearLastResponseSafely(): void {
+  try {
+    Notifications.clearLastNotificationResponse();
+  } catch {
+    // A notification routing failure must not interrupt app startup.
+  }
 }

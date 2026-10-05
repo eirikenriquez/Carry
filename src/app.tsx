@@ -1,3 +1,7 @@
+/**
+ * Starts Carry and supplies the repositories and notification service.
+ * Shows Bible loading feedback before opening navigation.
+ */
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,12 +16,11 @@ import {
 import { AppNavigator } from './navigation/AppNavigator';
 
 const carryRepository = new SQLiteCarryRepository();
+
 const notifications = new ExpoNotificationService();
+
 configureNotificationPresentation();
 
-/**
- * Supply separate Bible and personal repositories, keeping Bible startup feedback intact.
- */
 export function CarryApp() {
   const { state, retry } = useBibleBrowserViewModel(openBundledBible);
 

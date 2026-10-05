@@ -22,6 +22,13 @@ directly; app wiring supplies implementations through contracts.
 Bible and Carry screens share the `LoadState` type. Create/edit ViewModels share
 `usePassagePreview` for passage loading and retry; their draft and save logic stay separate.
 
+## File layout
+
+Start with a two-sentence overview, then imports, types/interfaces, constants,
+main exports and private helpers. Keep screen styles last and class public methods
+before private methods. Preserve initialization and hook order when reorganising;
+do not add helpers just to satisfy the layout.
+
 ## Domain decisions
 
 - Carries hold a category ID, situation, schedule, intention, passage keys,
