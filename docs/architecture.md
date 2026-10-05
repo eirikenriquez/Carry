@@ -159,9 +159,19 @@ SHA-256 checksums:
 - Success returns to refreshed, read-only detail. Reflection presence derives
   Completed status; no schema, status column or notification change is needed.
 
-## Planned, not implemented
+## Category reflection reuse
 
-- Latest-reflection presentation by category.
+- Creating a Carry matches typed names or category chips using the existing case/
+  whitespace normalization. Matching a saved category reads `latestReflection`;
+  typing a new name never creates a category before Save.
+- The creation ViewModel owns the lookup, loading/error state and retry. Results
+  are keyed by category/attempt; cleanup ignores late reads after switching or leaving.
+- A read-only form component shows the saved date, rating, outcome and insight.
+  History is not copied into the draft; editing remains unchanged.
+- Latest means reflection creation time, then reflection ID descending for ties,
+  not the Carry schedule. The existing repository query/schema are unchanged.
+- New categories have no panel; saved categories with no reflection get a short
+  message. A history-read failure offers Retry but never blocks Carry creation.
 
 ## Grouped Carries
 

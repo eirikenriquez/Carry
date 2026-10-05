@@ -1,15 +1,16 @@
 # Test log
 
-Current automated results: 6 October 2026, code checkpoint `6eb76e7`.
+Current automated results: 6 October 2026, code checkpoint `b2331db`.
 Native evidence uses Carry_C_API33 (Android 13/API 33), app `com.eirikenriquez.carry`.
 Earlier feature checks were recorded on 2-5 October; the grouped-list smoke check
-on 6 October is distinguished below. Full refactoring acceptance was not repeated.
+and category-reflection checks on 6 October are distinguished below.
+Full refactoring acceptance was not repeated.
 
 ## Current automated results
 
 | Check | Result | Coverage |
 | --- | --- | --- |
-| Jest | 51 cases passed | Core domain, lifecycle, ViewModel, grouped-list UI and navigation behaviour |
+| Jest | 54 cases passed | Core domain, lifecycle, ViewModel, grouped-list/category-preview UI and navigation behaviour |
 | Personal SQLite | 9 checks passed | Category reuse, persistence, guarded writes, reflection integrity and rollback |
 | Publisher source | 2 checks passed | Dataset integrity and exact comparison with the pinned publisher export |
 | Bible integration | Passed | Actual bundled database: ordering, passage resolution, empty text and invalid selections |
@@ -96,15 +97,39 @@ Disposable records were backed up and cleaned up without resetting user data.
 - A controlled ViewModel check regroups on app resume without writing/reloading storage.
   Refocus reloads fixture changes representing creation, editing, deletion and reflection.
   Existing domain, navigation and real SQLite checks also pass.
-- These are automated checks, not a new native end-to-end or restart result.
-  Native grouped-list acceptance is still pending.
-- The x86_64 release built and installed without clearing app data. API 33 launch,
+- The initial x86_64 release built and installed without clearing app data. API 33 launch,
   empty-list layout, Browse Bible and cold-restart reopening passed without Metro;
   no records were created or changed. Radio settings were not changed.
-  Mixed groups, saved-record restart and the full grouped lifecycle still need native checks.
+  That smoke check did not cover mixed groups or saved-record lifecycle/restart.
 - Java 25 emitted a prefab native-access warning that blocked configuration. The
   installed JDK 20 and temporary short-path mapping allowed a successful build;
   no project configuration, dependencies or global Java settings changed.
+- Later category-reflection checks verified mixed groups offline, a real reflection
+  moving its seeded Carry from Ready to Completed, and correct groups after device
+  restart. Every fixture appeared once. Creation/edit/delete/time-transition group
+  refresh is automated coverage, not a newly repeated native full-loop result.
+
+## Category-reflection verification
+
+- Focused ViewModel checks cover normalized matching, no history/new categories,
+  category switching with a late result, failed reads/retry and successful creation
+  despite a history-read failure. The form check covers all displayed values,
+  loading/no-history/error feedback, retry, Save availability and creation-only scope.
+- Existing real SQLite checks verify reflection-time ordering and ID tie-breaking;
+  each repository call opens a fresh connection. No new schema or write path.
+- API 33 release checks ran in airplane mode without Metro. Labelled fixtures
+  supplied two Work reflections, one Family reflection, an unreflected category
+  and mixed lifecycle groups. Work showed the latest reflection, not schedule order;
+  switching to Family never displayed Work values. Typed case/spacing matched Work.
+- The empty-history message rendered correctly. Cancelling the draft added no
+  Carry/category. A reflection was then submitted through the real form on a seeded
+  Ready Carry; the grouped list refreshed to Completed. After emulator reboot, a
+  fresh Work draft showed this newly saved rating, outcome and insight offline.
+- Exact-ID fixture cleanup removed the test rows after backing them up. The database
+  dump matched its original empty contents, and airplane mode was restored.
+- Failures/races are controlled tests, not native fault injection. No-history Save
+  is covered by creation logic checks, not a new native valid-creation trial.
+  These checks do not repeat the entire create/edit/delete/reminder user loop.
 
 ## Refactoring verification
 
@@ -118,6 +143,10 @@ Disposable records were backed up and cleaned up without resetting user data.
 
 ## Screenshots
 
+- Category reflection: [mixed groups offline](evidence/category-reflection/groups-offline.jpg),
+  [latest Work reflection](evidence/category-reflection/latest-work-offline.jpg),
+  [no previous reflection](evidence/category-reflection/no-history-offline.jpg),
+  [new reflection after restart](evidence/category-reflection/latest-after-restart-offline.jpg).
 - Setup: [Expo Go](evidence/setup/carry-expo-go-emulator-c-api33.png),
   [development build](evidence/setup/carry-development-build-api33.png).
 - Bundled data: [offline preview](evidence/bible/carry-bible-offline-api33.png),
