@@ -1,3 +1,7 @@
+/**
+ * Displays the form for creating or editing a Carry.
+ * Sends user changes to the ViewModel, which handles validation and saving.
+ */
 import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import {
   ActivityIndicator,
@@ -37,25 +41,6 @@ export interface CarryFormScreenProps {
   readonly onCancel: () => void;
 }
 
-function FieldError({ message }: { readonly message?: string }) {
-  if (!message) return null;
-
-  return (
-    <Text accessibilityRole="alert" style={styles.errorText}>
-      {message}
-    </Text>
-  );
-}
-
-function formatDate(value: Date): string {
-  return value.toLocaleDateString();
-}
-
-function formatTime(value: Date): string {
-  return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
-/** Render draft fields and native pickers; validation and saving stay in the ViewModel. */
 export function CarryFormScreen({
   draft,
   categories,
@@ -338,6 +323,24 @@ export function CarryFormScreen({
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
+}
+
+function FieldError({ message }: { readonly message?: string }) {
+  if (!message) return null;
+
+  return (
+    <Text accessibilityRole="alert" style={styles.errorText}>
+      {message}
+    </Text>
+  );
+}
+
+function formatDate(value: Date): string {
+  return value.toLocaleDateString();
+}
+
+function formatTime(value: Date): string {
+  return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 }
 
 const styles = StyleSheet.create({
