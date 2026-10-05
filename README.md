@@ -18,8 +18,8 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 - Delete an upcoming Carry after confirmation, keeping its reusable category.
 - Schedule a local reminder 15 minutes before an eligible Carry; tap it to reopen details.
 - Record a ready Carry's alignment rating, what happened and insight; reopen its saved reflection.
+- See a category's latest reflection when reusing it in a new Carry.
 
-Latest reflection by category remains pending.
 Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements

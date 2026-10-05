@@ -35,6 +35,7 @@ function makeOptions(overrides = {}) {
   };
   const carryRepository = overrides.carryRepository ?? {
     getCategories: jest.fn(async () => ({ ok: true, value: [] })),
+    latestReflection: jest.fn(async () => ({ ok: true, value: null })),
     create: jest.fn(async (_category, carry) => ({ ok: true, value: carry })),
   };
 
@@ -167,4 +168,74 @@ it('ignores duplicate saves and locks the draft after success', async () => {
   expect(options.carryRepository.create).toHaveBeenCalledTimes(1);
   expect(options.notifications.requestPermission).toHaveBeenCalledTimes(1);
   expect(current().reminderMessage).toContain('Reminders are disabled');
+});
+
+it('matches reused categories and ignores a late reflection from a previous category', async () => {
+  const options = makeOptions();
+  const reflection = {
+    id: 'reflection-work',
+    alignmentRating: 4,
+    whatOccurred: 'I listened before responding.',
+    insight: 'Pause before speaking.',
+    createdAt: NOW,
+  };
+  options.carryRepository.getCategories.mockResolvedValue({
+    ok: true,
+    value: [
+      { id: 'work', name: 'Work Life' },
+      { id: 'peace', name: 'Peace' },
+    ],
+  });
+  let resolveWork;
+  options.carryRepository.latestReflection.mockImplementation((id) =>
+    id === 'work'
+      ? new Promise((resolve) => {
+          resolveWork = resolve;
+        })
+      : Promise.resolve({ ok: true, value: null }),
+  );
+  const { current } = await mount(options);
+  expect(current().categoryReflection).toBeNull();
+
+  await act(async () => current().onChangeCategory('  WORK   life  '));
+  expect(options.carryRepository.latestReflection).toHaveBeenCalledWith('work');
+  expect(current().categoryReflection).toEqual({ status: 'loading' });
+  await act(async () => current().onChangeCategory('Peace'));
+  expect(current().categoryReflection).toEqual({ status: 'ready', data: null });
+  await act(async () => resolveWork({ ok: true, value: reflection }));
+  expect(current().categoryReflection).toEqual({ status: 'ready', data: null });
+
+  options.carryRepository.latestReflection.mockResolvedValue({ ok: true, value: reflection });
+  await act(async () => current().onChangeCategory('Work Life'));
+  expect(current().categoryReflection).toEqual({ status: 'ready', data: reflection });
+  await act(async () => current().onChangeCategory('A new category'));
+  expect(current().categoryReflection).toBeNull();
+  expect(options.carryRepository.latestReflection).toHaveBeenCalledTimes(3);
+  expect(options.carryRepository.create).not.toHaveBeenCalled();
+});
+
+it('retries a failed reflection read without blocking Carry creation', async () => {
+  const options = makeOptions();
+  options.carryRepository.getCategories.mockResolvedValue({
+    ok: true,
+    value: [{ id: 'peace', name: 'Peace' }],
+  });
+  options.carryRepository.latestReflection
+    .mockResolvedValueOnce({ ok: false, code: 'unavailable' })
+    .mockRejectedValueOnce(new Error('Read failed'))
+    .mockResolvedValueOnce({ ok: true, value: null });
+  const { current } = await mount(options);
+  await fillDraft(current);
+  expect(current().categoryReflection).toEqual({ status: 'error' });
+  await act(async () => current().onRetryReflection());
+  expect(current().categoryReflection).toEqual({ status: 'error' });
+  await act(async () => current().onRetryReflection());
+  expect(current().categoryReflection).toEqual({ status: 'ready', data: null });
+
+  // A later lookup failure is supporting feedback, not a validation error.
+  options.carryRepository.latestReflection.mockResolvedValue({ ok: false, code: 'unavailable' });
+  await act(async () => current().onRetryReflection());
+  await act(async () => current().save());
+  expect(current().savedCarry.id).toBe('carry-id');
+  expect(current().saveError).toBeNull();
 });

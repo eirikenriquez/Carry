@@ -103,6 +103,8 @@ export function CreateCarryFlow({
       categories={model.categories}
       categoryLoadFailed={model.categoryLoadFailed}
       onRetryCategories={model.onRetryCategories}
+      categoryReflection={model.categoryReflection}
+      onRetryReflection={model.onRetryReflection}
       passagePreview={model.passagePreview}
       onRetryPassage={model.onRetryPassage}
       errors={model.errors}

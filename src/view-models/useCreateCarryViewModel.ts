@@ -13,6 +13,8 @@ import type { BiblePassage } from '../models/BiblePassage';
 import type { Carry } from '../models/Carry';
 import type { Category } from '../models/Category';
 import type { PassageSelection } from '../models/PassageSelection';
+import type { Reflection } from '../models/Reflection';
+import { normalizeCategoryName } from '../models/normalizeCategoryName';
 import { clearFieldError, sameSelection, validationMessage } from './CarryFormState';
 import type { CarryFormDraft, CarryFormErrors } from './CarryFormState';
 import type { LoadState } from './LoadState';
@@ -33,6 +35,8 @@ export interface CreateCarryViewModel {
   readonly categories: readonly Category[];
   readonly categoryLoadFailed: boolean;
   readonly onRetryCategories: () => void;
+  readonly categoryReflection: LoadState<Reflection | null> | null;
+  readonly onRetryReflection: () => void;
   readonly passagePreview: LoadState<BiblePassage>;
   readonly onRetryPassage: () => void;
   readonly errors: CarryFormErrors;
@@ -67,6 +71,12 @@ export function useCreateCarryViewModel({
   const [categories, setCategories] = useState<readonly Category[]>([]);
   const [categoryLoadFailed, setCategoryLoadFailed] = useState(false);
   const [categoryAttempt, setCategoryAttempt] = useState(0);
+  const [reflectionAttempt, setReflectionAttempt] = useState(0);
+  const [reflectionRecord, setReflectionRecord] = useState<{
+    readonly categoryId: string;
+    readonly attempt: number;
+    readonly state: LoadState<Reflection | null>;
+  } | null>(null);
   const [appliedSelection, setAppliedSelection] = useState(() => ({ ...initialSelection }));
   const [errors, setErrors] = useState<CarryFormErrors>({});
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -78,6 +88,19 @@ export function useCreateCarryViewModel({
   const saving = useRef(false);
   const saved = useRef<Carry | null>(null);
   const passagePreview = usePassagePreview({ bibleRepository, selection: draft.passage });
+  const categoryId = categories.find(
+    (category) =>
+      normalizeCategoryName(category.name) === normalizeCategoryName(draft.categoryName),
+  )?.id;
+
+  // Hide a previous category's result immediately, before the next read finishes.
+  const categoryReflection: LoadState<Reflection | null> | null =
+    categoryId === undefined
+      ? null
+      : reflectionRecord?.categoryId === categoryId &&
+          reflectionRecord.attempt === reflectionAttempt
+        ? reflectionRecord.state
+        : { status: 'loading' };
 
   // Sync picker changes during render so a new preview never belongs to an old selection.
   if (!isSaving && savedCarry === null && !sameSelection(appliedSelection, initialSelection)) {
@@ -121,6 +144,36 @@ export function useCreateCarryViewModel({
   const onRetryCategories = useCallback((): void => {
     setCategoryLoadFailed(false);
     setCategoryAttempt((current) => current + 1);
+  }, []);
+
+  useEffect(() => {
+    if (categoryId === undefined) return;
+    let active = true;
+    const selectedCategoryId = categoryId;
+
+    /** Read existing history without creating a category or changing the draft. */
+    async function loadReflection(): Promise<void> {
+      let state: LoadState<Reflection | null>;
+      try {
+        const result = await carryRepository.latestReflection(selectedCategoryId);
+        state = result.ok ? { status: 'ready', data: result.value } : { status: 'error' };
+      } catch {
+        state = { status: 'error' };
+      }
+      if (active) {
+        setReflectionRecord({ categoryId: selectedCategoryId, attempt: reflectionAttempt, state });
+      }
+    }
+
+    void loadReflection();
+    return () => {
+      // Switching category, retrying or leaving makes the outstanding result irrelevant.
+      active = false;
+    };
+  }, [carryRepository, categoryId, reflectionAttempt]);
+
+  const onRetryReflection = useCallback((): void => {
+    setReflectionAttempt((current) => current + 1);
   }, []);
 
   const onChangeCategory = useCallback((value: string): void => {
@@ -215,6 +268,8 @@ export function useCreateCarryViewModel({
     categories,
     categoryLoadFailed,
     onRetryCategories,
+    categoryReflection,
+    onRetryReflection,
     passagePreview: passagePreview.state,
     onRetryPassage: passagePreview.retry,
     errors,

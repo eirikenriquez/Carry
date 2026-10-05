@@ -5,6 +5,7 @@
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import type { Category } from '../../models/Category';
+import { normalizeCategoryName } from '../../models/normalizeCategoryName';
 
 interface CarryCategoryFieldProps {
   readonly value: string;
@@ -60,7 +61,7 @@ export function CarryCategoryField({
       ) : categories.length > 0 ? (
         <View style={styles.categoryChoices}>
           {categories.map((category) => {
-            const selected = value === category.name;
+            const selected = normalizeCategoryName(value) === normalizeCategoryName(category.name);
 
             return (
               <Pressable
