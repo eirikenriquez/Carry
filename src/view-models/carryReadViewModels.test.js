@@ -1,7 +1,7 @@
 const React = require('react');
 const { afterEach, describe, it, jest, expect } = require('@jest/globals');
 const { mountProbe, unmountProbe } = require('../testing/hookTestHelpers');
-const { useCarryListViewModel } = require('./useCarryListViewModel');
+const { groupCarryListItems, useCarryListViewModel } = require('./useCarryListViewModel');
 const { useCarryDetailViewModel } = require('./useCarryDetailViewModel');
 
 const { act } = React;
@@ -31,6 +31,36 @@ afterEach(async () => {
 });
 
 describe('Carry read view models', () => {
+  it('groups each Carry once, preserving order and handling empty groups', () => {
+    const now = new Date('2026-10-03T01:00:00.000Z');
+    const items = [
+      {
+        carry: { ...carry('upcoming-1'), scheduledAt: new Date('2026-10-04T01:00:00.000Z') },
+        categoryName: 'Work',
+      },
+      { carry: carry('ready-1'), categoryName: 'Work' },
+      {
+        carry: { ...carry('completed-1'), reflection: { alignmentRating: 4 } },
+        categoryName: 'Work',
+      },
+      {
+        carry: { ...carry('upcoming-2'), scheduledAt: new Date('2026-10-05T01:00:00.000Z') },
+        categoryName: 'Work',
+      },
+    ];
+
+    expect(groupCarryListItems(items, now)).toEqual([
+      { key: 'upcoming', data: [items[0], items[3]] },
+      { key: 'readyToReflect', data: [items[1]] },
+      { key: 'completed', data: [items[2]] },
+    ]);
+    expect(groupCarryListItems([], now)).toEqual([
+      { key: 'upcoming', data: [] },
+      { key: 'readyToReflect', data: [] },
+      { key: 'completed', data: [] },
+    ]);
+  });
+
   it('loads canonical category names and retries a controlled list failure', async () => {
     const savedCarries = [carry(), { ...carry('carry-2'), categoryId: 'missing' }];
     const repository = {

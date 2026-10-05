@@ -6,12 +6,21 @@ import { useCallback, useEffect, useState } from 'react';
 
 import type { CarryRepository } from '../repositories/CarryRepository';
 import type { Carry } from '../models/Carry';
+import type { CarryStatus } from '../models/CarryStatus';
+import { getCarryStatus } from '../models/getCarryStatus';
 import type { LoadState } from './LoadState';
 
 export interface CarryListItem {
   readonly carry: Carry;
   readonly categoryName: string;
 }
+
+export interface CarryListSection {
+  readonly key: CarryStatus;
+  readonly data: readonly CarryListItem[];
+}
+
+const sectionOrder: readonly CarryStatus[] = ['upcoming', 'readyToReflect', 'completed'];
 
 /** Reload saved records when their screen opens, ignoring reads after it loses focus. */
 export function useCarryListViewModel(repository: CarryRepository, isFocused: boolean) {
@@ -66,4 +75,22 @@ export function useCarryListViewModel(repository: CarryRepository, isFocused: bo
   }, [repository, isFocused, attempt]);
 
   return { state, retry };
+}
+
+/** Group the loaded list using one clock value, keeping its order within each section. */
+export function groupCarryListItems(
+  items: readonly CarryListItem[],
+  now: Date,
+): readonly CarryListSection[] {
+  const groups: Record<CarryStatus, CarryListItem[]> = {
+    upcoming: [],
+    readyToReflect: [],
+    completed: [],
+  };
+
+  for (const item of items) {
+    groups[getCarryStatus(item.carry, now)].push(item);
+  }
+
+  return sectionOrder.map((key) => ({ key, data: groups[key] }));
 }
