@@ -1,3 +1,7 @@
+/**
+ * Defines storage operations for Carries, categories and reflections.
+ * Keeps database details separate from the rest of the app.
+ */
 import type { Carry } from '../models/Carry';
 import type { Category } from '../models/Category';
 import type { Reflection } from '../models/Reflection';

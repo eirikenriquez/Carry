@@ -1,3 +1,7 @@
+/**
+ * Defines the initial tables and schema version for personal Carry data.
+ * Includes category links, reflection constraints and a category lookup index.
+ */
 export const personalDatabaseVersion = 1;
 
 // Initial schema only. The loader must enable foreign keys and apply it atomically.

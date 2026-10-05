@@ -1,3 +1,7 @@
+/**
+ * Defines the operations for reading Bible books, chapters and passages.
+ * Lets callers use Bible data without depending on SQLite.
+ */
 import type { BibleBook } from '../models/BibleBook';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { BibleVerse } from '../models/BibleVerse';

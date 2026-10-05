@@ -1,3 +1,7 @@
+/**
+ * Copies the bundled Bible database into app storage when needed.
+ * Opens a validated copy for read-only Bible queries.
+ */
 import { Asset } from 'expo-asset';
 import { Directory, File, Paths } from 'expo-file-system';
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
@@ -6,20 +10,6 @@ import type { BibleRepository, BibleRepositoryResult } from './BibleRepository';
 import { SQLiteBibleRepository } from './SQLiteBibleRepository';
 
 const databaseName = 'web-2026-09-28.db';
-
-/**
- * Enable read-only queries and confirm the expected bundled dataset version.
- */
-async function validateDatabase(database: SQLiteDatabase): Promise<void> {
-  await database.execAsync('PRAGMA query_only = ON');
-  const metadata = await database.getFirstAsync<{ value: string }>(
-    'SELECT value FROM metadata WHERE name = ?',
-    'dataset',
-  );
-  if (metadata?.value !== 'engwebp-2026-09-28') {
-    throw new Error('Unexpected bundled Bible version.');
-  }
-}
 
 /**
  * Install the bundled Bible if absent, then open a validated read-only repository.
@@ -68,5 +58,19 @@ export async function openBundledBible(): Promise<BibleRepositoryResult<BibleRep
       // Retry removes a leftover temporary copy if storage becomes available again.
     }
     return { ok: false, code: 'unavailable' };
+  }
+}
+
+/**
+ * Enable read-only queries and confirm the expected bundled dataset version.
+ */
+async function validateDatabase(database: SQLiteDatabase): Promise<void> {
+  await database.execAsync('PRAGMA query_only = ON');
+  const metadata = await database.getFirstAsync<{ value: string }>(
+    'SELECT value FROM metadata WHERE name = ?',
+    'dataset',
+  );
+  if (metadata?.value !== 'engwebp-2026-09-28') {
+    throw new Error('Unexpected bundled Bible version.');
   }
 }

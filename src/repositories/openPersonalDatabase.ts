@@ -1,3 +1,7 @@
+/**
+ * Opens the personal SQLite database and creates its initial schema when needed.
+ * Checks the schema version and enables foreign-key protection.
+ */
 import { openDatabaseAsync, type SQLiteDatabase } from 'expo-sqlite';
 
 import type { CarryRepositoryResult } from './CarryRepository';
