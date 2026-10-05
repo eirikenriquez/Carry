@@ -1,29 +1,34 @@
 /**
- * This screen lists saved Carries and their statuses.
+ * This screen lists Carries in upcoming, ready-to-reflect and completed sections.
  * It opens a selected Carry or guides users to browse Scripture when the list is empty.
  */
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { getCarryStatus } from '../models/getCarryStatus';
 import { CarryLoadError, CarryLoadFeedback } from '../components/CarryLoadFeedback';
 import type { LoadState } from '../view-models/LoadState';
-import type { CarryListItem } from '../view-models/useCarryListViewModel';
+import type { CarryListItem, CarryListSection } from '../view-models/useCarryListViewModel';
 import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
 export interface CarryListScreenProps {
   readonly state: LoadState<readonly CarryListItem[]>;
-  readonly now: Date;
+  readonly sections: readonly CarryListSection[];
   readonly reminderMessage?: string;
   readonly onRetry: () => void;
   readonly onOpenCarry: (id: string) => void;
   readonly onBrowseBible: () => void;
 }
 
-/** Render saved Carries for reopening; grouped history is separate. */
+const emptyGroupMessages = {
+  upcoming: 'No upcoming Carries.',
+  readyToReflect: 'No Carries ready to reflect on.',
+  completed: 'No completed Carries yet.',
+};
+
+/** Render lifecycle groups while keeping detail navigation and load feedback unchanged. */
 export function CarryListScreen({
   state,
-  now,
+  sections,
   reminderMessage,
   onRetry,
   onOpenCarry,
@@ -49,8 +54,9 @@ export function CarryListScreen({
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
-      <FlatList
-        data={state.data}
+      <SectionList<CarryListItem, CarryListSection>
+        sections={state.data.length === 0 ? [] : sections}
+        stickySectionHeadersEnabled={false}
         keyExtractor={(item) => item.carry.id}
         contentContainerStyle={[
           styles.listContent,
@@ -63,14 +69,25 @@ export function CarryListScreen({
               <Text accessibilityRole="header" style={styles.screenTitle}>
                 Your Carries
               </Text>
-              <Text style={styles.intro}>Every saved Carry stays here for you to revisit.</Text>
+              <Text style={styles.intro}>
+                Find your upcoming situations and revisit your reflections.
+              </Text>
             </View>
           </View>
         }
         ListEmptyComponent={<EmptyCarryList onBrowseBible={onBrowseBible} />}
-        renderItem={({ item }) => {
-          const status = getCarryStatus(item.carry, now);
-          const statusLabel = formatCarryStatus(status);
+        renderSectionHeader={({ section }) => (
+          <Text accessibilityRole="header" style={styles.sectionHeading}>
+            {formatCarryStatus(section.key)}
+          </Text>
+        )}
+        renderSectionFooter={({ section }) =>
+          section.data.length === 0 ? (
+            <Text style={styles.emptySection}>{emptyGroupMessages[section.key]}</Text>
+          ) : null
+        }
+        renderItem={({ item, section }) => {
+          const statusLabel = formatCarryStatus(section.key);
 
           return (
             <Pressable
@@ -130,6 +147,14 @@ const styles = StyleSheet.create({
   listHeader: { paddingTop: 20, paddingBottom: 12 },
   screenTitle: { color: '#111111', fontSize: 28, fontWeight: '600', lineHeight: 36 },
   intro: { marginTop: 6, color: '#555555', fontSize: 15, lineHeight: 22 },
+  sectionHeading: {
+    marginTop: 20,
+    color: '#111111',
+    fontSize: 20,
+    fontWeight: '600',
+    lineHeight: 28,
+  },
+  emptySection: { paddingVertical: 14, color: '#555555', fontSize: 15, lineHeight: 22 },
   reminderWarning: {
     marginTop: 14,
     borderWidth: 1,

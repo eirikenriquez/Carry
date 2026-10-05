@@ -1,6 +1,6 @@
 /**
- * This hook loads saved Carries and their category names.
- * It reloads when the list screen gains focus and exposes retry.
+ * This hook loads saved Carries and groups them by lifecycle status.
+ * It reloads on focus and refreshes grouping when the app resumes.
  */
 import { useCallback, useEffect, useState } from 'react';
 
@@ -9,6 +9,7 @@ import type { Carry } from '../models/Carry';
 import type { CarryStatus } from '../models/CarryStatus';
 import { getCarryStatus } from '../models/getCarryStatus';
 import type { LoadState } from './LoadState';
+import { useCarryStatusClock } from './useCarryStatusClock';
 
 export interface CarryListItem {
   readonly carry: Carry;
@@ -74,7 +75,10 @@ export function useCarryListViewModel(repository: CarryRepository, isFocused: bo
     };
   }, [repository, isFocused, attempt]);
 
-  return { state, retry };
+  const now = useCarryStatusClock(isFocused, state);
+  const sections = state.status === 'ready' ? groupCarryListItems(state.data, now) : [];
+
+  return { state, sections, retry };
 }
 
 /** Group the loaded list using one clock value, keeping its order within each section. */
