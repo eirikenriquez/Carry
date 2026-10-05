@@ -61,3 +61,56 @@ it('renders lifecycle sections, an empty group and the existing detail action', 
     await unmountProbe(renderer);
   }
 });
+
+it('keeps loading, retry, reminder feedback and the first-Carry prompt', async () => {
+  let state = { status: 'loading' };
+  const onRetry = jest.fn();
+  const onBrowseBible = jest.fn();
+  function Probe() {
+    return React.createElement(CarryListScreen, {
+      state,
+      sections: [
+        { key: 'upcoming', data: [] },
+        { key: 'readyToReflect', data: [] },
+        { key: 'completed', data: [] },
+      ],
+      reminderMessage: 'A reminder could not be cancelled.',
+      onRetry,
+      onBrowseBible,
+      onOpenCarry: jest.fn(),
+    });
+  }
+
+  const renderer = await mountProbe(Probe);
+  const renderedText = () =>
+    renderer.root
+      .findAllByType(Text)
+      .map((node) => React.Children.toArray(node.props.children).join(''));
+  try {
+    expect(renderedText()).toContain('Loading carries…');
+    expect(renderedText()).toContain('A reminder could not be cancelled.');
+
+    state = { status: 'error' };
+    await React.act(async () => renderer.update(React.createElement(Probe)));
+    expect(renderedText()).toContain('Carries could not be loaded.');
+    const retryButton = renderer.root.findAll(
+      (node) =>
+        typeof node.props.onPress === 'function' &&
+        node.props.accessibilityLabel === 'Retry loading carries',
+    )[0];
+    await React.act(async () => retryButton.props.onPress());
+    expect(onRetry).toHaveBeenCalledTimes(1);
+
+    state = { status: 'ready', data: [] };
+    await React.act(async () => renderer.update(React.createElement(Probe)));
+    expect(renderer.root.findByType(SectionList).props.sections).toEqual([]);
+    expect(renderedText()).toContain('No Carries saved yet');
+    const browseButton = renderer.root.findAll(
+      (node) => typeof node.props.onPress === 'function' && node.props.onPress === onBrowseBible,
+    )[0];
+    await React.act(async () => browseButton.props.onPress());
+    expect(onBrowseBible).toHaveBeenCalledTimes(1);
+  } finally {
+    await unmountProbe(renderer);
+  }
+});

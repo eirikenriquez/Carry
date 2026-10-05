@@ -1,5 +1,6 @@
 const React = require('react');
 const { afterEach, describe, it, jest, expect } = require('@jest/globals');
+const { AppState } = require('react-native');
 const { mountProbe, unmountProbe } = require('../testing/hookTestHelpers');
 const { groupCarryListItems, useCarryListViewModel } = require('./useCarryListViewModel');
 const { useCarryDetailViewModel } = require('./useCarryDetailViewModel');
@@ -22,6 +23,13 @@ const carry = (id = 'carry-1', situation = 'Before a hard conversation') => ({
   ifThenIntention: 'If I feel tense, then I will listen first.',
   createdAt: new Date('2026-10-02T01:00:00.000Z'),
 });
+const reflection = {
+  id: 'reflection-1',
+  alignmentRating: 4,
+  whatOccurred: 'I listened before answering.',
+  insight: 'Pause first.',
+  createdAt: new Date('2026-10-06T10:06:00.000Z'),
+};
 
 let renderer;
 
@@ -40,7 +48,7 @@ describe('Carry read view models', () => {
       },
       { carry: carry('ready-1'), categoryName: 'Work' },
       {
-        carry: { ...carry('completed-1'), reflection: { alignmentRating: 4 } },
+        carry: { ...carry('completed-1'), reflection },
         categoryName: 'Work',
       },
       {
@@ -86,6 +94,62 @@ describe('Carry read view models', () => {
       ],
     });
     expect(repository.getCategories).toHaveBeenCalledTimes(2);
+  });
+
+  it('regroups on resume and reloads changed records when the list regains focus', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date('2026-10-06T10:00:00.000Z'));
+    const upcoming = { ...carry('upcoming'), scheduledAt: new Date('2026-10-06T10:05:00.000Z') };
+    const ready = { ...carry('ready'), scheduledAt: new Date('2026-10-06T09:00:00.000Z') };
+    const deleted = { ...ready, id: 'deleted' };
+    let savedCarries = [ready, deleted, upcoming];
+    const repository = {
+      findAll: jest.fn().mockImplementation(async () => ok(savedCarries)),
+      getCategories: jest.fn().mockResolvedValue(ok(categories)),
+    };
+    let resume;
+    const listenerSpy = jest
+      .spyOn(AppState, 'addEventListener')
+      .mockImplementation((_event, listener) => {
+        resume = listener;
+        return { remove: jest.fn() };
+      });
+    let focused = true;
+    let viewModel;
+    function Probe() {
+      viewModel = useCarryListViewModel(repository, focused);
+      return null;
+    }
+    const groupedIds = () =>
+      viewModel.sections.map((section) => section.data.map((item) => item.carry.id));
+
+    try {
+      renderer = await mountProbe(Probe);
+      expect(groupedIds()).toEqual([['upcoming'], ['ready', 'deleted'], []]);
+
+      jest.setSystemTime(new Date('2026-10-06T10:06:00.000Z'));
+      await act(async () => resume('active'));
+      expect(groupedIds()).toEqual([[], ['ready', 'deleted', 'upcoming'], []]);
+      expect(repository.findAll).toHaveBeenCalledTimes(1);
+
+      focused = false;
+      await act(async () => renderer.update(React.createElement(Probe)));
+      // Stand in for changes saved while the list is covered by another screen.
+      savedCarries = [
+        { ...ready, reflection },
+        { ...upcoming, scheduledAt: new Date('2026-10-06T11:00:00.000Z') },
+        { ...carry('created'), scheduledAt: new Date('2026-10-06T12:00:00.000Z') },
+      ];
+      focused = true;
+      await act(async () => renderer.update(React.createElement(Probe)));
+      expect(groupedIds()).toEqual([['upcoming', 'created'], [], ['ready']]);
+      expect(repository.findAll).toHaveBeenCalledTimes(2);
+    } finally {
+      await unmountProbe(renderer);
+      renderer = undefined;
+      listenerSpy.mockRestore();
+      jest.useRealTimers();
+    }
   });
 
   it('retries detail failures, resolves stored Scripture, and ignores late id, focus, and unmount reads', async () => {
