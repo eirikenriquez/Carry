@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CarryPassageField } from '../components/carry-form/CarryPassageField';
 import { CarryScheduleField } from '../components/carry-form/CarryScheduleField';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { Category } from '../models/Category';
@@ -145,57 +146,13 @@ export function CarryFormScreen({
             <FieldError message={errors.situation} />
           </View>
 
-          <View style={styles.section}>
-            <View style={styles.sectionHeadingRow}>
-              <Text style={styles.label}>Scripture passage</Text>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel="Change selected passage"
-                accessibilityState={{ disabled: isSaving }}
-                disabled={isSaving}
-                onPress={onChangePassage}
-                style={({ pressed }) => [styles.inlineButton, pressed && styles.pressed]}
-              >
-                <Text style={styles.linkText}>Change passage</Text>
-              </Pressable>
-            </View>
-            <View style={styles.passageCard}>
-              {passagePreview.status === 'loading' ? (
-                <View style={styles.loadingRow}>
-                  <ActivityIndicator accessibilityLabel="Loading passage preview" color="#111111" />
-                  <Text accessibilityLiveRegion="polite" style={styles.supportingText}>
-                    Loading passage preview…
-                  </Text>
-                </View>
-              ) : passagePreview.status === 'error' ? (
-                <View>
-                  <Text accessibilityRole="alert" style={styles.supportingText}>
-                    The selected passage could not be loaded.
-                  </Text>
-                  <Pressable
-                    accessibilityRole="button"
-                    accessibilityLabel="Retry loading passage preview"
-                    disabled={isSaving}
-                    onPress={onRetryPassage}
-                    style={({ pressed }) => [styles.inlineButton, pressed && styles.pressed]}
-                  >
-                    <Text style={styles.linkText}>Try again</Text>
-                  </Pressable>
-                </View>
-              ) : (
-                <>
-                  <Text style={styles.passageReference}>{passagePreview.data.reference}</Text>
-                  {passagePreview.data.verses.map((verse) => (
-                    <Text key={verse.key} style={styles.passageText}>
-                      {verse.verse}.{' '}
-                      {verse.text.trim() ? verse.text : 'No verse text in this edition.'}
-                    </Text>
-                  ))}
-                </>
-              )}
-            </View>
-            <FieldError message={errors.passage} />
-          </View>
+          <CarryPassageField
+            preview={passagePreview}
+            onRetry={onRetryPassage}
+            onChangePassage={onChangePassage}
+            disabled={isSaving}
+            error={errors.passage}
+          />
 
           <CarryScheduleField
             value={draft.scheduledAt}
@@ -324,28 +281,6 @@ const styles = StyleSheet.create({
   },
   categoryChoiceSelected: { borderColor: '#111111', backgroundColor: '#f2f2f2' },
   categoryChoiceText: { color: '#111111', fontSize: 15, lineHeight: 22 },
-  sectionHeadingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  passageCard: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: '#dddddd',
-    borderRadius: 4,
-    padding: 12,
-  },
-  passageReference: {
-    marginBottom: 8,
-    color: '#111111',
-    fontSize: 17,
-    fontWeight: '600',
-    lineHeight: 24,
-  },
-  passageText: { color: '#333333', fontSize: 15, lineHeight: 23, paddingBottom: 8 },
-  loadingRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10 },
   example: { marginTop: 4, color: '#555555', fontSize: 14, lineHeight: 20 },
   saveError: { marginTop: 24, color: '#8a1c1c', fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 28 },
