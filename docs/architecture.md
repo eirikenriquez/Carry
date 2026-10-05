@@ -21,6 +21,9 @@ MVVM boundaries. Screens and ViewModels never call SQLite or Expo Notifications
 directly; app wiring supplies implementations through contracts.
 Bible and Carry screens share the `LoadState` type. Create/edit ViewModels share
 `usePassagePreview` for passage loading and retry; their draft and save logic stay separate.
+The create/edit form composes category, passage and schedule fields from
+`src/components/carry-form`. Each field owns its UI/styles; draft state, validation
+and saving remain in the ViewModels.
 
 ## File layout
 

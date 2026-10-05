@@ -25,6 +25,7 @@ Emulator: Carry_C_API33, Android 13/API 33; app: `com.eirikenriquez.carry`.
 | Shared loading and preview | 137 / 30 | Existing coverage retained for create/edit previews, stale reads, draft preservation and save guards |
 | Focused Jest coverage | 47 / 20 | Core workflows, lifecycle rules, retry/save guards, selection, reminder routing and app resume |
 | File layout cleanup | 47 / 20 | Existing coverage retained after file overviews and declaration/member reordering |
+| Carry form fields | 47 / 20 | Existing coverage retained after extracting schedule, passage and category UI |
 
 - Format, lint, strict TypeScript, and scoped Git whitespace checks passed at these checkpoints.
 - Folder audit: 24 personal SQLite checks and Bible integration passed. Android
@@ -344,6 +345,16 @@ rebuild the normal app afterward; do not leave test startup code enabled.
 - 47 Jest cases, nine SQLite checks, two Python checks, complete Bible integration,
   TypeScript, normal Expo lint, formatting and whitespace checks pass.
 - This is readability work only; no native acceptance was repeated.
+
+## Carry form field checkpoint (5 October)
+
+- Extracted three UI sections into `components/carry-form`; the screen went from
+  451 to 247 lines. ViewModel state, validation, persistence and navigation are unchanged.
+- A temporary comparison against the original form matched host structure, text,
+  styles, accessibility and callback/picker results across 144 combinations.
+  This used mocked native controls, not emulator acceptance; no test files were added.
+- All 47 Jest cases, TypeScript, normal Expo lint, formatting and whitespace pass.
+  Database/data checks and native acceptance were not repeated for this UI-only change.
 
 ## Screenshots
 

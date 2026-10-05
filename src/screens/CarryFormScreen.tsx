@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CarryCategoryField } from '../components/carry-form/CarryCategoryField';
 import { CarryPassageField } from '../components/carry-form/CarryPassageField';
 import { CarryScheduleField } from '../components/carry-form/CarryScheduleField';
 import type { BiblePassage } from '../models/BiblePassage';
@@ -75,60 +76,15 @@ export function CarryFormScreen({
             Choose a moment, connect it with Scripture, and make a small plan for how to respond.
           </Text>
 
-          <View style={styles.section}>
-            <Text style={styles.label}>Category</Text>
-            <TextInput
-              accessibilityLabel="Category name"
-              editable={!isSaving}
-              onChangeText={onChangeCategory}
-              placeholder="For example, Patience"
-              placeholderTextColor="#777777"
-              returnKeyType="next"
-              style={styles.input}
-              value={draft.categoryName}
-            />
-            <FieldError message={errors.categoryName} />
-            {categoryLoadFailed ? (
-              <View style={styles.inlineFeedback}>
-                <Text accessibilityRole="alert" style={styles.supportingText}>
-                  Saved categories could not be loaded. You can still enter a category name.
-                </Text>
-                <Pressable
-                  accessibilityRole="button"
-                  disabled={isSaving}
-                  onPress={onRetryCategories}
-                  style={({ pressed }) => [styles.inlineButton, pressed && styles.pressed]}
-                >
-                  <Text style={styles.linkText}>Try loading categories again</Text>
-                </Pressable>
-              </View>
-            ) : categories.length > 0 ? (
-              <View style={styles.categoryChoices}>
-                {categories.map((category) => {
-                  const selected = draft.categoryName === category.name;
-
-                  return (
-                    <Pressable
-                      key={category.id}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Use category ${category.name}`}
-                      accessibilityState={{ selected, disabled: isSaving }}
-                      disabled={isSaving}
-                      onPress={() => onChangeCategory(category.name)}
-                      style={({ pressed }) => [
-                        styles.categoryChoice,
-                        selected && styles.categoryChoiceSelected,
-                        pressed && styles.pressed,
-                        isSaving && styles.disabled,
-                      ]}
-                    >
-                      <Text style={styles.categoryChoiceText}>{category.name}</Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ) : null}
-          </View>
+          <CarryCategoryField
+            value={draft.categoryName}
+            categories={categories}
+            loadFailed={categoryLoadFailed}
+            onRetry={onRetryCategories}
+            onChange={onChangeCategory}
+            disabled={isSaving}
+            error={errors.categoryName}
+          />
 
           <View style={styles.section}>
             <Text style={styles.label}>What situation do you want to prepare for?</Text>
@@ -261,26 +217,6 @@ const styles = StyleSheet.create({
   },
   multilineInput: { minHeight: 104, paddingTop: 12 },
   errorText: { marginTop: 6, color: '#8a1c1c', fontSize: 14, lineHeight: 20 },
-  supportingText: { color: '#555555', fontSize: 15, lineHeight: 22 },
-  inlineFeedback: { marginTop: 8 },
-  inlineButton: {
-    minHeight: 48,
-    justifyContent: 'center',
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-  },
-  linkText: { color: '#111111', fontSize: 15, lineHeight: 22, textDecorationLine: 'underline' },
-  categoryChoices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 },
-  categoryChoice: {
-    minHeight: 48,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#888888',
-    borderRadius: 4,
-    paddingHorizontal: 14,
-  },
-  categoryChoiceSelected: { borderColor: '#111111', backgroundColor: '#f2f2f2' },
-  categoryChoiceText: { color: '#111111', fontSize: 15, lineHeight: 22 },
   example: { marginTop: 4, color: '#555555', fontSize: 14, lineHeight: 20 },
   saveError: { marginTop: 24, color: '#8a1c1c', fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 28 },
