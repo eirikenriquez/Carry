@@ -2,7 +2,6 @@
  * Displays the form for creating or editing a Carry.
  * Sends user changes to the ViewModel, which handles validation and saving.
  */
-import { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { CarryScheduleField } from '../components/carry-form/CarryScheduleField';
 import type { BiblePassage } from '../models/BiblePassage';
 import type { Category } from '../models/Category';
 import type { CarryFormDraft, CarryFormErrors, CarryFormMode } from '../view-models/CarryFormState';
@@ -60,34 +60,6 @@ export function CarryFormScreen({
   onSave,
   onCancel,
 }: CarryFormScreenProps) {
-  const selectedSchedule = draft.scheduledAt ?? new Date();
-
-  /** Change the local calendar date without discarding the selected clock time. */
-  const openDatePicker = () => {
-    DateTimePickerAndroid.open({
-      value: selectedSchedule,
-      mode: 'date',
-      onValueChange: (_event, selectedDate) => {
-        const schedule = new Date(selectedDate);
-        schedule.setHours(selectedSchedule.getHours(), selectedSchedule.getMinutes(), 0, 0);
-        onChangeSchedule(schedule);
-      },
-    });
-  };
-
-  /** Change local hours/minutes while keeping the selected calendar date. */
-  const openTimePicker = () => {
-    DateTimePickerAndroid.open({
-      value: selectedSchedule,
-      mode: 'time',
-      onValueChange: (_event, selectedTime) => {
-        const schedule = new Date(selectedSchedule);
-        schedule.setHours(selectedTime.getHours(), selectedTime.getMinutes(), 0, 0);
-        onChangeSchedule(schedule);
-      },
-    });
-  };
-
   return (
     <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
       <KeyboardAvoidingView
@@ -225,38 +197,12 @@ export function CarryFormScreen({
             <FieldError message={errors.passage} />
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.label}>When do you expect this situation?</Text>
-            <View style={styles.scheduleButtons}>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Choose date${draft.scheduledAt ? `, ${formatDate(draft.scheduledAt)}` : ''}`}
-                accessibilityState={{ disabled: isSaving }}
-                disabled={isSaving}
-                onPress={openDatePicker}
-                style={({ pressed }) => [styles.scheduleButton, pressed && styles.pressed]}
-              >
-                <Text style={styles.scheduleButtonLabel}>Date</Text>
-                <Text style={styles.scheduleButtonValue}>
-                  {draft.scheduledAt ? formatDate(draft.scheduledAt) : 'Choose date'}
-                </Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={`Choose time${draft.scheduledAt ? `, ${formatTime(draft.scheduledAt)}` : ''}`}
-                accessibilityState={{ disabled: isSaving }}
-                disabled={isSaving}
-                onPress={openTimePicker}
-                style={({ pressed }) => [styles.scheduleButton, pressed && styles.pressed]}
-              >
-                <Text style={styles.scheduleButtonLabel}>Time</Text>
-                <Text style={styles.scheduleButtonValue}>
-                  {draft.scheduledAt ? formatTime(draft.scheduledAt) : 'Choose time'}
-                </Text>
-              </Pressable>
-            </View>
-            <FieldError message={errors.scheduledAt} />
-          </View>
+          <CarryScheduleField
+            value={draft.scheduledAt}
+            onChange={onChangeSchedule}
+            disabled={isSaving}
+            error={errors.scheduledAt}
+          />
 
           <View style={styles.section}>
             <Text style={styles.label}>Make an if-then plan</Text>
@@ -335,14 +281,6 @@ function FieldError({ message }: { readonly message?: string }) {
   );
 }
 
-function formatDate(value: Date): string {
-  return value.toLocaleDateString();
-}
-
-function formatTime(value: Date): string {
-  return value.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: '#ffffff' },
   keyboardAvoiding: { flex: 1 },
@@ -408,19 +346,6 @@ const styles = StyleSheet.create({
   },
   passageText: { color: '#333333', fontSize: 15, lineHeight: 23, paddingBottom: 8 },
   loadingRow: { minHeight: 48, flexDirection: 'row', alignItems: 'center', gap: 10 },
-  scheduleButtons: { flexDirection: 'row', gap: 12, marginTop: 10 },
-  scheduleButton: {
-    minHeight: 64,
-    flex: 1,
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#888888',
-    borderRadius: 4,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  scheduleButtonLabel: { color: '#555555', fontSize: 13, lineHeight: 18 },
-  scheduleButtonValue: { marginTop: 2, color: '#111111', fontSize: 16, lineHeight: 22 },
   example: { marginTop: 4, color: '#555555', fontSize: 14, lineHeight: 20 },
   saveError: { marginTop: 24, color: '#8a1c1c', fontSize: 15, lineHeight: 22 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 28 },
