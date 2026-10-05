@@ -13,12 +13,13 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 - Look up full-name references such as `John 3:16` or `James 1:19-20`.
 - Create a Carry with a category, situation, future schedule and if-then plan.
 - Reopen saved Carries offline, including after restarting the app.
+- View saved Carries in Upcoming, Ready to reflect, and Completed groups.
 - Edit an upcoming Carry without changing its identity or other saved Carries.
 - Delete an upcoming Carry after confirmation, keeping its reusable category.
 - Schedule a local reminder 15 minutes before an eligible Carry; tap it to reopen details.
 - Record a ready Carry's alignment rating, what happened and insight; reopen its saved reflection.
 
-Grouped history and latest reflection by category remain pending.
+Latest reflection by category remains pending.
 Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements
