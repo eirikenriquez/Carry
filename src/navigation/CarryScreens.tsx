@@ -18,7 +18,7 @@ import { useCarryDetailViewModel } from '../view-models/useCarryDetailViewModel'
 import { useCarryStatusClock } from '../view-models/useCarryStatusClock';
 import { useReflectionViewModel } from '../view-models/useReflectionViewModel';
 import { CarryFormScreen } from '../screens/CarryFormScreen';
-import { CarryListScreen } from '../screens/CarryListScreen';
+import { HomeScreen } from '../screens/HomeScreen';
 import { CarryDetailScreen } from '../screens/CarryDetailScreen';
 import { CarryLoadError, CarryLoadFeedback } from '../components/CarryLoadFeedback';
 import { ReflectionFormScreen } from '../screens/ReflectionFormScreen';
@@ -56,7 +56,7 @@ interface CarryListFlowProps {
   readonly reminderMessage?: string;
   readonly onClearReminderMessage: () => void;
   readonly onOpenCarry: (carryId: string) => void;
-  readonly onBrowseBible: () => void;
+  readonly onNewCarry: () => void;
 }
 
 interface CarryDetailFlowProps {
@@ -264,7 +264,7 @@ export function CarryListFlow({
   reminderMessage,
   onClearReminderMessage,
   onOpenCarry,
-  onBrowseBible,
+  onNewCarry,
 }: CarryListFlowProps) {
   const isFocused = useIsFocused();
   const model = useCarryListViewModel(repository, isFocused);
@@ -272,13 +272,13 @@ export function CarryListFlow({
     if (!isFocused && reminderMessage) onClearReminderMessage();
   }, [isFocused, reminderMessage, onClearReminderMessage]);
   return (
-    <CarryListScreen
+    <HomeScreen
       state={model.state}
       sections={model.sections}
       reminderMessage={reminderMessage}
       onRetry={model.retry}
       onOpenCarry={onOpenCarry}
-      onBrowseBible={onBrowseBible}
+      onNewCarry={onNewCarry}
     />
   );
 }

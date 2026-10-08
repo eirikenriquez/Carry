@@ -231,7 +231,7 @@ export function AppNavigator({
               reminderMessage={route.params?.reminderMessage}
               onClearReminderMessage={() => navigation.setParams({ reminderMessage: undefined })}
               onOpenCarry={(carryId) => navigation.navigate('CarryDetail', { carryId })}
-              onBrowseBible={() => navigation.navigate('Books')}
+              onNewCarry={() => navigation.navigate('Books')}
             />
           )}
         </Stack.Screen>
