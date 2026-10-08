@@ -1,6 +1,6 @@
 /**
  * This screen lists Carries in upcoming, ready-to-reflect and completed sections.
- * It opens a selected Carry or guides users to browse Scripture when the list is empty.
+ * It opens a selected Carry or starts the flow for creating a new Carry.
  */
 import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -10,13 +10,13 @@ import type { LoadState } from '../view-models/LoadState';
 import type { CarryListItem, CarryListSection } from '../view-models/useCarryListViewModel';
 import { formatCarryStatus, formatSchedule } from './carryDisplay';
 
-export interface CarryListScreenProps {
+export interface HomeScreenProps {
   readonly state: LoadState<readonly CarryListItem[]>;
   readonly sections: readonly CarryListSection[];
   readonly reminderMessage?: string;
   readonly onRetry: () => void;
   readonly onOpenCarry: (id: string) => void;
-  readonly onBrowseBible: () => void;
+  readonly onNewCarry: () => void;
 }
 
 const emptyGroupMessages = {
@@ -26,14 +26,14 @@ const emptyGroupMessages = {
 };
 
 /** Render lifecycle groups while keeping detail navigation and load feedback unchanged. */
-export function CarryListScreen({
+export function HomeScreen({
   state,
   sections,
   reminderMessage,
   onRetry,
   onOpenCarry,
-  onBrowseBible,
-}: CarryListScreenProps) {
+  onNewCarry,
+}: HomeScreenProps) {
   if (state.status === 'loading') {
     return (
       <SafeAreaView style={styles.safeArea} edges={['bottom', 'left', 'right']}>
@@ -72,10 +72,18 @@ export function CarryListScreen({
               <Text style={styles.intro}>
                 Find your upcoming situations and revisit your reflections.
               </Text>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="New Carry"
+                onPress={onNewCarry}
+                style={({ pressed }) => [styles.newCarryButton, pressed && styles.newCarryPressed]}
+              >
+                <Text style={styles.newCarryButtonText}>New Carry</Text>
+              </Pressable>
             </View>
           </View>
         }
-        ListEmptyComponent={<EmptyCarryList onBrowseBible={onBrowseBible} />}
+        ListEmptyComponent={<EmptyCarryList />}
         renderSectionHeader={({ section }) => (
           <Text accessibilityRole="header" style={styles.sectionHeading}>
             {formatCarryStatus(section.key)}
@@ -114,20 +122,13 @@ export function CarryListScreen({
   );
 }
 
-function EmptyCarryList({ onBrowseBible }: { readonly onBrowseBible: () => void }) {
+function EmptyCarryList() {
   return (
     <View style={styles.emptyContent}>
       <Text style={styles.emptyHeading}>No Carries saved yet</Text>
       <Text style={styles.emptyMessage}>
         Browse the Bible and choose a passage to create your first Carry.
       </Text>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onBrowseBible}
-        style={({ pressed }) => [styles.browseButton, pressed && styles.pressed]}
-      >
-        <Text style={styles.browseButtonText}>Browse Bible</Text>
-      </Pressable>
     </View>
   );
 }
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'center',
   },
-  browseButton: {
+  newCarryButton: {
     minHeight: 52,
     minWidth: 160,
     alignItems: 'center',
@@ -208,6 +209,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#111111',
     paddingHorizontal: 16,
   },
-  browseButtonText: { color: '#ffffff', fontSize: 16, fontWeight: '600', lineHeight: 24 },
+  newCarryButtonText: { color: '#ffffff', fontSize: 16, fontWeight: '600', lineHeight: 24 },
+  newCarryPressed: { opacity: 0.75 },
   pressed: { opacity: 0.65, backgroundColor: '#f2f2f2' },
 });

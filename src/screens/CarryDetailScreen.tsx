@@ -24,7 +24,7 @@ export interface CarryDetailScreenProps {
   readonly now: Date;
   readonly reminderMessage?: string;
   readonly onRetry: () => void;
-  readonly onViewCarries: () => void;
+  readonly onGoHome: () => void;
   readonly onEdit: () => void;
   readonly onReflect: () => void;
   readonly onDelete: () => void;
@@ -38,7 +38,7 @@ export function CarryDetailScreen({
   now,
   reminderMessage,
   onRetry,
-  onViewCarries,
+  onGoHome,
   onEdit,
   onReflect,
   onDelete,
@@ -223,14 +223,14 @@ export function CarryDetailScreen({
           accessibilityRole="button"
           accessibilityState={{ disabled: isDeleting }}
           disabled={isDeleting}
-          onPress={() => onViewCarries()}
+          onPress={() => onGoHome()}
           style={({ pressed }) => [
             styles.backButton,
             isDeleting && styles.disabled,
             pressed && !isDeleting && styles.pressed,
           ]}
         >
-          <Text style={styles.backButtonText}>Back to Carries</Text>
+          <Text style={styles.backButtonText}>Back to Home</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

@@ -2,11 +2,12 @@ const React = require('react');
 const { it, expect, jest } = require('@jest/globals');
 const { mountProbe, unmountProbe } = require('../testing/hookTestHelpers');
 
-let mockActiveScreen = 'EditCarry';
-let mockRoute = { params: { carryId: 'carry-7' } };
+let mockActiveScreen = 'Home';
+let mockRoute = { params: undefined };
+let mockInitialRouteName;
 let mockEditFlowProps;
 let mockCreateFlowProps;
-let mockListFlowProps;
+let mockHomeFlowProps;
 let mockDetailFlowProps;
 let mockReflectFlowProps;
 let mockReflectRouteElement;
@@ -18,7 +19,9 @@ const mockNavigation = {
   goBack: jest.fn(),
   navigate: jest.fn(),
   replace: jest.fn(),
+  reset: jest.fn(),
   setParams: jest.fn(),
+  getState: jest.fn(() => ({ routes: [] })),
 };
 
 jest.mock('@react-navigation/native', () => {
@@ -32,7 +35,10 @@ jest.mock('@react-navigation/native-stack', () => {
   const React = require('react');
   return {
     createNativeStackNavigator: () => ({
-      Navigator: ({ children }) => React.createElement(React.Fragment, null, children),
+      Navigator: ({ children, initialRouteName }) => {
+        mockInitialRouteName = initialRouteName;
+        return React.createElement(React.Fragment, null, children);
+      },
       Screen: ({ name, children }) => {
         if (name !== mockActiveScreen) return null;
         const element = children({ navigation: mockNavigation, route: mockRoute });
@@ -51,8 +57,8 @@ jest.mock('./CarryScreens', () => ({
     mockEditFlowProps = props;
     return null;
   },
-  CarryListFlow: (props) => {
-    mockListFlowProps = props;
+  HomeFlow: (props) => {
+    mockHomeFlowProps = props;
     return null;
   },
   CarryDetailFlow: (props) => {
@@ -90,7 +96,7 @@ jest.mock('../components/ReferenceLookupForm', () => ({
 
 const { AppNavigator } = require('./AppNavigator');
 
-it('routes Carry forms and Scripture picks back to the matching screen', async () => {
+it('starts at Home and preserves new, edit and reflection navigation', async () => {
   const carryRepository = {};
   const bibleRepository = {};
   const notifications = {};
@@ -108,18 +114,100 @@ it('routes Carry forms and Scripture picks back to the matching screen', async (
     await React.act(async () => renderer.update(React.createElement(Probe)));
   }
 
-  mockActiveScreen = 'EditCarry';
-  mockRoute = { params: { carryId: 'carry-7' } };
+  mockActiveScreen = 'Home';
+  mockRoute = { params: undefined };
+  mockInitialRouteName = undefined;
   mockEditFlowProps = undefined;
   mockCreateFlowProps = undefined;
+  mockHomeFlowProps = undefined;
   mockDetailFlowProps = undefined;
   mockReflectFlowProps = undefined;
   mockReflectRouteElement = undefined;
   mockVersesProps = undefined;
   mockNavigation.push.mockClear();
   mockNavigation.popTo.mockClear();
+  mockNavigation.navigate.mockClear();
+  mockNavigation.reset.mockClear();
+  mockNavigation.getState.mockReturnValue({ routes: [{ name: 'Home' }] });
   const renderer = await mountProbe(Probe);
   try {
+    expect(mockInitialRouteName).toBe('Home');
+    expect(mockHomeFlowProps.repository).toBe(carryRepository);
+    await React.act(async () => mockHomeFlowProps.onNewCarry());
+    expect(mockNavigation.navigate).toHaveBeenCalledWith('Books', {
+      selectForCarry: { screen: 'CreateCarry' },
+    });
+
+    await showScreen(renderer, 'Verses', {
+      params: {
+        bookId: 'JHN',
+        chapter: 3,
+        selectForCarry: { screen: 'CreateCarry' },
+      },
+    });
+    mockNavigation.getState.mockReturnValue({
+      routes: [{ name: 'Home' }, { name: 'Books' }, { name: 'Chapters' }, { name: 'Verses' }],
+    });
+    await React.act(async () => mockVersesProps.onUsePassage());
+    expect(mockNavigation.push).toHaveBeenCalledWith('CreateCarry', {
+      selection: mockSelection,
+    });
+
+    await showScreen(renderer, 'CreateCarry', { params: { selection: mockSelection } });
+    expect(mockCreateFlowProps.selection).toBe(mockSelection);
+    await React.act(async () => mockCreateFlowProps.onChangePassage());
+    expect(mockNavigation.push).toHaveBeenCalledWith('Books', {
+      selectForCarry: { screen: 'CreateCarry' },
+    });
+    await showScreen(renderer, 'Verses', {
+      params: {
+        bookId: 'JHN',
+        chapter: 3,
+        selectForCarry: { screen: 'CreateCarry' },
+      },
+    });
+    mockNavigation.getState.mockReturnValue({
+      routes: [
+        { name: 'Home' },
+        { name: 'Books' },
+        { name: 'Chapters' },
+        { name: 'Verses' },
+        { name: 'CreateCarry' },
+        { name: 'Books' },
+        { name: 'Chapters' },
+        { name: 'Verses' },
+      ],
+    });
+    await React.act(async () => mockVersesProps.onUsePassage());
+    expect(mockNavigation.popTo).toHaveBeenCalledWith('CreateCarry', {
+      selection: mockSelection,
+    });
+    await showScreen(renderer, 'CreateCarry', { params: { selection: mockSelection } });
+    await React.act(async () =>
+      mockCreateFlowProps.onSaved('new-carry', 'The reminder could not be scheduled.'),
+    );
+    expect(mockNavigation.reset).toHaveBeenCalledWith({
+      index: 1,
+      routes: [
+        { name: 'Home' },
+        {
+          name: 'CarryDetail',
+          params: {
+            carryId: 'new-carry',
+            reminderMessage: 'The reminder could not be scheduled.',
+          },
+        },
+      ],
+    });
+
+    await showScreen(renderer, 'CreateCarry', { params: { selection: mockSelection } });
+    await React.act(async () => mockCreateFlowProps.onCancel());
+    expect(mockNavigation.popTo).toHaveBeenLastCalledWith('Home');
+
+    mockActiveScreen = 'EditCarry';
+    mockRoute = { params: { carryId: 'carry-7' } };
+    mockNavigation.push.mockClear();
+    await React.act(async () => renderer.update(React.createElement(Probe)));
     expect(mockEditFlowProps.carryId).toBe('carry-7');
     expect(mockEditFlowProps.notifications).toBe(notifications);
     await React.act(async () => mockEditFlowProps.onSaved('Reminder refreshed.'));
@@ -144,36 +232,18 @@ it('routes Carry forms and Scripture picks back to the matching screen', async (
       carryId: 'carry-7',
       selection: mockSelection,
     });
-    await showScreen(renderer, 'CreateCarry', { params: { selection: mockSelection } });
-    await React.act(async () => mockCreateFlowProps.onChangePassage());
-    expect(mockNavigation.push).toHaveBeenNthCalledWith(2, 'Books', {
-      selectForCarry: { screen: 'CreateCarry' },
-    });
-
-    await showScreen(renderer, 'Verses', {
-      params: {
-        bookId: 'JHN',
-        chapter: 3,
-        selectForCarry: { screen: 'CreateCarry' },
-      },
-    });
-    await React.act(async () => mockVersesProps.onUsePassage());
-    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(2, 'CreateCarry', {
-      selection: mockSelection,
-    });
-
     await showScreen(renderer, 'CarryDetail', { params: { carryId: 'directly-created' } });
     expect(mockDetailFlowProps.carryId).toBe('directly-created');
     expect(mockDetailFlowProps.notifications).toBe(notifications);
-    await React.act(async () => mockDetailFlowProps.onViewCarries());
-    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(3, 'Carries', {
+    await React.act(async () => mockDetailFlowProps.onGoHome());
+    expect(mockNavigation.popTo).toHaveBeenCalledWith('Home', {
       reminderMessage: undefined,
     });
 
     const deleteWarning =
       'Carry deleted, but its reminder could not be cancelled. It may still appear.';
-    await React.act(async () => mockDetailFlowProps.onViewCarries(deleteWarning));
-    expect(mockNavigation.popTo).toHaveBeenNthCalledWith(4, 'Carries', {
+    await React.act(async () => mockDetailFlowProps.onGoHome(deleteWarning));
+    expect(mockNavigation.popTo).toHaveBeenLastCalledWith('Home', {
       reminderMessage: deleteWarning,
     });
 
@@ -195,9 +265,9 @@ it('routes Carry forms and Scripture picks back to the matching screen', async (
     await React.act(async () => mockReflectFlowProps.onCancel());
     expect(mockNavigation.goBack).toHaveBeenCalledTimes(1);
 
-    await showScreen(renderer, 'Carries', { params: { reminderMessage: deleteWarning } });
-    expect(mockListFlowProps.reminderMessage).toBe(deleteWarning);
-    await React.act(async () => mockListFlowProps.onClearReminderMessage());
+    await showScreen(renderer, 'Home', { params: { reminderMessage: deleteWarning } });
+    expect(mockHomeFlowProps.reminderMessage).toBe(deleteWarning);
+    await React.act(async () => mockHomeFlowProps.onClearReminderMessage());
     expect(mockNavigation.setParams).toHaveBeenCalledWith({ reminderMessage: undefined });
   } finally {
     await unmountProbe(renderer);

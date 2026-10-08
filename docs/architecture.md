@@ -56,7 +56,7 @@ do not add helpers just to satisfy the layout.
 - Preview resolves through `BibleRepository.getPassage`. Selections store keys only.
 - Loading/error/ready states expose Retry. Cleanup and request guards ignore stale results.
 - Books cancels lookup on losing focus and checks focus again before navigating;
-  a late result cannot open Scripture over My Carries.
+  a late result cannot open Scripture over Home.
 
 ## Storage and source data
 
@@ -110,8 +110,11 @@ SHA-256 checksums:
 
 ## Carry creation flow
 
-- Passage preview opens a draft. Change passage pushes the Bible picker above it;
-  only the selected keys change when returning, so other fields remain intact.
+- Home is the initial route. New Carry opens the existing Bible browser and
+  selecting a passage opens the form above the Scripture screens. Change passage
+  pushes the picker above the mounted form; selecting a replacement preserves its
+  other draft fields. Android Back from the form returns to the prior Scripture
+  screen; explicit Cancel returns to Home.
 - Native Android pickers combine local date/time into one Date, stored as UTC ISO.
   The intention is one free-text field, with an if-then example.
 - `createCarryRecord` checks domain fields and resolves the passage before writing.
@@ -120,8 +123,8 @@ SHA-256 checksums:
   It rejects duplicate Carry IDs; the separate `save` operation remains an upsert.
 - Per-draft UUIDs survive retries. An immediate save lock prevents double taps;
   navigation is blocked during saving/scheduling. Cancelling before Save writes nothing.
-- Successful Save replaces the draft with read-only detail. My Carries groups
-  saved records by their derived lifecycle status for reopening.
+- Successful Save resets the stack to `[Home, CarryDetail]`, preserving any
+  reminder warning; Back from detail returns to Home.
 
 ## Carry editing flow
 
@@ -178,10 +181,11 @@ SHA-256 checksums:
 - The list ViewModel loads Carries/category names and groups them through the existing
   `getCarryStatus` rule. Every record appears once; schedule/ID order stays intact
   within Upcoming, Ready to reflect and Completed sections.
-- `CarryListScreen` renders a `SectionList`; rows open existing detail and its
-  available actions. Empty groups get brief messages; no saved records keeps the
-  Browse Bible prompt. Loading, retry and reminder feedback remain unchanged.
-- Returning to the list reloads saved changes. Focus, load/retry and app resume
+- `HomeScreen` renders a `SectionList`; rows open existing detail and its
+  available actions. The header's New Carry action is available with or without
+  saved records. Empty groups get brief messages; the empty state explains
+  Scripture selection. Loading, retry and reminder feedback remain unchanged.
+- Returning Home reloads saved changes. Focus, load/retry and app resume
   refresh the grouping clock; there is no continuous polling or persisted status.
 - Grouping stays beside the existing ViewModel; no new storage/service abstraction
   or database changes are needed. Latest reflection by category is a separate feature.

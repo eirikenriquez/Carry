@@ -12,7 +12,7 @@ import {
   createNativeStackNavigator,
   type NativeStackScreenProps,
 } from '@react-navigation/native-stack';
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import type { BibleRepository } from '../repositories/BibleRepository';
 import type { CarryRepository } from '../repositories/CarryRepository';
@@ -23,9 +23,9 @@ import { ChaptersScreen } from '../screens/ChaptersScreen';
 import { BookBrowsing, ChapterReading } from './BibleScreens';
 import {
   CarryDetailFlow,
-  CarryListFlow,
   CreateCarryFlow,
   EditCarryFlow,
+  HomeFlow,
   ReflectCarryFlow,
 } from './CarryScreens';
 import { useReminderNavigation } from './useReminderNavigation';
@@ -44,7 +44,7 @@ export type AppRoutes = {
   CreateCarry: { selection: PassageSelection };
   EditCarry: { carryId: string; selection?: PassageSelection };
   ReflectCarry: { carryId: string };
-  Carries: { reminderMessage?: string } | undefined;
+  Home: { reminderMessage?: string } | undefined;
   CarryDetail: { carryId: string; reminderMessage?: string };
 };
 
@@ -63,7 +63,7 @@ const theme = {
 };
 
 /**
- * Wire Bible selection and personal Carry screens without passing stored text through routes.
+ * Wire Home, Bible selection and Carry screens without passing stored text through routes.
  */
 export function AppNavigator({
   repository,
@@ -78,22 +78,24 @@ export function AppNavigator({
 
   return (
     <NavigationContainer ref={navigationRef} onReady={handleNavigationReady} theme={theme}>
-      <Stack.Navigator initialRouteName="Books">
+      <Stack.Navigator initialRouteName="Home">
+        <Stack.Screen name="Home" options={{ title: 'Home' }}>
+          {({ navigation, route }: NativeStackScreenProps<AppRoutes, 'Home'>) => (
+            <HomeFlow
+              repository={carryRepository}
+              reminderMessage={route.params?.reminderMessage}
+              onClearReminderMessage={() => navigation.setParams({ reminderMessage: undefined })}
+              onOpenCarry={(carryId) => navigation.navigate('CarryDetail', { carryId })}
+              onNewCarry={() =>
+                navigation.navigate('Books', { selectForCarry: { screen: 'CreateCarry' } })
+              }
+            />
+          )}
+        </Stack.Screen>
         <Stack.Screen
           name="Books"
-          options={({ navigation, route }) => ({
+          options={({ route }) => ({
             title: route.params?.selectForCarry ? 'Choose Scripture' : 'Bible books',
-            headerRight: route.params?.selectForCarry
-              ? undefined
-              : () => (
-                  <Pressable
-                    accessibilityRole="button"
-                    onPress={() => navigation.navigate('Carries')}
-                    style={{ minHeight: 48, minWidth: 48, justifyContent: 'center' }}
-                  >
-                    <Text>My Carries</Text>
-                  </Pressable>
-                ),
           })}
         >
           {({ navigation, route }: NativeStackScreenProps<AppRoutes, 'Books'>) => (
@@ -159,8 +161,15 @@ export function AppNavigator({
                   const target = route.params.selectForCarry;
                   if (target.screen === 'EditCarry') {
                     navigation.popTo('EditCarry', { carryId: target.carryId, selection });
-                  } else {
+                  } else if (
+                    navigation
+                      .getState()
+                      .routes.some((stackRoute) => stackRoute.name === 'CreateCarry')
+                  ) {
+                    // Reuse the mounted form so changing Scripture keeps its draft.
                     navigation.popTo('CreateCarry', { selection });
+                  } else {
+                    navigation.push('CreateCarry', { selection });
                   }
                 } else {
                   navigation.push('CreateCarry', { selection });
@@ -177,12 +186,19 @@ export function AppNavigator({
               selection={route.params.selection}
               notifications={notifications}
               onSaved={(carryId, reminderMessage) =>
-                navigation.replace('CarryDetail', {
-                  carryId,
-                  reminderMessage: reminderMessage ?? undefined,
+                // Discard the Bible picker history so Back from details returns to Home.
+                navigation.reset({
+                  index: 1,
+                  routes: [
+                    { name: 'Home' },
+                    {
+                      name: 'CarryDetail',
+                      params: { carryId, reminderMessage: reminderMessage ?? undefined },
+                    },
+                  ],
                 })
               }
-              onCancel={() => navigation.goBack()}
+              onCancel={() => navigation.popTo('Home')}
               onChangePassage={() =>
                 navigation.push('Books', { selectForCarry: { screen: 'CreateCarry' } })
               }
@@ -224,17 +240,6 @@ export function AppNavigator({
             />
           )}
         </Stack.Screen>
-        <Stack.Screen name="Carries" options={{ title: 'My Carries' }}>
-          {({ navigation, route }: NativeStackScreenProps<AppRoutes, 'Carries'>) => (
-            <CarryListFlow
-              repository={carryRepository}
-              reminderMessage={route.params?.reminderMessage}
-              onClearReminderMessage={() => navigation.setParams({ reminderMessage: undefined })}
-              onOpenCarry={(carryId) => navigation.navigate('CarryDetail', { carryId })}
-              onBrowseBible={() => navigation.navigate('Books')}
-            />
-          )}
-        </Stack.Screen>
         <Stack.Screen name="CarryDetail" options={{ title: 'Saved Carry' }}>
           {({ route, navigation }: NativeStackScreenProps<AppRoutes, 'CarryDetail'>) => (
             <CarryDetailFlow
@@ -242,7 +247,7 @@ export function AppNavigator({
               bibleRepository={repository}
               notifications={notifications}
               carryId={route.params.carryId}
-              onViewCarries={(reminderMessage) => navigation.popTo('Carries', { reminderMessage })}
+              onGoHome={(reminderMessage) => navigation.popTo('Home', { reminderMessage })}
               reminderMessage={route.params.reminderMessage}
               onEdit={() => navigation.push('EditCarry', { carryId: route.params.carryId })}
               onReflect={() => navigation.push('ReflectCarry', { carryId: route.params.carryId })}

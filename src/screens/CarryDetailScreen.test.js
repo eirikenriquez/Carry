@@ -41,7 +41,7 @@ it('invokes deletion only from the native destructive confirmation', async () =>
       state,
       now: new Date('2026-10-04T12:00:00.000Z'),
       onRetry: jest.fn(),
-      onViewCarries: jest.fn(),
+      onGoHome: jest.fn(),
       onEdit: jest.fn(),
       onReflect: jest.fn(),
       onDelete,
@@ -94,7 +94,7 @@ it.each([
   'shows reflection availability and saved values for %s Carries',
   async (status, carryChanges, visible) => {
     const onReflect = jest.fn();
-    const onViewCarries = jest.fn();
+    const onGoHome = jest.fn();
     const screenState = {
       ...state,
       data: { ...state.data, carry: { ...state.data.carry, ...carryChanges } },
@@ -104,7 +104,7 @@ it.each([
         state: screenState,
         now: new Date('2026-10-04T12:00:00.000Z'),
         onRetry: jest.fn(),
-        onViewCarries,
+        onGoHome,
         onEdit: jest.fn(),
         onReflect,
         onDelete: jest.fn(),
@@ -127,12 +127,12 @@ it.each([
     const backButton = renderer.root.findAll(
       (node) =>
         typeof node.props.onPress === 'function' &&
-        node.findAllByType(Text).some((text) => text.props.children === 'Back to Carries'),
+        node.findAllByType(Text).some((text) => text.props.children === 'Back to Home'),
     )[0];
     await React.act(async () =>
       backButton.props.onPress({ nativeEvent: { pageX: 100, pageY: 400 } }),
     );
-    expect(onViewCarries).toHaveBeenCalledWith();
+    expect(onGoHome).toHaveBeenCalledWith();
 
     if (status === 'completed') {
       const textValues = renderer.root.findAllByType(Text).map((node) => node.props.children);

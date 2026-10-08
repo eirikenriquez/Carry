@@ -1,6 +1,6 @@
 # Test log
 
-Current automated results: 6 October 2026, code checkpoint `b2331db`.
+Current automated results: 9 October 2026, code checkpoint `970e2c2`.
 Native evidence uses Carry_C_API33 (Android 13/API 33), app `com.eirikenriquez.carry`.
 Earlier feature checks were recorded on 2-5 October; the grouped-list smoke check
 and category-reflection checks on 6 October are distinguished below.
@@ -10,7 +10,7 @@ Full refactoring acceptance was not repeated.
 
 | Check | Result | Coverage |
 | --- | --- | --- |
-| Jest | 54 cases passed | Core domain, lifecycle, ViewModel, grouped-list/category-preview UI and navigation behaviour |
+| Jest | 54 cases passed | Core domain, lifecycle, ViewModel, Home/category-preview UI and navigation behaviour |
 | Personal SQLite | 9 checks passed | Category reuse, persistence, guarded writes, reflection integrity and rollback |
 | Publisher source | 2 checks passed | Dataset integrity and exact comparison with the pinned publisher export |
 | Bible integration | Passed | Actual bundled database: ordering, passage resolution, empty text and invalid selections |
@@ -204,3 +204,24 @@ Disposable records were backed up and cleaned up without resetting user data.
 - Dependency advisories remain recorded as a limitation, not a current security verdict.
   Broad `eslint .` reports pre-existing Node-script `__dirname` globals; normal Expo lint passes.
 - Detailed earlier build attempts, fixture IDs and numerical checkpoints remain in Git history.
+
+## Home entry - 9 October
+
+- Code checkpoint `970e2c2`: all automated gates above passed; the existing tests
+  were updated for Home without increasing the case count.
+- A fresh API 33 x86_64 release built in 1m 58s and installed without clearing data.
+  The temporary drive mapping used the parent folder so Expo could locate the app.
+- Offline, without Metro: cold launch opened Home; New Carry opened Scripture;
+  Save opened detail and Back returned Home. Explicit Cancel returned Home, while
+  Android Back from the form returned to Scripture. Back from Change passage
+  preserved the mounted form's category, situation and passage.
+- Detail's Back to Home action worked. Home refreshed after creation/deletion and
+  retained the correct groups after app restart. Only the labelled disposable
+  Carry was deleted; the earlier completed demo remained. Its reusable test
+  category was retained. Original radio settings were restored.
+- Empty Home is automated coverage, not a cleared-data native check. Native
+  reminder delivery/tapping was not newly verified on this build; existing routing
+  tests passed. This is a bounded navigation check, not formal NFR evaluation.
+- Screenshots: [populated Home](evidence/home/populated-home.png),
+  [draft after picker Back](evidence/home/draft-after-picker-back.png),
+  [Home after cleanup and restart](evidence/home/home-after-restart.png).

@@ -8,40 +8,48 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 ## Current features
 
 - Browse the bundled [World English Bible](https://ebible.org/engwebp/) offline
-  by book and chapter.
-- Select and preview a verse or same-chapter range.
-- Look up full-name references such as `John 3:16` or `James 1:19-20`.
+  or look up references such as `John 3:16`; select a verse or same-chapter range.
+- Start from Home, with Upcoming, Ready to reflect and Completed Carries available
+  offline, including after app restart.
 - Create a Carry with a category, situation, future schedule and if-then plan.
-- Reopen saved Carries offline, including after restarting the app.
-- View saved Carries in Upcoming, Ready to reflect, and Completed groups.
-- Edit an upcoming Carry without changing its identity or other saved Carries.
-- Delete an upcoming Carry after confirmation, keeping its reusable category.
-- Schedule a local reminder 15 minutes before an eligible Carry; tap it to reopen details.
-- Record a ready Carry's alignment rating, what happened and insight; reopen its saved reflection.
-- See a category's latest reflection when reusing it in a new Carry.
+- Edit or confirm deletion of an upcoming Carry without changing other records.
+- Receive a local reminder 15 minutes before an eligible Carry; tap to reopen it.
+- Save a rating, what happened and an insight; see the latest reflection when
+  reusing its category.
 
 Lookup excludes abbreviations, keyword search and cross-chapter ranges.
 
 ## Requirements
 
+- Git
 - Node.js 24 and npm
 - Android Studio with an Android SDK and emulator
+- A JDK with `JAVA_HOME` pointing to its installation
 - Python 3, only for the source-data check
 
 ## Run locally
 
-From this directory, start an Android emulator and run:
+Start an Android emulator, then run in PowerShell:
 
 ```powershell
+git clone https://github.com/eirikenriquez/Carry.git
+Set-Location Carry
 npm ci
 $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 npm run android
 ```
 
+If the repository is already cloned, open its `Carry` directory and skip the
+first two commands.
+
 The first run builds and installs the Expo development app and starts Metro.
 For later JavaScript or TypeScript changes, run `npm run start` and press `a`.
 Rebuild after native dependency or Expo configuration changes; use the development
 build, not Expo Go, for native verification.
+
+A standalone release APK contains its own code and runs without Metro. To see
+updated code in that version, install a newly built APK on the emulator; starting
+Metro alone will not update it.
 
 ## Checks
 

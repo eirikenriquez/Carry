@@ -2,9 +2,9 @@ const React = require('react');
 const { it, jest, expect } = require('@jest/globals');
 const { SectionList, Text } = require('react-native');
 const { mountProbe, unmountProbe } = require('../testing/hookTestHelpers');
-const { CarryListScreen } = require('./CarryListScreen');
+const { HomeScreen } = require('./HomeScreen');
 
-it('renders lifecycle sections, an empty group and the existing detail action', async () => {
+it('renders lifecycle sections, the New Carry action and the existing detail action', async () => {
   const upcoming = {
     carry: {
       id: 'upcoming-1',
@@ -27,13 +27,14 @@ it('renders lifecycle sections, an empty group and the existing detail action', 
     { key: 'completed', data: [completed] },
   ];
   const onOpenCarry = jest.fn();
+  const onNewCarry = jest.fn();
   function Probe() {
-    return React.createElement(CarryListScreen, {
+    return React.createElement(HomeScreen, {
       state: { status: 'ready', data: [upcoming, completed] },
       sections,
       onOpenCarry,
       onRetry: jest.fn(),
-      onBrowseBible: jest.fn(),
+      onNewCarry,
     });
   }
 
@@ -43,12 +44,20 @@ it('renders lifecycle sections, an empty group and the existing detail action', 
     const text = renderer.root.findAllByType(Text).map((node) => node.props.children);
     expect(text).toEqual(
       expect.arrayContaining([
+        'New Carry',
         'Upcoming',
         'Ready to reflect',
         'Completed',
         'No Carries ready to reflect on.',
       ]),
     );
+
+    const newCarryButton = renderer.root.findAll(
+      (node) => node.props.accessibilityLabel === 'New Carry',
+      { deep: false },
+    )[0];
+    await React.act(async () => newCarryButton.props.onPress());
+    expect(onNewCarry).toHaveBeenCalledTimes(1);
 
     const button = renderer.root.findAll(
       (node) =>
@@ -62,12 +71,12 @@ it('renders lifecycle sections, an empty group and the existing detail action', 
   }
 });
 
-it('keeps loading, retry, reminder feedback and the first-Carry prompt', async () => {
+it('keeps loading, retry, reminder feedback and the empty-state New Carry action', async () => {
   let state = { status: 'loading' };
   const onRetry = jest.fn();
-  const onBrowseBible = jest.fn();
+  const onNewCarry = jest.fn();
   function Probe() {
-    return React.createElement(CarryListScreen, {
+    return React.createElement(HomeScreen, {
       state,
       sections: [
         { key: 'upcoming', data: [] },
@@ -76,7 +85,7 @@ it('keeps loading, retry, reminder feedback and the first-Carry prompt', async (
       ],
       reminderMessage: 'A reminder could not be cancelled.',
       onRetry,
-      onBrowseBible,
+      onNewCarry,
       onOpenCarry: jest.fn(),
     });
   }
@@ -105,11 +114,16 @@ it('keeps loading, retry, reminder feedback and the first-Carry prompt', async (
     await React.act(async () => renderer.update(React.createElement(Probe)));
     expect(renderer.root.findByType(SectionList).props.sections).toEqual([]);
     expect(renderedText()).toContain('No Carries saved yet');
-    const browseButton = renderer.root.findAll(
-      (node) => typeof node.props.onPress === 'function' && node.props.onPress === onBrowseBible,
-    )[0];
-    await React.act(async () => browseButton.props.onPress());
-    expect(onBrowseBible).toHaveBeenCalledTimes(1);
+    expect(renderedText()).toContain(
+      'Browse the Bible and choose a passage to create your first Carry.',
+    );
+    const newCarryButtons = renderer.root.findAll(
+      (node) => node.props.accessibilityLabel === 'New Carry',
+      { deep: false },
+    );
+    expect(newCarryButtons).toHaveLength(1);
+    await React.act(async () => newCarryButtons[0].props.onPress());
+    expect(onNewCarry).toHaveBeenCalledTimes(1);
   } finally {
     await unmountProbe(renderer);
   }
