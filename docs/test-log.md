@@ -2,9 +2,8 @@
 
 Current automated results: 9 October 2026, code checkpoint `970e2c2`.
 Native evidence uses Carry_C_API33 (Android 13/API 33), app `com.eirikenriquez.carry`.
-Earlier feature checks were recorded on 2-5 October; the grouped-list smoke check
-and category-reflection checks on 6 October are distinguished below.
-Full refactoring acceptance was not repeated.
+Earlier feature checks were recorded on 2-6 October. A normal selection-to-retrieval
+run on 8 October is recorded separately below; automated gates were not rerun that day.
 
 ## Current automated results
 
@@ -30,7 +29,43 @@ Fixtures and controlled failures do not cover every possible race or damaged dat
 
 Normal prototype release builds ran without Metro and used offline conditions.
 Storage probes and seeded fixtures are identified below; they are not full-loop evidence.
-Disposable records were backed up and cleaned up without resetting user data.
+Earlier disposable fixtures were backed up and cleaned up without resetting user
+data. The completed 8 October main-loop record is retained as explained below.
+
+### Integrated user loop — 8 October
+
+- Merged main `f14047e`; fresh x86_64 release build passed in 1m 49s using the
+  installed JDK 20 and a temporary short-path mapping. Install retained app data.
+  The initial native check took about 43 minutes, including real scheduled waits;
+  the approved deletion recheck followed separately.
+- API 33, airplane mode on, Wi-Fi disabled, no Metro. Normal UI actions created
+  the records; no lifecycle fixtures, reflection inserts or clock changes were used.
+- Browsing selected Exodus 1:1-3. Creation saved `Offline loop check`, category
+  `Loop test`, a 4:35pm schedule and `If rushed then I will pause` with a reminder ID.
+- Editing to 4:36pm preserved identity/creation metadata and replaced that reminder.
+  Android showed one Carry alarm at 4:21pm; the cancelled 4:20pm reminder was absent.
+  The replacement was visible by 4:21:46pm, within the planned timing window.
+  Its warm tap reopened the correct passage, situation, intention and edited time.
+- My Carries showed the updated Upcoming item once. Reference lookup resolved
+  James 1:19; a second valid Carry saved using the existing, no-history category.
+  Native deletion Cancel left this second entry unchanged.
+- Resuming after the actual 4:36pm schedule moved only the main Carry to Ready.
+  Required reflection feedback passed; an explicit rating of 4 and both answers
+  saved through the form, refreshed detail to Completed and regrouped the list.
+- App restart and emulator reboot retained the Upcoming/Completed groups. Radio
+  checks confirmed airplane mode on and Wi-Fi disabled after reboot. A fresh draft
+  using `Loop test` showed the saved rating, outcome and insight; Back cancelled it.
+  Database dumps before/after restart and the cancelled draft matched.
+- After user approval, offline confirmation deleted only `Deletion test only` and
+  refreshed My Carries. Its queued Android alarm was absent before force-stop;
+  the main Carry, reflection and shared category remained unchanged in SQLite.
+  Offline app restart retained the deletion and showed the main Carry once in Completed.
+  Recoverable backups are in ignored `.expo/carry-loop-*.db`; the main record is
+  retained for demonstration. Original airplane mode was restored and the temporary
+  mapping removed.
+- This supports the normal selection-to-retrieval path, not every failure or all
+  formal NFR thresholds. No participant, accessibility, ten-reminder reliability,
+  multi-configuration or full UML-conformity evaluation was performed.
 
 ### Scripture and storage
 
@@ -129,7 +164,8 @@ Disposable records were backed up and cleaned up without resetting user data.
   dump matched its original empty contents, and airplane mode was restored.
 - Failures/races are controlled tests, not native fault injection. No-history Save
   is covered by creation logic checks, not a new native valid-creation trial.
-  These checks do not repeat the entire create/edit/delete/reminder user loop.
+  These 6 October checks did not repeat the normal integrated user loop;
+  the later 8 October run above adds normal creation and no-history Save evidence.
 
 ## Refactoring verification
 
@@ -143,6 +179,18 @@ Disposable records were backed up and cleaned up without resetting user data.
 
 ## Screenshots
 
+- Integrated loop: [created](evidence/full-loop/created-offline.jpg),
+  [edited](evidence/full-loop/edited-offline.jpg),
+  [Upcoming](evidence/full-loop/upcoming-offline.jpg),
+  [reminder](evidence/full-loop/reminder-offline.jpg),
+  [warm tap](evidence/full-loop/reminder-opened-offline.jpg),
+  [Ready on resume](evidence/full-loop/ready-on-resume-offline.jpg),
+  [saved reflection](evidence/full-loop/saved-reflection-offline.jpg),
+  [Completed groups](evidence/full-loop/completed-groups-offline.jpg),
+  [groups after reboot](evidence/full-loop/groups-after-device-restart.jpg),
+  [latest reflection after reboot](evidence/full-loop/latest-reflection-after-restart.jpg),
+  [deleted list](evidence/full-loop/deleted-list-offline.jpg),
+  [deletion after restart](evidence/full-loop/deleted-after-restart-offline.jpg).
 - Category reflection: [mixed groups offline](evidence/category-reflection/groups-offline.jpg),
   [latest Work reflection](evidence/category-reflection/latest-work-offline.jpg),
   [no previous reflection](evidence/category-reflection/no-history-offline.jpg),
@@ -192,9 +240,11 @@ Disposable records were backed up and cleaned up without resetting user data.
 ## Limits and environment
 
 - Evidence is representative emulator work, not a physical-device, TalkBack, large-font
-  or user-study evaluation. No complete selection-to-retrieval run is recorded yet.
+  or user-study evaluation. A normal selection-to-retrieval run and approved offline
+  deletion/reminder-cancellation recheck are now recorded.
 - Formal reminder reliability evaluation remains pending; one delivery does not establish
-  the Milestone 1 timing threshold. Warm taps, cutoff/permission failures, stale results,
+  the Milestone 1 reliability threshold. Warm tapping passed in the integrated run;
+  cutoff/permission failures, stale results,
   duplicate submissions, write failures and compensation primarily use controlled tests.
 - Storage/data checks use the actual asset and desktop SQLite; seeded native checks do not
   replace normal creation/reflection acceptance. Native scenarios do not cover every timing race.
