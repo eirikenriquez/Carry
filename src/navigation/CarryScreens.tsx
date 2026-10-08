@@ -51,7 +51,7 @@ interface ReflectCarryFlowProps {
   readonly onCancel: () => void;
 }
 
-interface CarryListFlowProps {
+interface HomeFlowProps {
   readonly repository: CarryRepository;
   readonly reminderMessage?: string;
   readonly onClearReminderMessage: () => void;
@@ -65,7 +65,7 @@ interface CarryDetailFlowProps {
   readonly notifications: NotificationService;
   readonly carryId: string;
   readonly reminderMessage?: string;
-  readonly onViewCarries: (reminderMessage?: string) => void;
+  readonly onGoHome: (reminderMessage?: string) => void;
   readonly onEdit: () => void;
   readonly onReflect: () => void;
 }
@@ -258,14 +258,14 @@ export function ReflectCarryFlow({
   );
 }
 
-/** Reload Carries on focus and render the ViewModel's lifecycle sections. */
-export function CarryListFlow({
+/** Reload Carries on focus and render the Home screen's lifecycle sections. */
+export function HomeFlow({
   repository,
   reminderMessage,
   onClearReminderMessage,
   onOpenCarry,
   onNewCarry,
-}: CarryListFlowProps) {
+}: HomeFlowProps) {
   const isFocused = useIsFocused();
   const model = useCarryListViewModel(repository, isFocused);
   useEffect(() => {
@@ -290,7 +290,7 @@ export function CarryDetailFlow({
   notifications,
   carryId,
   reminderMessage,
-  onViewCarries,
+  onGoHome,
   onEdit,
   onReflect,
 }: CarryDetailFlowProps) {
@@ -305,8 +305,8 @@ export function CarryDetailFlow({
   const now = useCarryStatusClock(isFocused, model.state);
   usePreventRemove(model.isDeleting, () => undefined);
   useEffect(() => {
-    if (model.deletedCarryId !== null) onViewCarries(model.deleteWarning ?? undefined);
-  }, [model.deletedCarryId, model.deleteWarning, onViewCarries]);
+    if (model.deletedCarryId !== null) onGoHome(model.deleteWarning ?? undefined);
+  }, [model.deletedCarryId, model.deleteWarning, onGoHome]);
 
   return (
     <CarryDetailScreen
@@ -314,7 +314,7 @@ export function CarryDetailFlow({
       now={now}
       reminderMessage={reminderMessage}
       onRetry={model.retry}
-      onViewCarries={onViewCarries}
+      onGoHome={onGoHome}
       onEdit={onEdit}
       onReflect={onReflect}
       onDelete={() => void model.deleteCarry()}
