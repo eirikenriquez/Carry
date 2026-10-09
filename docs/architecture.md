@@ -28,12 +28,9 @@ and saving remain in the ViewModels.
 and navigation callbacks. `ReflectionRatingField` renders the controlled 1-5 rating;
 the reflection ViewModel still owns its value, validation and saving.
 
-## File layout
+## Coding standards
 
-Start with a two-sentence overview, then imports, types/interfaces, constants,
-main exports and private helpers. Keep screen styles last and class public methods
-before private methods. Preserve initialization and hook order when reorganising;
-do not add helpers just to satisfy the layout.
+See [coding standards](coding-standards.md) for file layout, comments and checks.
 
 ## Domain decisions
 
