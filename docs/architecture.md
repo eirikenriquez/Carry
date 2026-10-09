@@ -3,6 +3,27 @@
 Carry uses lightweight MVVM, Repository, and Service boundaries from Milestone 1.
 Views render state; ViewModels handle interaction; repositories and services isolate SQLite and notifications.
 
+## Component diagram
+
+![Carry component diagram](diagrams/component-diagram.png)
+
+[Standalone PNG](diagrams/component-diagram.png) | [PlantUML source](diagrams/component-diagram.puml)
+
+This shows the main feature dependencies, not every import or the order of execution.
+Startup and navigation details are omitted; `src/app.tsx` supplies the concrete dependencies.
+
+Compared with Milestone 1:
+
+- View, ViewModel and Model regions are now labelled explicitly, following the feedback.
+- The planned `CarryOperations` / `CarryLifecycleService` design became smaller workflow
+  functions in `src/services`. ViewModels also read directly through repository contracts.
+- MVVM, repository contracts, separate databases and the notification adapter remain.
+
+The notation follows [IBM's provided/required interface guidance](https://www.ibm.com/docs/en/dma?topic=diagrams-interfaces)
+and [PlantUML's connector syntax](https://plantuml.com/deployment-diagram).
+The regions use [MVVM responsibilities](https://learn.microsoft.com/en-us/dotnet/architecture/maui/mvvm),
+adapted to React hooks rather than .NET classes.
+
 ## Current structure
 
 - `index.ts`: registers the root component from `src/app.tsx`.
