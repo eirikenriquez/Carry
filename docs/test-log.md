@@ -1,5 +1,8 @@
 # Test log
 
+Formal evaluation procedures and trial records belong in [evaluation.md](evaluation.md).
+This log retains automated and development-check evidence.
+
 Current automated results: 9 October 2026, code checkpoint `970e2c2`.
 Native evidence uses Carry_C_API33 (Android 13/API 33), app `com.eirikenriquez.carry`.
 Earlier feature checks were recorded on 2-6 October. A normal selection-to-retrieval

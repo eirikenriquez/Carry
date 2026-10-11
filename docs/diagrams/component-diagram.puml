@@ -1,0 +1,64 @@
+@startuml
+top to bottom direction
+
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 17
+skinparam componentStyle uml2
+skinparam packageStyle frame
+skinparam linetype polyline
+skinparam nodesep 45
+skinparam ranksep 60
+skinparam ArrowColor #455466
+skinparam ComponentBorderColor #455466
+skinparam ComponentBackgroundColor white
+skinparam PackageBorderColor #455466
+skinparam PackageFontStyle bold
+skinparam DatabaseBorderColor #455466
+skinparam DatabaseBackgroundColor white
+
+package "View" #EDF3FA {
+  component "Screens and components" as Views
+}
+
+package "ViewModel" #FFF5E8 {
+  component "ViewModel hooks" as ViewModels
+}
+
+package "Model" #EFF6EF {
+  component "Domain models and rules\nCarry, Reflection,\nselection and status" as Domain
+  component "Carry workflow functions\nCreate, edit, delete,\nreminders and reflection" as Workflows
+}
+
+package "Storage and platform" #F5F5F5 {
+  component "SQLiteCarryRepository" as CarryAdapter
+  component "SQLiteBibleRepository" as BibleAdapter
+  component "ExpoNotificationService" as NotificationAdapter
+
+  database "Personal Carry database" as PersonalDatabase
+  database "Bundled Bible database\nWorld English Bible" as BibleDatabase
+  component "Android notifications" as AndroidNotifications
+}
+
+Views ..> ViewModels
+ViewModels ..> Domain
+ViewModels .down.> Workflows
+CarryAdapter -up0)- ViewModels : CarryRepository\n(reads)
+BibleAdapter -up0)- ViewModels : BibleRepository\n(reads)
+
+Workflows .right.> Domain
+CarryAdapter --up0)-- Workflows : CarryRepository
+BibleAdapter --up0)-- Workflows : BibleRepository
+NotificationAdapter --up0)-- Workflows : NotificationService
+
+CarryAdapter ..> PersonalDatabase
+BibleAdapter ..> BibleDatabase
+NotificationAdapter ..> AndroidNotifications
+
+legend bottom
+  src/app.tsx supplies the repositories and notification service.
+  Dashed arrows show code dependencies, not runtime order.
+  Ball: provides an interface. Socket: requires that interface.
+endlegend
+@enduml
