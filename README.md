@@ -71,3 +71,5 @@ Python checks the data against the publisher export.
 
 - [Architecture, decisions, and Bible provenance](docs/architecture.md)
 - [Test checkpoints, screenshots, and limitations](docs/test-log.md)
+- [Coding standards](docs/coding-standards.md)
+- [Evaluation procedures and device results](docs/evaluation.md)
