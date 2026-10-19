@@ -20,7 +20,7 @@ Architecture and development-process reflection belong in report Section 3.
 
 ### User tasks — planned
 
-Use the [short user-testing sheet](user-testing.md) for prompts and session records.
+Use the [editable Word testing sheet](user-testing.docx) for prompts and session records.
 
 - Recruit classmates through the course consent process. Use participant labels
   and fictional situations. Record first use and optional target-group fit.
@@ -29,8 +29,9 @@ Use the [short user-testing sheet](user-testing.md) for prompts and session reco
 - Completion, help and problems are self-reported. After each attempt, use the
   [SEQ](https://measuringu.com/evolution-of-seq/) from 1 (very difficult) to
   7 (very easy). Screenshots are not required.
-- Stopwatch timing is optional. Exclude installation, waiting and form-filling.
-  Leave unmeasured times missing. Help means the attempt was not unaided.
+- Stopwatch timing is optional. Include entering information in Carry. Exclude
+  installation, waiting between tasks and completing the sheet. Leave unmeasured
+  times missing. Help means the attempt was not unaided.
 - Keep RUN-01's original thresholds, but do not claim an independently verified
   pass from self-reports. Participants outside the target group limit conclusions
   about target-user usability. Keep pilot/repeat results separate.
