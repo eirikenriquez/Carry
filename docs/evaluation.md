@@ -20,14 +20,21 @@ Architecture and development-process reflection belong in report Section 3.
 
 ### User tasks — planned
 
-- Confirm recruitment and consent; use anonymous IDs and fictional situations.
-  Pilot a 10–15-minute session.
-- Ask users to create a Carry and identify its cue/action, reflect on a prepared
-  Ready Carry, then find that category's latest reflection.
-- Give task goals, not button instructions. Record completion, time after the
-  scenario is understood, errors, help, ease rating and feedback.
-- Help means the task was not unaided. The three-minute limit applies to creation
-  and reflection, not retrieval. Pilot/repeat users are not new first-time users.
+Use the [editable Word testing sheet](user-testing.docx) for prompts and session records.
+
+- Recruit classmates through the course consent process. Use participant labels
+  and fictional situations. Record first use and optional target-group fit.
+- Participants independently create a Carry, reflect after its scheduled time,
+  then find that category's latest reflection while preparing another Carry.
+- Completion, help and problems are self-reported. After each attempt, use the
+  [SEQ](https://measuringu.com/evolution-of-seq/) from 1 (very difficult) to
+  7 (very easy). Screenshots are not required.
+- Stopwatch timing is optional. Include entering information in Carry. Exclude
+  installation, waiting between tasks and completing the sheet. Leave unmeasured
+  times missing. Help means the attempt was not unaided.
+- Keep RUN-01's original thresholds, but do not claim an independently verified
+  pass from self-reports. Participants outside the target group limit conclusions
+  about target-user usability. Keep pilot/repeat results separate.
 
 ### Interface inspection — planned
 
