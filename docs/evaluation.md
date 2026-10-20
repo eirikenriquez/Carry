@@ -22,6 +22,10 @@ Architecture and development-process reflection belong in report Section 3.
 
 Use the [editable Word testing sheet](user-testing.docx) for prompts and session records.
 
+Version 2 clarifies instructions and questions without changing the task goals or
+SEQ scale. Record which version each participant used and any clarification given.
+Keep original responses when transferring answers to the revised sheet.
+
 - Recruit classmates through the course consent process. Use participant labels
   and fictional situations. Record first use and optional target-group fit.
 - Participants independently create a Carry, reflect after its scheduled time,
