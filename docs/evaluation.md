@@ -43,7 +43,7 @@ All four records describe first-time users; none fully matched the target group.
 - Outcomes and times are self-reported; NM means not measured. Eight of nine
   task entries were marked complete. No app-task results are assigned to P02/P04.
 - P03 later saved a Carry while moving to task 2, then completed reflection and
-  retrieval. His initial No remains; no retry time was recorded.
+  retrieval. The original No remains. No retry time was recorded.
 - P01 reported help for all tasks despite listing no problems. Follow-up concerned
   reflection entry and the sheet; exact assistance per task is unclear.
 - P01 requested clearer reminder feedback and more colour; P03 suggested first-use
@@ -129,7 +129,7 @@ or reminder delivery. Earlier C reminder checks preceded Home.
 | RUN-01 | Not established: three returned sheets, assistance and an installation block do not demonstrate four of five unaided completions. |
 | RUN-02 | Not met in sampled screens: touch areas passed, but placeholder contrast was below 4.5:1. Enlarged-text crowding also needs refinement. |
 | PHY-01 | Partial: offline/restart evidence exists; full offline/privacy and no-transmission assessment was not completed. |
-| PHY-02 | Not established: delivery/tapping was demonstrated, but ten-trial reliability and Home-build rechecks were not completed. Native permission denial is not established by the retained records; automated coverage is recorded in the test log. |
+| PHY-02 | Nine developer-reported [arrival times](test-log.md#reminder-trial-times) fall within the required window. Trial 9's arrival is unrecorded. Home-build reminder behaviour and native permission denial remain unverified. Criterion not fully established. |
 | PHY-03 | Partial: four emulator configurations have checks; reported phone use is not a documented physical-device trial. |
 
 Uncompleted checks are future evaluation work, not scheduled trials or passes.

@@ -36,7 +36,7 @@ and opened the correct Carry.
 
 ## Reminder trial times
 
-User-reported reminder-trial times on emulator C.
+Developer-reported reminder-trial times on emulator C.
 
 | Trial | Situation time | Expected reminder time | Recorded notification arrival time |
 | --- | --- | --- | --- |
