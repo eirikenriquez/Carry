@@ -1,0 +1,170 @@
+[
+  {
+    "text": "",
+    "content-desc": "Navigate up",
+    "class": "android.widget.ImageButton",
+    "clickable": "true",
+    "bounds": "[0,96][224,320]"
+  },
+  {
+    "text": "Create a Carry",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[288,154][797,261]"
+  },
+  {
+    "text": "Create a Carry",
+    "content-desc": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,400][1568,544]"
+  },
+  {
+    "text": "Choose a moment, connect it with Scripture, and make a small plan for how to respond.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,576][1568,768]"
+  },
+  {
+    "text": "Category",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,864][1568,960]"
+  },
+  {
+    "text": "For example, Patience",
+    "content-desc": "Category name",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,992][1568,1184]"
+  },
+  {
+    "text": "",
+    "content-desc": "Use category Loop test",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,1224][452,1416]"
+  },
+  {
+    "text": "Loop test",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[140,1276][392,1364]"
+  },
+  {
+    "text": "What situation do you want to prepare for?",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1512][1568,1608]"
+  },
+  {
+    "text": "Describe the moment you have in mind.",
+    "content-desc": "Situation",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,1640][1568,2056]"
+  },
+  {
+    "text": "Scripture passage",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2200][632,2296]"
+  },
+  {
+    "text": "",
+    "content-desc": "Change selected passage",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[1057,2152][1568,2344]"
+  },
+  {
+    "text": "Change passage",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[1089,2204][1536,2292]"
+  },
+  {
+    "text": "Genesis 1:1",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,2428][1516,2524]"
+  },
+  {
+    "text": "1. In the beginning, God created the heavens and the earth.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,2556][1516,2772]"
+  },
+  {
+    "text": "When do you expect this situation?",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2920][1568,3016]"
+  },
+  {
+    "text": "",
+    "content-desc": "Choose date",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,3056][800,3312]"
+  },
+  {
+    "text": "Date",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,3100][748,3172]"
+  },
+  {
+    "text": "Choose date",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,3180][748,3268]"
+  },
+  {
+    "text": "",
+    "content-desc": "Choose time",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[848,3056][1568,3312]"
+  },
+  {
+    "text": "Time",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[900,3100][1516,3172]"
+  },
+  {
+    "text": "Choose time",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[900,3180][1516,3268]"
+  },
+  {
+    "text": "Make an if-then plan",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,3408][1568,3504]"
+  },
+  {
+    "text": "Example: If I feel rushed, then I will pause and remember this passage.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,3520][1568,3564]"
+  }
+]

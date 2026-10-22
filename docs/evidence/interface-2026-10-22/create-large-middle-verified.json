@@ -1,0 +1,156 @@
+[
+  {
+    "text": "",
+    "content-desc": "Navigate up",
+    "class": "android.widget.ImageButton",
+    "clickable": "true",
+    "bounds": "[0,96][224,320]"
+  },
+  {
+    "text": "Create a Carry",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[288,154][797,261]"
+  },
+  {
+    "text": "Describe the moment you have in mind.",
+    "content-desc": "Situation",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,320][1568,536]"
+  },
+  {
+    "text": "Scripture passage",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,656][908,800]"
+  },
+  {
+    "text": "",
+    "content-desc": "Change selected passage",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[940,632][1648,824]"
+  },
+  {
+    "text": "Change passage",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[972,662][1641,794]"
+  },
+  {
+    "text": "Genesis 1:1",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,908][1516,1052]"
+  },
+  {
+    "text": "1. In the beginning, God created the heavens and the earth.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,1084][1516,1392]"
+  },
+  {
+    "text": "When do you expect this situation?",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1540][1568,1828]"
+  },
+  {
+    "text": "",
+    "content-desc": "Choose date",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,1868][800,2188]"
+  },
+  {
+    "text": "Date",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,1904][748,2012]"
+  },
+  {
+    "text": "Choose date",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,2020][748,2152]"
+  },
+  {
+    "text": "",
+    "content-desc": "Choose time",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[848,1868][1568,2188]"
+  },
+  {
+    "text": "Time",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[900,1904][1516,2012]"
+  },
+  {
+    "text": "Choose time",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[900,2020][1516,2152]"
+  },
+  {
+    "text": "Make an if-then plan",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2284][1568,2428]"
+  },
+  {
+    "text": "Example: If I feel rushed, then I will pause and remember this passage.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2444][1568,2684]"
+  },
+  {
+    "text": "If I…, then I will…",
+    "content-desc": "If-then intention",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,2716][1568,3132]"
+  },
+  {
+    "text": "",
+    "content-desc": "Cancel",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,3244][804,3452]"
+  },
+  {
+    "text": "Cancel",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[296,3276][587,3420]"
+  },
+  {
+    "text": "",
+    "content-desc": "Save Carry",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[852,3244][1568,3452]"
+  },
+  {
+    "text": "Save Carry",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[977,3276][1442,3420]"
+  }
+]

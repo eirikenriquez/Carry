@@ -1,0 +1,218 @@
+[
+  {
+    "text": "",
+    "content-desc": "Navigate up",
+    "resource-id": "",
+    "class": "android.widget.ImageButton",
+    "clickable": "true",
+    "bounds": "[0,96][224,320]"
+  },
+  {
+    "text": "Reflect on Carry",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[288,154][861,261]"
+  },
+  {
+    "text": "Reflect on your Carry",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,400][1568,544]"
+  },
+  {
+    "text": "Situation",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,676][1516,756]"
+  },
+  {
+    "text": "Interface review only - fictional",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,764][1516,860]"
+  },
+  {
+    "text": "Your if–then plan",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,908][1516,988]"
+  },
+  {
+    "text": "If rushed then I will pause",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,996][1516,1092]"
+  },
+  {
+    "text": "Alignment (required)",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1240][1568,1336]"
+  },
+  {
+    "text": "How closely did your response follow your plan? 1 = not at all; 5 = closely.",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1352][1568,1528]"
+  },
+  {
+    "text": "",
+    "content-desc": "Rating 1",
+    "resource-id": "",
+    "class": "android.widget.RadioButton",
+    "clickable": "true",
+    "bounds": "[80,1568][352,1760]"
+  },
+  {
+    "text": "1",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[196,1616][235,1712]"
+  },
+  {
+    "text": "",
+    "content-desc": "Rating 2",
+    "resource-id": "",
+    "class": "android.widget.RadioButton",
+    "clickable": "true",
+    "bounds": "[384,1568][656,1760]"
+  },
+  {
+    "text": "2",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[500,1616][539,1712]"
+  },
+  {
+    "text": "",
+    "content-desc": "Rating 3",
+    "resource-id": "",
+    "class": "android.widget.RadioButton",
+    "clickable": "true",
+    "bounds": "[688,1568][960,1760]"
+  },
+  {
+    "text": "3",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[804,1616][843,1712]"
+  },
+  {
+    "text": "",
+    "content-desc": "Rating 4",
+    "resource-id": "",
+    "class": "android.widget.RadioButton",
+    "clickable": "true",
+    "bounds": "[992,1568][1264,1760]"
+  },
+  {
+    "text": "4",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[1108,1616][1147,1712]"
+  },
+  {
+    "text": "",
+    "content-desc": "Rating 5",
+    "resource-id": "",
+    "class": "android.widget.RadioButton",
+    "clickable": "true",
+    "bounds": "[1296,1568][1568,1760]"
+  },
+  {
+    "text": "5",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[1412,1616][1451,1712]"
+  },
+  {
+    "text": "What happened? (required)",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1856][1568,1952]"
+  },
+  {
+    "text": "Describe how you responded.",
+    "content-desc": "What happened (required)",
+    "resource-id": "",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,1984][1568,2400]"
+  },
+  {
+    "text": "What did you learn? (required)",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2496][1568,2592]"
+  },
+  {
+    "text": "Write down an insight to carry forward.",
+    "content-desc": "What did you learn (required)",
+    "resource-id": "",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,2624][1568,3040]"
+  },
+  {
+    "text": "",
+    "content-desc": "Cancel",
+    "resource-id": "",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,3152][804,3360]"
+  },
+  {
+    "text": "Cancel",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[344,3208][540,3304]"
+  },
+  {
+    "text": "",
+    "content-desc": "Save reflection",
+    "resource-id": "",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[852,3152][1568,3360]"
+  },
+  {
+    "text": "Save reflection",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[995,3208][1424,3304]"
+  }
+]
