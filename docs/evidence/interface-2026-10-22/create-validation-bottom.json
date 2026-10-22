@@ -1,0 +1,170 @@
+[
+  {
+    "text": "",
+    "content-desc": "Navigate up",
+    "class": "android.widget.ImageButton",
+    "clickable": "true",
+    "bounds": "[0,96][224,320]"
+  },
+  {
+    "text": "Create a Carry",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[288,154][797,261]"
+  },
+  {
+    "text": "",
+    "content-desc": "Use category Loop test",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,332][452,524]"
+  },
+  {
+    "text": "Loop test",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[140,384][392,472]"
+  },
+  {
+    "text": "What situation do you want to prepare for?",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,620][1568,716]"
+  },
+  {
+    "text": "Describe the moment you have in mind.",
+    "content-desc": "Situation",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,748][1568,1164]"
+  },
+  {
+    "text": "Add the situation you want to prepare for.",
+    "content-desc": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,1188][1568,1268]"
+  },
+  {
+    "text": "Scripture passage",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1412][632,1508]"
+  },
+  {
+    "text": "",
+    "content-desc": "Change selected passage",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[1057,1364][1568,1556]"
+  },
+  {
+    "text": "Change passage",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[1089,1416][1536,1504]"
+  },
+  {
+    "text": "Genesis 1:1",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,1640][1516,1736]"
+  },
+  {
+    "text": "1. In the beginning, God created the heavens and the earth.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,1768][1516,1984]"
+  },
+  {
+    "text": "When do you expect this situation?",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2132][1568,2228]"
+  },
+  {
+    "text": "",
+    "content-desc": "Choose date",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,2268][800,2524]"
+  },
+  {
+    "text": "Date",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,2312][748,2384]"
+  },
+  {
+    "text": "Choose date",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[132,2392][748,2480]"
+  },
+  {
+    "text": "",
+    "content-desc": "Choose time",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[848,2268][1568,2524]"
+  },
+  {
+    "text": "Time",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[900,2312][1516,2384]"
+  },
+  {
+    "text": "Choose time",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[900,2392][1516,2480]"
+  },
+  {
+    "text": "Choose a valid schedule date.",
+    "content-desc": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,2548][1568,2628]"
+  },
+  {
+    "text": "Make an if-then plan",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2724][1568,2820]"
+  },
+  {
+    "text": "Example: If I feel rushed, then I will pause and remember this passage.",
+    "content-desc": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2836][1568,2996]"
+  },
+  {
+    "text": "If I…, then I will…",
+    "content-desc": "If-then intention",
+    "class": "android.widget.EditText",
+    "clickable": "true",
+    "bounds": "[80,3028][1568,3444]"
+  },
+  {
+    "text": "Add your if–then intention.",
+    "content-desc": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,3468][1568,3548]"
+  }
+]

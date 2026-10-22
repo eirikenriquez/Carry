@@ -18,13 +18,13 @@ Architecture and development-process reflection belong in report Section 3.
 
 ## Methods
 
-### User tasks — planned
+### Task-based user testing
 
 Use the [editable Word testing sheet](user-testing.docx) for prompts and session records.
 
-Version 2 clarifies instructions and questions without changing the task goals or
-SEQ scale. Record which version each participant used and any clarification given.
-Keep original responses when transferring answers to the revised sheet.
+The de-identified [response records and complete answers](evidence/participants/README.md)
+retain submitted task outcomes and separate follow-up clarifications. Original
+private records are retained outside the repository.
 
 - Recruit classmates through the course consent process. Use participant labels
   and fictional situations. Record first use and optional target-group fit.
@@ -40,13 +40,16 @@ Keep original responses when transferring answers to the revised sheet.
   pass from self-reports. Participants outside the target group limit conclusions
   about target-user usability. Keep pilot/repeat results separate.
 
-### Interface inspection — planned
+### Interface inspection
 
-- Review Home, Scripture, forms, detail and reflection using Nielsen's heuristics.
-  Record the screen, issue, task impact, proposed fix and retest.
-- Measure touch areas, colours/contrast and font size/weight; check enlarged text
-  and clipping. This is a developer review, not an independent expert panel or
-  a full WCAG assessment.
+- The review sampled Home, creation and reflection on Carry C, using Nielsen's
+  status-feedback and error-recovery heuristics. Empty-form submissions checked
+  validation; normal and 150% system text checked reachability and layout.
+- Native UIAutomator bounds were converted from pixels to dp using the configured
+  density. Source colour pairs supplied unrounded WCAG contrast calculations.
+  [Captures, measurements and calculation](evidence/interface-2026-10-22/README.md)
+  record the method and findings. This is a developer review, not an independent
+  expert panel or full accessibility assessment.
 
 ### Device checks
 
@@ -68,6 +71,54 @@ record ten situation times, intended reminder times and observed arrivals,
 plus permission denial. These are separate from the core-loop checks below.
 
 ## Results
+
+### Participant tasks
+
+P01, P03 and P05 returned sheets. P02 consented but could not install the APK
+because Samsung Auto Blocker blocked it; all tasks were not attempted. P04
+showed the app in use but did not return a sheet, so no task results are assigned.
+All four written records describe first-time users, none with full target-group
+fit. P05 is Christian but aged 30, outside the planned 18–29 range.
+
+| ID | Task | Completed | Help | SEQ / 7 | Time (s) |
+| --- | --- | --- | --- | --- | --- |
+| P01 | Create | Yes | Yes | 7 | 10 |
+| P01 | Reflect | Yes | Yes | 6 | 5 |
+| P01 | Retrieve | Yes | Yes | 7 | 30 |
+| P03 | Create | No | No | 3 | NM |
+| P03 | Reflect | Yes | No | 6 | 37 |
+| P03 | Retrieve | Yes | No | 6 | 25 |
+| P05 | Create | Yes | No | 6 | 180 |
+| P05 | Reflect | Yes | No | 7 | 180 |
+| P05 | Retrieve | Yes | No | 7 | 20 |
+
+These are self-reports; NM means not measured. Eight of nine entries were marked
+completed. P03 later saved a Carry while moving to task 2, then completed tasks 2
+and 3, as clarified by the researcher. His original unsuccessful result is kept;
+the retry has no recorded time. P01's Help entries remain Yes despite a problems
+response of None. Follow-up questions concerned reflection entry and the sheet's
+wording. These records do not establish the four-of-five unaided RUN-01 condition.
+
+P01 requested a more prominent reminder warning and more colour. P03 suggested
+first-use tips; P05 suggested no change. Clearer first-use guidance, a form-first
+creation flow and reminder feedback are proposed improvements, not implemented
+or retested fixes. The creation-flow proposal is an interpretation of the feedback,
+not a cause demonstrated by the task sheets.
+
+### Interface findings
+
+- Sampled touch areas met 48 by 48 dp: New Carry 372 by 52 dp, category input
+  372 by 48 dp and reflection ratings 68 by 48 dp. The evidence log lists all six samples.
+- Empty creation and reflection submissions showed field-specific errors without
+  saving incomplete records. One labelled fictional Carry enabled reflection-form
+  inspection; no reflection was saved.
+- Fields and save controls remained reachable at 150% text. The creation form's
+  Scripture heading and Change passage action crowded the right edge. Stacking
+  this row as text grows is future work.
+- Normal-state placeholder text (#777777 on white) measured 4.478089:1, below
+  RUN-02's 4.5:1 threshold. Other sampled pairs met it. RUN-02 is not met in the
+  sampled screens; a darker placeholder colour and enlarged-text layout fix
+  remain future work. No full accessibility pass is claimed.
 
 ### Device checks
 
@@ -98,18 +149,21 @@ D's reboot capture includes the emulator's diagnostic overlay; it is unedited.
 
 A used an x86 release rebuild; B/D reused the preserved x86_64 release APK.
 
-## Remaining work and limits
+## Criteria status and limits
 
-- **RUN-01:** participant trials pending. Record actual sample and target-group fit;
-  fewer than five users cannot establish the original four-of-five condition.
-- **RUN-02:** heuristic review, touch/contrast measurements and enlarged-text checks pending.
-- **PHY-01:** full offline/privacy assessment pending; earlier API 33 checks and
-  D reboot persistence are partial evidence, not proof of no transmission.
-- **PHY-02:** ten-reminder reliability trial, native denial outcome and Home-build
-  reminder delivery/tapping recheck pending.
-- **PHY-03:** emulator evidence recorded; a documented phone trial is still needed.
-- Record each issue, chosen fix and retest as evaluation continues; update report
-  Section 4 and Appendix A. Markdown changes do not update LaTeX automatically.
+| Criterion | Evidence status |
+| --- | --- |
+| RUN-01 | Not established. Three returned task sheets, reported assistance and one installation block do not demonstrate four of five unaided users meeting every condition. |
+| RUN-02 | Not met in the sampled screens. Touch samples met 48 dp; placeholder contrast was below 4.5:1. Enlarged-text crowding also warrants refinement. |
+| PHY-01 | Partial evidence. Earlier API 33 offline/restart checks and D reboot persistence were recorded; a full offline/privacy assessment was not completed. No-transmission is not established. |
+| PHY-02 | Not established. Earlier reminder delivery/tapping was checked. Ten-trial reliability, native permission denial and Home-build delivery/tapping recheck were not completed. |
+| PHY-03 | Partial evidence. Four emulator configurations have recorded checks; phone use was reported without a documented trial. The full criterion is not established. |
+
+The uncompleted technical checks are future evaluation work, not scheduled trials
+or successful results. Proposed changes need implementation and retesting before
+their effects can be assessed. The small, non-target sample and self-reported
+outcomes limit usability conclusions. These sessions do not establish long-term
+use or spiritual benefit.
 
 ## Sources
 

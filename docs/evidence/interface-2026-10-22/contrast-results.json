@@ -1,0 +1,44 @@
+[
+  {
+    "label": "Main text / white",
+    "foreground": "#111111",
+    "background": "#ffffff",
+    "ratio": 18.883060964594996,
+    "normal_text_4_5_pass": true
+  },
+  {
+    "label": "Supporting text / white",
+    "foreground": "#555555",
+    "background": "#ffffff",
+    "ratio": 7.455177810447525,
+    "normal_text_4_5_pass": true
+  },
+  {
+    "label": "Passage text / white",
+    "foreground": "#333333",
+    "background": "#ffffff",
+    "ratio": 12.63465434445799,
+    "normal_text_4_5_pass": true
+  },
+  {
+    "label": "Placeholder text / white",
+    "foreground": "#777777",
+    "background": "#ffffff",
+    "ratio": 4.478089453577215,
+    "normal_text_4_5_pass": false
+  },
+  {
+    "label": "Validation error / white",
+    "foreground": "#8a1c1c",
+    "background": "#ffffff",
+    "ratio": 9.277567556320555,
+    "normal_text_4_5_pass": true
+  },
+  {
+    "label": "Primary button text / dark fill",
+    "foreground": "#ffffff",
+    "background": "#111111",
+    "ratio": 18.883060964594996,
+    "normal_text_4_5_pass": true
+  }
+]

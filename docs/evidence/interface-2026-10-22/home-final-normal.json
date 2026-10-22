@@ -1,0 +1,154 @@
+[
+  {
+    "text": "Home",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[64,154][279,261]"
+  },
+  {
+    "text": "Your Carries",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,400][1568,544]"
+  },
+  {
+    "text": "Find your upcoming situations and revisit your reflections.",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,568][1568,744]"
+  },
+  {
+    "text": "",
+    "content-desc": "New Carry",
+    "resource-id": "",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,824][1568,1032]"
+  },
+  {
+    "text": "New Carry",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[675,880][973,976]"
+  },
+  {
+    "text": "Upcoming",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,1160][1568,1272]"
+  },
+  {
+    "text": "No upcoming Carries.",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1272][1568,1472]"
+  },
+  {
+    "text": "Ready to reflect",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,1552][1568,1664]"
+  },
+  {
+    "text": "",
+    "content-desc": "Interface review only - fictional. Interface check. Ready to reflect. Scheduled 10/22/2026 at 1:46 PM.",
+    "resource-id": "",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,1664][1568,2066]"
+  },
+  {
+    "text": "Interface review only - fictional",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1720][1157,1816]"
+  },
+  {
+    "text": "Ready to reflect",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[1205,1720][1568,1800]"
+  },
+  {
+    "text": "Interface check",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1832][1568,1920]"
+  },
+  {
+    "text": "Scheduled 10/22/2026 at 1:46 PM",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,1928][1568,2008]"
+  },
+  {
+    "text": "Completed",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.view.View",
+    "clickable": "false",
+    "bounds": "[80,2146][1568,2258]"
+  },
+  {
+    "text": "",
+    "content-desc": "Offline loop check. Loop test. Completed. Scheduled 10/8/2026 at 4:36 PM.",
+    "resource-id": "",
+    "class": "android.widget.Button",
+    "clickable": "true",
+    "bounds": "[80,2258][1568,2660]"
+  },
+  {
+    "text": "Offline loop check",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2314][1266,2410]"
+  },
+  {
+    "text": "Completed",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[1314,2314][1568,2394]"
+  },
+  {
+    "text": "Loop test",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2426][1568,2514]"
+  },
+  {
+    "text": "Scheduled 10/8/2026 at 4:36 PM",
+    "content-desc": "",
+    "resource-id": "",
+    "class": "android.widget.TextView",
+    "clickable": "false",
+    "bounds": "[80,2522][1568,2602]"
+  }
+]
