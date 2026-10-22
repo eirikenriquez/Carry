@@ -5,29 +5,60 @@ choose a passage, plan an action, and reflect afterward.
 
 An Android app built with React Native, Expo, and TypeScript for COMP826 Milestone 2.
 
-## Current features
+[Try the app](#try-the-app) · [Run from source](#run-from-source) · [Checks](#checks) · [Evidence](#documentation-and-evidence)
 
-- Browse the bundled [World English Bible](https://ebible.org/engwebp/) offline
-  or look up references such as `John 3:16`; select a verse or same-chapter range.
-- Start from Home, with Upcoming, Ready to reflect and Completed Carries available
-  offline, including after app restart.
-- Create a Carry with a category, situation, future schedule and if-then plan.
-- Edit or confirm deletion of an upcoming Carry without changing other records.
-- Receive a local reminder 15 minutes before an eligible Carry; tap to reopen it.
-- Save a rating, what happened and an insight; see the latest reflection when
-  reusing its category.
+Features include offline [World English Bible](https://ebible.org/engwebp/) browsing
+and reference lookup, editable plans, local reminders, saved reflections and
+reuse of a category's latest insight.
 
-Lookup excludes abbreviations, keyword search and cross-chapter ranges.
+<table>
+  <tr><th>Home</th><th>Previous insight in a new plan</th></tr>
+  <tr>
+    <td><img src="docs/evidence/home/populated-home.png" alt="Home groups Carries by Upcoming, Ready to reflect and Completed" width="220"></td>
+    <td><img src="docs/evidence/full-loop/latest-reflection-after-restart.jpg" alt="A new Carry displays its category's latest reflection" width="220"></td>
+  </tr>
+</table>
 
-## Requirements
+Screenshots are from recorded emulator checks.
+
+## Try the app
+
+1. Download **[Carry.apk](https://github.com/eirikenriquez/Carry/releases/download/v1.0.0-evaluation/Carry.apk)**
+   from the [evaluation release](https://github.com/eirikenriquez/Carry/releases/tag/v1.0.0-evaluation).
+2. Install and open it on Android 7.0 or later. For an Android Studio emulator,
+   drag the downloaded APK onto its window.
+3. No account, server or development tools are needed on a phone. Bundled Scripture
+   and saved records are available offline.
+
+If phone security blocks installation, use an emulator or contact the developer
+rather than disabling security. iPhone is not supported.
+
+### Short walkthrough
+
+Use fictional information for testing.
+
+1. Tap **New Carry**, choose a book/chapter, select verses and confirm the passage.
+2. Enter category **Demo**, a situation, an if-then plan and a time a few minutes
+   ahead. Save and reopen the Carry. Upcoming Carries can also be edited or deleted.
+3. After its situation time, return to Home and open the **Ready to reflect** Carry.
+   Enter a rating, what happened and an insight, then save.
+4. Start another Carry and use category **Demo** to see the previous reflection.
+   Cancel this draft if you do not want to save it.
+
+For a **reminder demo**, use a situation at least 20 minutes ahead and allow
+notifications when prompted. The reminder is scheduled 15 minutes before the
+situation; tap it to reopen the Carry. A near-term reflection demo will not schedule
+a reminder once that offset has passed.
+
+## Run from source
+
+### Requirements
 
 - Git
 - Node.js 24 and npm
 - Android Studio with an Android SDK and emulator
-- A JDK with `JAVA_HOME` pointing to its installation
+- JDK 20 was used for the recorded native builds; `JAVA_HOME` must point to the JDK
 - Python 3, only for the source-data check
-
-## Run locally
 
 Start an Android emulator, then run in PowerShell:
 
@@ -39,8 +70,8 @@ $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 npm run android
 ```
 
-If the repository is already cloned, open its `Carry` directory and skip the
-first two commands.
+If using the submitted ZIP or an existing clone, open the project folder containing
+`package.json` and start at `npm ci`.
 
 The first run builds and installs the Expo development app and starts Metro.
 For later JavaScript or TypeScript changes, run `npm run start` and press `a`.
@@ -67,11 +98,19 @@ python scripts/test_bible_data.py
 against real SQLite. Node's experimental SQLite warning is expected.
 Python checks the data against the publisher export.
 
-## Documentation
+## Documentation and evidence
 
-- [Architecture, decisions, and Bible provenance](docs/architecture.md)
-- [Test checkpoints, screenshots, and limitations](docs/test-log.md)
-- [Coding standards](docs/coding-standards.md)
-- [Evaluation methods, results and evidence status](docs/evaluation.md)
-- [De-identified participant sheets and complete responses](docs/evidence/participants/README.md)
-- [Interface checks, screenshots and measurements](docs/evidence/interface-2026-10-22/README.md)
+| What to inspect | Where |
+| --- | --- |
+| Architecture, diagram and Bible source | [Architecture](docs/architecture.md) |
+| Recorded automated and installed-app checks | [Test log](docs/test-log.md) |
+| Criteria, methods and results | [Evaluation](docs/evaluation.md) |
+| De-identified responses | [Participant sheets](docs/evidence/participants/README.md) |
+| Touch, contrast and enlarged-text findings | [Interface checks](docs/evaluation.md#interface-checks) |
+| Coding conventions | [Coding standards](docs/coding-standards.md) |
+
+## Scope
+
+Android portrait prototype. Lookup supports full book names, not keyword search,
+abbreviations or cross-chapter ranges. Testing provides partial evidence, not a full
+reliability or accessibility pass; see the [criterion statuses](docs/evaluation.md#criteria-status).
