@@ -9,10 +9,10 @@ An Android app built with React Native, Expo, and TypeScript for COMP826 Milesto
 
 Features include offline [World English Bible](https://ebible.org/engwebp/) browsing
 and reference lookup, editable plans, local reminders, saved reflections and
-reuse of a category's latest insight.
+reuse of a category's latest reflection.
 
 <table>
-  <tr><th>Home</th><th>Previous insight in a new plan</th></tr>
+  <tr><th>Home</th><th>Previous reflection in a new plan</th></tr>
   <tr>
     <td><img src="docs/evidence/home/populated-home.png" alt="Home groups Carries by Upcoming, Ready to reflect and Completed" width="220"></td>
     <td><img src="docs/evidence/full-loop/latest-reflection-after-restart.jpg" alt="A new Carry displays its category's latest reflection" width="220"></td>
