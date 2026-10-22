@@ -4,3 +4,6 @@ coverage/
 dist/
 ios/
 node_modules/
+
+# Saved interface inspection output
+docs/evidence/interface-2026-10-22/*.json
