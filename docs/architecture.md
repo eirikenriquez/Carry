@@ -12,6 +12,17 @@ state, ViewModels handle interaction, and interfaces isolate SQLite and Expo not
 The diagram shows dependencies, not execution order. `src/app.tsx` supplies the
 concrete repositories and notification service.
 
+## Creation and reminder sequence
+
+![Successful Carry creation and reminder sequence](diagrams/creation-sequence.png)
+
+[PNG](diagrams/creation-sequence.png) | [PlantUML source](diagrams/creation-sequence.puml)
+
+The sequence covers the same creation-to-display scenario as Milestone 1.
+Separate creation and reminder functions replace the planned lifecycle service.
+It shows successful creation with notification permission and a future reminder
+time. Validation failures and reminder failures are omitted, not assumed to pass.
+
 ## Structure and Milestone 1 changes
 
 | Location | Responsibility |
