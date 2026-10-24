@@ -1,0 +1,48 @@
+@startuml
+' Same creation/reminder scenario as the original Milestone 1 sequence.
+' Successful path: valid draft, future reminder time and permission granted.
+' Workflow controls represent functions, not new service classes.
+' Supporting BibleRepository reads and failure paths are omitted for clarity.
+hide footbox
+skinparam backgroundColor white
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam defaultFontSize 20
+skinparam ArrowColor #455466
+skinparam ParticipantBorderColor #455466
+skinparam ParticipantBackgroundColor #EEF2F5
+skinparam ActorBorderColor #455466
+skinparam BoundaryBorderColor #455466
+skinparam ControlBorderColor #455466
+skinparam LifeLineBorderColor #CBD4DC
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 170
+
+actor User
+boundary "Carry\nform" as Form
+control "Create\nViewModel" as VM
+control "Creation\nworkflow" as Create
+participant "Carry\nrepository" as Repository <<repository>>
+control "Reminder\nworkflow" as Reminder
+boundary "Notification\nservice" as Notifications
+
+User -> Form : Enter details\nand save
+Form -> VM : Submit draft
+VM -> Create : Create Carry
+Create -> Create : Check draft\nand passage
+Create -> Repository : Save category\nand Carry
+Repository --> Create : Saved Carry
+Create --> VM : Saved Carry
+
+VM -> Reminder : Set reminder
+Reminder -> Notifications : Request permission
+Notifications --> Reminder : Permission granted
+Reminder -> Notifications : Schedule reminder
+Notifications --> Reminder : Notification ID
+Reminder -> Repository : Link notification ID
+Repository --> Reminder : ID linked
+Reminder --> VM : Reminder scheduled
+
+VM --> Form : Saved Carry\nwith reminder
+Form --> User : Display saved Carry
+@enduml
